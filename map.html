@@ -1,0 +1,1336 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>الجزائر الخضراء — منصة متقدمة للمساهمات البيئية</title>
+
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css"/>
+<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css"/>
+<script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster-src.js"></script>
+<script src="https://unpkg.com/simpleheat/simpleheat.js"></script>
+<script src="https://unpkg.com/leaflet.heat/dist/leaflet-heat.js"></script>
+
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;800&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
+
+<style>
+  /* --------------------------------- */
+  /* 1. Variables de Design (Palette)  */
+  /* --------------------------------- */
+  :root{
+    /* Couleurs */
+    --color-primary: #1e88e5;       /* Bleu vif pour l'action */
+    --color-primary-dark: #0d47a1;
+    --color-secondary: #4caf50;     /* Vert pour le succès/ajout */
+    --color-secondary-dark: #388e3c;
+    --color-bg-light: #f7f9fc;      /* Arrière-plan général */
+    --color-bg-panel: #ffffff;      /* Fonds de panneaux */
+    --color-text-dark: #212529;     /* Texte principal */
+    --color-text-muted: #6c757d;    /* Texte secondaire */
+    --color-border: #e9ecef;        /* Bordures légères */
+    --color-danger: #ef5350;        /* Rouge pour les erreurs/suppression */
+    --color-success: #43a047;       /* Vert pour les messages de succès */
+    --color-warning: #ffb300;       /* Orange pour les alertes */
+
+    /* Espace et Ombre */
+    --radius-default: 16px; 
+    --radius-small: 10px;
+    --spacing-unit: 20px; 
+
+    --shadow-default: 0 2px 8px rgba(0, 0, 0, 0.04); 
+    --shadow-panel-hover: 0 6px 16px rgba(0, 0, 0, 0.08); 
+    --shadow-heavy: 0 10px 25px rgba(0, 0, 0, 0.15);
+    --glass-bg: rgba(255, 255, 255, 0.85); 
+    --color-hover-bg: #f2f5f7; 
+
+    /* Typographie */
+    --font-primary: 'Cairo', 'Noto Sans Arabic', sans-serif;
+  }
+
+  /* Keyframes */
+  @keyframes pulse {
+    0% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.1); opacity: 0.8; }
+    100% { transform: scale(1); opacity: 1; }
+  }
+  @keyframes fadein {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* --------------------------------- */
+  /* 2. Base et Réinitialisation     */
+  /* --------------------------------- */
+  *, *::before, *::after {
+    box-sizing: border-box;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); /* Transition plus douce */
+  }
+  html, body {
+    height: 100%;
+    margin: 0;
+    font-family: var(--font-primary);
+    background: var(--color-bg-light);
+    color: var(--color-text-dark);
+    -webkit-font-smoothing: antialiased;
+    direction: rtl; 
+    font-size: 16px;
+  }
+  h1, h2, h3, h4, h5, h6 {
+    font-weight: 800;
+    margin: 0;
+    color: var(--color-text-dark);
+  }
+  .required { color: var(--color-danger); }
+  .muted { color: var(--color-text-muted); font-size: 0.85rem; font-weight: 400; }
+
+  /* --------------------------------- */
+  /* 3. Structure de l'Application     */
+  /* --------------------------------- */
+  .app {
+    display: grid;
+    grid-template-columns: 400px 1fr;
+    gap: var(--spacing-unit);
+    padding: var(--spacing-unit);
+    height: 100vh;
+    box-sizing: border-box;
+  }
+
+  .sidebar {
+    background: var(--color-bg-panel);
+    border-radius: var(--radius-default);
+    padding: var(--spacing-unit);
+    box-shadow: var(--shadow-default);
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    z-index: 500;
+  }
+
+  .mapwrap {
+    position: relative;
+    border-radius: var(--radius-default);
+    overflow: hidden;
+    box-shadow: var(--shadow-default);
+  }
+  #map {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+  }
+
+  /* --------------------------------- */
+  /* 4. Brand & Header (Inchangé)      */
+  /* --------------------------------- */
+  .brand {
+    display: flex; align-items: center; gap: 15px; margin-bottom: var(--spacing-unit);
+    padding-bottom: 15px; border-bottom: 1px solid var(--color-border);
+  }
+  .brand .logo {
+    width: 50px; height: 50px; border-radius: 50%;
+    background: linear-gradient(135deg, var(--color-primary), var(--color-primary-dark));
+    display: flex; align-items: center; justify-content: center;
+    color: #fff; font-weight: 800; font-size: 20px;
+    box-shadow: 0 4px 10px rgba(30, 136, 229, 0.3);
+  }
+  .brand h1 { font-size: 1.4rem; font-weight: 800; }
+  .brand p { margin-top: 4px; color: var(--color-text-muted); font-size: 0.85rem; }
+
+  /* --------------------------------- */
+  /* 5. Panneaux et Formulaires        */
+  /* --------------------------------- */
+  .panel {
+    background: var(--color-bg-panel);
+    padding: 18px; 
+    border-radius: var(--radius-default);
+    border: 1px solid var(--color-border);
+    margin-bottom: 18px; 
+    box-shadow: var(--shadow-default); 
+  }
+  .panel h3 {
+    font-size: 1.3rem; font-weight: 800; margin-bottom: 18px !important;
+    border-bottom: 3px solid var(--color-primary);
+    padding-bottom: 5px; width: fit-content;
+  }
+  .field { margin-bottom: 18px; display: flex; flex-direction: column; gap: 6px; }
+  .field label { font-size: 0.95rem; color: var(--color-text-dark); font-weight: 700; }
+  
+  /* Inputs */
+  input[type="text"], select, textarea, input[type="date"], input[type="file"] {
+    padding: 12px; border-radius: var(--radius-small);
+    border: 1px solid var(--color-border); font-size: 1rem;
+    font-family: var(--font-primary); background-color: var(--color-bg-light);
+    box-shadow: inset 2px 2px 5px rgba(0, 0, 0, 0.04);
+  }
+  input[type="text"]:focus, select:focus, textarea:focus, input[type="date"]:focus {
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px rgba(30, 136, 229, 0.15), inset 2px 2px 5px rgba(0, 0, 0, 0.04);
+    outline: none; background-color: var(--color-bg-panel);
+  }
+  input[type="file"] { padding: 8px 12px; } /* Ajustement pour le type file */
+  
+  .location-group .coords-inputs { display: flex; gap: 10px; }
+  .location-group .coords-inputs input { flex: 1; text-align: center; font-weight: 700; }
+  .location-group .muted { margin-top: 5px; display: block; }
+
+  .preview {
+    width: 100%; height: 160px; object-fit: cover;
+    border-radius: var(--radius-small); border: 2px dashed var(--color-border);
+    margin-top: 10px !important; background-color: var(--color-hover-bg);
+  }
+
+  /* Validation message */
+  #formMessage, .toast {
+    font-weight: 700; animation: fadein 0.3s;
+  }
+
+  /* --------------------------------- */
+  /* 6. Boutons (Buttons)            */
+  /* --------------------------------- */
+  .form-button-group { display: flex; gap: 8px; margin-top: 10px; align-items: center; }
+  .btn {
+    display: inline-flex; align-items: center; justify-content: center;
+    gap: 8px; padding: 10px 16px; border-radius: var(--radius-small);
+    border: 0; cursor: pointer; font-weight: 700; font-size: 0.95rem;
+    text-decoration: none; user-select: none; white-space: nowrap;
+    line-height: 1.2;
+  }
+  .btn.primary { background: var(--color-primary); color: #fff; box-shadow: 0 4px 10px rgba(30, 136, 229, 0.2); }
+  .btn.primary:hover { background: var(--color-primary-dark); box-shadow: 0 6px 12px rgba(30, 136, 229, 0.3); }
+  .btn.ghost { background: transparent; border: 1px solid var(--color-border); color: var(--color-text-dark); }
+  .btn.ghost:hover { background: var(--color-hover-bg); border-color: #ced4da; }
+  .btn.secondary { background: var(--color-secondary); color: #fff; }
+  .btn.secondary:hover { background: var(--color-secondary-dark); }
+  .btn[type="submit"] { flex-grow: 1; }
+  .btn[type="submit"]:disabled {
+    background: #e9ecef; color: #aeb4b9; cursor: not-allowed;
+    box-shadow: none; pointer-events: none; opacity: 0.6; 
+  }
+  .btn.danger { background: var(--color-danger); color: #fff; }
+  .btn.danger:hover { background: #c62828; }
+  .btn.icon-only { width: 36px; height: 36px; padding: 0; font-size: 1rem; border-radius: 50%; }
+
+
+  /* --------------------------------- */
+  /* 7. Statistiques et Recherche      */
+  /* --------------------------------- */
+  .stat-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 15px;
+  }
+  .stat-item {
+    padding: 18px 10px; border-radius: var(--radius-default);
+    background: var(--color-bg-panel); border: 1px solid var(--color-border);
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05); 
+  }
+  .stat-item strong { font-weight: 800; font-size: 1.6rem; display: block; line-height: 1.2; margin-bottom: 4px; }
+  
+  .filter-group {
+      display: flex; gap: 8px; margin-top: 15px; align-items: center;
+      flex-wrap: wrap; /* Pour le mobile */
+  }
+  .filter-group input, .filter-group select {
+      flex: 1; min-width: 150px;
+  }
+
+  /* --------------------------------- */
+  /* 8. Liste des Localisations        */
+  /* --------------------------------- */
+  .list-title {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 15px; padding-bottom: 5px; border-bottom: 1px solid var(--color-border);
+  }
+  #locationsList { max-height: 400px; overflow-y: auto; padding-left: 5px; }
+
+  .location-item {
+    display: flex; gap: 10px; padding: 12px; border-radius: var(--radius-small);
+    border: 1px solid var(--color-border); align-items: center;
+    background: var(--color-bg-panel); margin-bottom: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.03); animation: fadein 0.3s;
+  }
+  .location-item:hover {
+    background: var(--color-hover-bg); border-color: var(--color-primary);
+    transform: translateY(-2px); box-shadow: var(--shadow-panel-hover);
+  }
+  .location-item img {
+    width: 60px; height: 60px; border-radius: 50%; object-fit: cover; border: 1px solid var(--color-border);
+  }
+  .location-item .meta { flex: 1; }
+  .location-item h4 { margin: 0; font-size: 1rem; font-weight: 800; }
+  .location-item .type-icon { color: var(--color-secondary); font-size: 1.1rem; margin-left: 8px; }
+  .location-item p { margin: 2px 0 0 0; font-size: 0.9rem; color: var(--color-text-muted); }
+  
+  /* NOUVEAU: Groupe d'actions dans la liste */
+  .location-actions {
+      display: flex; gap: 6px; align-items: center;
+  }
+  .location-actions .btn {
+      padding: 6px; font-size: 0.9rem;
+  }
+
+  /* --------------------------------- */
+  /* 9. Contrôles de Carte et Toast    */
+  /* --------------------------------- */
+  .map-controls {
+    position: absolute; left: var(--spacing-unit); top: var(--spacing-unit);
+    z-index: 1000; background: var(--glass-bg); backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px); padding: 10px; border-radius: var(--radius-default);
+    display: flex; gap: 8px; align-items: center; box-shadow: var(--shadow-default);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+  }
+  .toggle {
+    padding: 8px 10px; border-radius: var(--radius-small); border: 0;
+    background: transparent; cursor: pointer; color: var(--color-text-dark); font-size: 1.1rem;
+  }
+  .toggle:hover { background: rgba(30, 136, 229, 0.1); color: var(--color-primary); }
+  .toggle.active { background: var(--color-primary) !important; color: #fff !important; }
+
+  /* Toast (Notifications) */
+  .toast {
+    position: fixed; left: 50%; transform: translateX(-50%); bottom: var(--spacing-unit);
+    padding: 12px 18px; border-radius: var(--radius-small); z-index: 2000;
+    font-weight: 700; box-shadow: var(--shadow-heavy); opacity: 0; pointer-events: none;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .toast.success { background: var(--color-success); color: #fff; }
+  .toast.error { background: var(--color-danger); color: #fff; }
+  .toast.alert { background: var(--color-warning); color: var(--color-text-dark); }
+
+
+  /* --------------------------------- */
+  /* 10. MODAL (NOUVEAU)               */
+  /* --------------------------------- */
+  .modal-overlay {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0, 0, 0, 0.6); z-index: 3000;
+    display: none; justify-content: center; align-items: center;
+    opacity: 0; transition: opacity 0.3s ease-in-out;
+  }
+  .modal-overlay.open { display: flex; opacity: 1; }
+  .modal-content {
+    background: var(--color-bg-panel); border-radius: var(--radius-default);
+    width: 90%; max-width: 500px; box-shadow: var(--shadow-heavy);
+    transform: translateY(-50px); opacity: 0; transition: all 0.4s ease-in-out;
+    padding: 25px; position: relative;
+  }
+  .modal-overlay.open .modal-content { transform: translateY(0); opacity: 1; }
+  .modal-close {
+      position: absolute; top: 15px; left: 15px;
+      background: none; border: none; font-size: 1.2rem;
+      color: var(--color-text-muted); cursor: pointer;
+  }
+  .modal-content h3 {
+      border-bottom: 2px solid var(--color-secondary);
+      width: 100%; padding-bottom: 8px; margin-bottom: 20px !important;
+  }
+
+
+  /* --------------------------------- */
+  /* 11. Responsive Design (Mobile)    */
+  /* --------------------------------- */
+  @media(max-width: 1024px){ 
+    .app {
+      grid-template-columns: 1fr; padding: 0; height: 100vh; display: block;
+    }
+    .mapwrap {
+      height: 100vh; border-radius: 0; box-shadow: none;
+    }
+    .sidebar {
+      position: fixed; left: 0; right: 0; bottom: 0;
+      top: 25vh; /* Laisser plus de carte visible */
+      height: 75vh;
+      min-height: 400px;
+      max-height: 90vh;
+      border-top-left-radius: var(--radius-default);
+      border-top-right-radius: var(--radius-default);
+      border-bottom-left-radius: 0; border-bottom-right-radius: 0;
+      padding: 0; box-shadow: var(--shadow-heavy); z-index: 1500;
+      transform: translateY(100%); visibility: hidden;
+      overflow-y: hidden;
+    }
+    .sidebar.visible {
+        transform: translateY(0); visibility: visible;
+    }
+    
+    .sidebar-content {
+        padding: 0 var(--spacing-unit);
+        overflow-y: auto;
+        flex-grow: 1;
+        padding-bottom: 80px; /* Espace pour ne pas cacher le bas */
+    }
+    .brand, #desktop-footer { display: none; } /* Masquer éléments desktop */
+    
+    /* Barre de navigation/Onglets Mobile */
+    .mobile-nav {
+        display: flex; justify-content: space-around; align-items: center;
+        padding: 10px 0; border-bottom: 1px solid var(--color-border);
+        background: var(--color-bg-panel);
+        border-top-left-radius: var(--radius-default);
+        border-top-right-radius: var(--radius-default);
+        position: sticky; top: 0; z-index: 10;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.03);
+    }
+    .mobile-nav-item {
+        flex: 1; text-align: center; padding: 10px 0; cursor: pointer;
+        font-weight: 700; color: var(--color-text-muted);
+        border-bottom: 3px solid transparent; font-size: 0.9rem;
+    }
+    .mobile-nav-item.active { color: var(--color-primary); border-color: var(--color-primary); }
+
+    /* Floating Action Button (FAB) */
+    .fab-button {
+        display: flex; position: fixed; bottom: 20px; right: 20px; z-index: 1200;
+        width: 55px; height: 55px; background: var(--color-primary);
+        border-radius: 50%; color: white; font-size: 1.5rem;
+        align-items: center; justify-content: center; cursor: pointer;
+        box-shadow: var(--shadow-heavy);
+    }
+    .map-controls {
+        left: 50%; transform: translateX(-50%); top: 15px;
+        border-radius: 50px; padding: 6px 12px;
+    }
+    .sidebar-close {
+        position: absolute; top: 15px; left: 15px;
+        background: none; border: none; font-size: 1.5rem;
+        color: var(--color-text-muted); cursor: pointer; padding: 5px; z-index: 20;
+    }
+    .sidebar .panel {
+        border: none; box-shadow: none; padding: 10px 0; margin-bottom: 0;
+        border-top: 1px solid var(--color-border);
+    }
+    .sidebar .panel:first-child { border-top: none; }
+    
+    /* Correction de la modale sur mobile */
+    .modal-content {
+        max-width: 95%; margin: 20px;
+    }
+    #locationsList { max-height: 50vh; }
+  }
+</style>
+</head>
+<body>
+
+<div class="app" role="application" aria-label="Algérie Verte">
+
+  <aside class="sidebar" id="sidebar" aria-labelledby="title">
+    <div class="brand">
+      <div class="logo">🌳</div>
+      <div>
+        <h1 id="title">الجزائر الخضراء</h1>
+        <p>منصة متقدمة للمساهمات البيئية</p>
+      </div>
+    </div>
+    
+    <button class="sidebar-close" onclick="toggleSidebar(false)" aria-label="Fermer la barre latérale"><i class="fas fa-times"></i></button>
+
+    <div class="mobile-nav" id="mobileNav">
+        <div class="mobile-nav-item active" data-target="form-panel" onclick="switchPanel('form-panel', this)"><i class="fas fa-plus-circle"></i> إضافة شجرة</div>
+        <div class="mobile-nav-item" data-target="list-panel" onclick="switchPanel('list-panel', this)"><i class="fas fa-list-ul"></i> المساهمات</div>
+        <div class="mobile-nav-item" data-target="stats-panel" onclick="switchPanel('stats-panel', this)"><i class="fas fa-chart-bar"></i> الإحصاءات</div>
+    </div>
+    
+    <div class="sidebar-content">
+        <div class="panel mobile-panel" id="form-panel">
+          <h3 id="form-title">سجل شجرتك الجديدة</h3>
+          <form id="treeForm" onsubmit="event.preventDefault(); handleSubmit();">
+            <div class="field">
+              <label for="nom">الاسم الكامل / الجهة <span class="required">*</span></label>
+              <input id="nom" name="nom" type="text" placeholder="مثال: محمد بن — جمعية زراعة" required />
+            </div>
+            <div class="field">
+              <label for="adresse">المنطقة / العنوان (اختياري)</label>
+              <input id="adresse" name="adresse" type="text" placeholder="ولاية، بلدية، أو وصف دقيق" />
+            </div>
+            <div class="row">
+              <div class="col field">
+                <label for="type_arbre">نوع الشجرة <span class="required">*</span></label>
+                <select id="type_arbre" required>
+                  <option value="">اختر نوع</option>
+                  <option>صنوبر حلبي</option>
+                  <option>أرز الأطلس</option>
+                  <option>زيتون</option>
+                  <option>نخيل</option>
+                  <option>بلوط</option>
+                  <option>أخرى</option>
+                </select>
+              </div>
+              <div class="col field">
+                <label for="date_planted">تاريخ الزرع</label>
+                <input id="date_planted" type="date" />
+              </div>
+            </div>
+            <div class="field">
+              <label for="photo">صورة بعد الزرع (اختياري)</label>
+              <input id="photo" type="file" accept="image/*" />
+              <img id="preview" class="preview" alt="معاينة الصورة" style="display:none;" />
+            </div>
+            <div class="field location-group">
+              <label>موقع الزرع <span class="required">*</span></label>
+              <div class="row coords-inputs">
+                <input id="latitude" type="text" readonly placeholder="خط العرض" required />
+                <input id="longitude" type="text" readonly placeholder="خط الطول" required />
+              </div>
+              <small class="muted">اضغط على الخريطة لتحديد الموقع أو استخدم زر تحديد الموقع</small>
+            </div>
+            <div class="form-button-group">
+              <button type="button" class="btn primary" onclick="handleGeolocation();"><i class="fas fa-location-arrow"></i> تحديد موقعي</button>
+              <button type="submit" class="btn secondary" title="أضف الشجرة" disabled>إضافة</button>
+              <button type="button" class="btn ghost small-action" onclick="resetForm();"><i class="fas fa-eraser"></i> مسح</button>
+            </div>
+            <div id="formMessage" class="muted"></div>
+          </form>
+        </div>
+
+        <div class="panel mobile-panel" id="stats-panel" style="display:none;">
+          <h3 id="stats-title">إحصاءات وأدوات</h3>
+          <div class="list-title">
+            <strong>إحصاء سريع</strong>
+            <small class="muted" id="lastUpdate">—</small>
+          </div>
+          <div class="stat-grid">
+            <div class="stat-item">
+              <strong id="stat-count">0</strong>
+              <div class="muted">مجموع المشاركات</div>
+            </div>
+            <div class="stat-item">
+              <strong id="stat-types">0</strong>
+              <div class="muted">أنواع الأشجار</div>
+            </div>
+          </div>
+          
+          <div class="filter-group">
+            <input id="quickSearch" placeholder="ابحث بالاسم، الموقع، أو النوع..." oninput="debouncedSearch()" />
+            <select id="sortOrder" onchange="applyFiltersAndSort()">
+                <option value="createdAt">الأحدث أولاً</option>
+                <option value="nom">ترتيب أبجدي (الاسم)</option>
+                <option value="type">ترتيب أبجدي (النوع)</option>
+            </select>
+            <select id="typeFilter" onchange="applyFiltersAndSort()">
+                <option value="">كل الأنواع</option>
+                <option>صنوبر حلبي</option>
+                <option>أرز الأطلس</option>
+                <option>زيتون</option>
+                <option>نخيل</option>
+                <option>بلوط</option>
+                <option>أخرى</option>
+            </select>
+          </div>
+
+          <div class="panel-footer-actions" style="margin-top:20px;">
+            <div class="list-title"><strong>إدارة البيانات</strong></div>
+            <div class="file-actions" style="display:flex; gap:8px;">
+              <button class="btn ghost" onclick="exportData()"><i class="fas fa-download"></i> تصدير (JSON)</button>
+              <input id="importFile" type="file" accept="application/json" style="display:none" onchange="importData(event)">
+              <button class="btn ghost" onclick="document.getElementById('importFile').click()"><i class="fas fa-file-import"></i> استيراد</button>
+              <button class="btn danger" onclick="clearAllData()"><i class="fas fa-trash-alt"></i> مسح الكل</button>
+            </div>
+            <small class="muted" style="margin-top:8px; display:block;">تصدير/استيراد يحفظ بيانات الخريطة محليًا.</small>
+          </div>
+        </div>
+
+        <div class="panel panel-list mobile-panel" id="list-panel" style="display:none;">
+          <h3 id="list-title">قائمة المساهمات</h3>
+          <div class="list-title">
+            <strong>النتائج (${entries.length})</strong>
+            <small id="filterInfo">الكل</small>
+          </div>
+          <div id="locationsList" style="flex-grow:1;"></div>
+        </div>
+
+        <div class="meta-footer" id="desktop-footer">تعمل المنصة محلياً — لمشاركة النقاط بين مستخدمين تحتاج backend.</div>
+    </div>
+  </aside>
+
+  <main class="mapwrap" role="main">
+    <div id="map" aria-label="خريطة الجزائر"></div>
+
+    <div class="map-controls" role="toolbar" aria-label="أدوات الخريطة">
+      <button class="toggle" onclick="zoomToAlgeria()" title="ركز على الجزائر"><i class="fas fa-globe"></i></button>
+      <button class="toggle" onclick="fitAllMarkers()" title="اظهر كل العلامات"><i class="fas fa-layer-group"></i></button>
+      <button class="toggle" id="toggleHeat" onclick="toggleHeatmap()" title="تبديل خريطة الحرارة"><i class="fas fa-fire"></i></button>
+      <button class="toggle" id="toggleStyle" onclick="toggleStyle()" title="سمة الخريطة"><i class="fas fa-adjust"></i></button>
+    </div>
+
+    <div class="fab-button" onclick="toggleSidebar(true, 'form-panel')">
+        <i class="fas fa-plus"></i>
+    </div>
+
+    <div class="toast" id="toast" style="opacity: 0;"></div>
+  </main>
+
+</div>
+
+<div class="modal-overlay" id="editModalOverlay">
+    <div class="modal-content" id="editModalContent">
+        <button class="modal-close" onclick="closeModal()" aria-label="إغلاق"><i class="fas fa-times"></i></button>
+        <h3>تعديل المساهمة</h3>
+        <form id="editForm">
+            <input type="hidden" id="editId">
+            <div class="field">
+                <label for="editNom">الاسم الكامل / الجهة <span class="required">*</span></label>
+                <input id="editNom" type="text" required />
+            </div>
+            <div class="field">
+                <label for="editAdresse">المنطقة / العنوان (اختياري)</label>
+                <input id="editAdresse" type="text" />
+            </div>
+            <div class="row">
+                <div class="col field">
+                    <label for="editTypeArbre">نوع الشجرة <span class="required">*</span></label>
+                    <select id="editTypeArbre" required>
+                        <option>صنوبر حلبي</option>
+                        <option>أرز الأطلس</option>
+                        <option>زيتون</option>
+                        <option>نخيل</option>
+                        <option>بلوط</option>
+                        <option>أخرى</option>
+                    </select>
+                </div>
+                <div class="col field">
+                    <label for="editDatePlanted">تاريخ الزرع</label>
+                    <input id="editDatePlanted" type="date" />
+                </div>
+            </div>
+             <div class="field location-group">
+                <label>موقع الزرع <span class="required">*</span></label>
+                <div class="row coords-inputs">
+                    <input id="editLatitude" type="text" readonly placeholder="خط العرض" required />
+                    <input id="editLongitude" type="text" readonly placeholder="خط الطول" required />
+                </div>
+                <small class="muted">يمكنك سحب العلامة على الخريطة لتغيير الموقع.</small>
+            </div>
+            <div class="form-button-group">
+                <button type="button" class="btn danger" onclick="removeEntry(document.getElementById('editId').value); closeModal();">
+                    <i class="fas fa-trash-alt"></i> حذف المساهمة
+                </button>
+                <button type="submit" class="btn primary" id="saveEditBtn">
+                    <i class="fas fa-save"></i> حفظ التغييرات
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+/* --------------------------------- */
+/* Configuration Globale & Helpers   */
+/* --------------------------------- */
+const STORAGE_KEY = 'algerie_verte_v3';
+let map, markerCluster, heatLayer;
+let entries = []; 
+let tileDefault, tileToner;
+let geojsonBounds = null;
+let tempMarker = null; 
+const ALGERIA_CENTER = [28.0339, 1.6596];
+const APPROX_BOUNDS = L.latLngBounds([18.9681, -8.6675], [37.0937, 11.9795]);
+let searchTimeout;
+
+/* Helper: Debounce pour la recherche (UX) */
+function debounce(func, delay) {
+    return function() {
+        const context = this;
+        const args = arguments;
+        clearTimeout(searchTimeout);
+        searchTimeout = setTimeout(() => func.apply(context, args), delay);
+    };
+}
+const debouncedSearch = debounce(applyFiltersAndSort, 300);
+
+/* Helper: toast avancé */
+function toast(msg, type='success', timeout=4000){
+  const t = document.getElementById('toast');
+  t.textContent = msg; 
+  t.className = `toast ${type}`;
+  t.style.opacity='1';
+  t.style.display='flex';
+
+  setTimeout(()=>{
+    t.style.opacity='0';
+    setTimeout(()=>t.style.display='none', 300);
+  }, timeout);
+}
+
+/* Helper escape */
+function escapeHtml(s){ if(!s) return ''; return s.replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+/* Récupère l'icône Font Awesome basée sur le type */
+function getTreeIconClass(type) {
+    type = type.toLowerCase();
+    if (type.includes('صنوبر') || type.includes('أرز') || type.includes('conifer')) return 'fas fa-tree'; 
+    if (type.includes('نخيل') || type.includes('palm')) return 'fas fa-leaf'; 
+    if (type.includes('زيتون') || type.includes('olivier')) return 'fas fa-seedling'; 
+    if (type.includes('بلوط') || type.includes('chêne')) return 'fas fa-tree'; 
+    return 'fas fa-seedling'; 
+}
+
+/* --------------------------------- */
+/* Gestion de la Carte               */
+/* --------------------------------- */
+
+function initMap(){
+  map = L.map('map', {center: ALGERIA_CENTER, zoom:5, minZoom:5, maxZoom:12, zoomControl:true});
+
+  tileDefault = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19, attribution:'© OpenStreetMap contributors'}).addTo(map);
+  tileToner = L.tileLayer('https://stamen-tiles.a.ssl.fastly.net/toner-lite/{z}/{x}/{y}.png',{maxZoom:20, attribution:'Tiles: Stamen'});
+
+  markerCluster = L.markerClusterGroup({chunkedLoading:true});
+  map.addLayer(markerCluster);
+
+  heatLayer = L.heatLayer([], {radius: 25, blur: 18, maxZoom: 11});
+
+  fetch('https://raw.githubusercontent.com/johan/world.geo.json/master/countries/DZA.geo.json').then(r=>{
+    if(!r.ok) throw new Error('GeoJSON load failed');
+    return r.json();
+  }).then(data=>{
+    const algeria = L.geoJSON(data, {style:{color:'#1e88e5', weight:2, fillColor:'rgba(30, 136, 229,0.06)', fillOpacity:1}}).addTo(map);
+    geojsonBounds = algeria.getBounds();
+    map.fitBounds(geojsonBounds.pad(0.02));
+    map.setMaxBounds(geojsonBounds.pad(0.03));
+  }).catch(err=>{
+    console.warn('GeoJSON failed, using approximate bounds', err);
+    map.fitBounds(APPROX_BOUNDS);
+    map.setMaxBounds(APPROX_BOUNDS);
+  });
+
+  map.on('click', function(e){
+    const latlng = e.latlng;
+    const isEditing = document.getElementById('editModalOverlay').classList.contains('open');
+
+    // Mettre à jour le formulaire approprié (Ajout ou Édition)
+    const latEl = document.getElementById(isEditing ? 'editLatitude' : 'latitude');
+    const lngEl = document.getElementById(isEditing ? 'editLongitude' : 'longitude');
+
+    latEl.value = latlng.lat.toFixed(6);
+    lngEl.value = latlng.lng.toFixed(6);
+    
+    setTempMarker(latlng, true);
+    
+    validateForm(); 
+    toast('تم وضع إحداثيات. اسحب العلامة لضبط الموقع.', 'alert');
+  });
+
+  document.getElementById('treeForm').addEventListener('input', validateForm);
+
+  // Événements du formulaire d'édition
+  document.getElementById('editForm').addEventListener('submit', handleEditSubmit);
+  document.getElementById('editForm').addEventListener('input', validateEditForm);
+
+
+  loadFromStorage();
+  validateForm();
+}
+
+/**
+ * Gère le marqueur temporaire (pour Ajout et Édition)
+ */
+function setTempMarker(latlng, draggable) {
+    if (tempMarker) map.removeLayer(tempMarker);
+    
+    const tempIcon = L.divIcon({
+        className: 'temp-marker-icon',
+        html: '<i class="fas fa-map-pin"></i>',
+        iconSize: [40, 42], 
+        iconAnchor: [20, 40] 
+    });
+    
+    tempMarker = L.marker(latlng, { icon: tempIcon, draggable: draggable });
+    
+    tempMarker.on('dragend', function(e) {
+        const newLatlng = tempMarker.getLatLng();
+        const isEditing = document.getElementById('editModalOverlay').classList.contains('open');
+
+        const latEl = document.getElementById(isEditing ? 'editLatitude' : 'latitude');
+        const lngEl = document.getElementById(isEditing ? 'editLongitude' : 'longitude');
+
+        latEl.value = newLatlng.lat.toFixed(6);
+        lngEl.value = newLatlng.lng.toFixed(6);
+        
+        if (isEditing) { validateEditForm(); } else { validateForm(); }
+        toast('تم تحديث الإحداثيات عبر السحب', 'alert');
+    });
+    
+    tempMarker.addTo(map);
+    map.setView(latlng, map.getZoom() < 10 ? 10 : map.getZoom());
+}
+
+/**
+ * Ajout du marqueur d'arbre sur la carte avec Popup
+ */
+function addEntryToMap(entry, open=false){
+  
+  const treeIconClass = getTreeIconClass(entry.type);
+
+  const customIcon = L.divIcon({
+    className: 'tree-marker-icon', 
+    html: `<i class="${treeIconClass}"></i>`,
+    iconSize: [30, 42],
+    iconAnchor: [15, 42],
+    popupAnchor: [0, -36]
+  });
+
+  const marker = L.marker([entry.lat, entry.lng], {icon: customIcon}); 
+
+  // Popup HTML avec actions de gestion (Edition/Suppression)
+  const popupHtml = `
+    <div dir="rtl" style="min-width:240px; font-family:var(--font-primary);">
+      <h3 style="margin:0 0 5px 0; color:#1e88e5; border-bottom:1px solid #eee; padding-bottom:5px;">
+        <i class="${treeIconClass}" style="margin-left:5px;"></i> ${escapeHtml(entry.type)}
+      </h3>
+      <p style="margin:4px 0;">
+        <strong style="color:#212529;">الزارع:</strong> ${escapeHtml(entry.nom)}
+      </p>
+      ${entry.adresse ? `<p style="margin:4px 0; color:#6c757d;">
+        <strong style="color:#212529;">الموقع:</strong> ${escapeHtml(entry.adresse)}
+      </p>` : ''}
+      ${entry.date ? `<p style="margin:4px 0; color:#6c757d;">
+        <strong style="color:#212529;">تاريخ الزرع:</strong> ${entry.date.replace(/-/g, '/')}
+      </p>` : ''}
+      
+      <img src="${entry.photo || 'https://via.placeholder.com/320x180?text=No+Image'}" 
+            style="width:100%; height:120px; object-fit:cover; border-radius:8px; margin-top:10px; border:1px solid #ccc;" 
+            onerror="this.src='https://via.placeholder.com/320x180?text=No+Image'"/>
+            
+      <div style="display:flex;gap:6px;margin-top:12px">
+        <button onclick="centerOn(${entry.lat}, ${entry.lng})" class="btn small-action primary" style="border-radius:6px;border:0">
+            <i class="fas fa-crosshairs"></i> توجيه
+        </button>
+        <button onclick="openEditModal('${entry.id}')" class="btn small-action ghost">
+            <i class="fas fa-edit"></i> تعديل
+        </button>
+      </div>
+    </div>`;
+  
+  marker.bindPopup(popupHtml);
+  marker._entryId = entry.id;
+  markerCluster.addLayer(marker);
+  if(open) marker.openPopup();
+
+  return marker;
+}
+
+function centerOn(lat,lng){ 
+    map.setView([lat,lng], 12); 
+    // Fermer le bottom sheet après l'action sur mobile
+    if (window.matchMedia('(max-width: 1024px)').matches) { toggleSidebar(false); }
+}
+
+function openPopupForEntry(id){
+  let found = null;
+  markerCluster.eachLayer(l => { if(l._entryId === id) found = l; });
+  if(found) found.openPopup();
+}
+
+/* --------------------------------- */
+/* Gestion des Données (CRUD)        */
+/* --------------------------------- */
+
+/**
+ * Gestion de l'ajout (Création)
+ */
+function handleSubmit(){
+  const nom = document.getElementById('nom').value.trim();
+  const adresse = document.getElementById('adresse').value.trim();
+  const type = document.getElementById('type_arbre').value;
+  const lat = parseFloat(document.getElementById('latitude').value);
+  const lng = parseFloat(document.getElementById('longitude').value);
+  const date = document.getElementById('date_planted').value || null;
+  const photoFile = document.getElementById('photo').files[0];
+
+  if(!nom || !type){ showFormMessage('الاسم ونوع الشجرة مطلوبان', 'error'); return; }
+  if(isNaN(lat) || isNaN(lng)){ showFormMessage('المرجو وضع الإحداثيات', 'error'); return; }
+
+  const checkBounds = geojsonBounds || APPROX_BOUNDS;
+  if(!checkBounds.contains([lat,lng])){ showFormMessage('الإحداثيات خارج حدود الجزائر', 'error'); return; }
+
+  const id = 'e_'+Date.now()+'_'+Math.random().toString(36).slice(2,8);
+  let photoUrl = null;
+  if(photoFile) photoUrl = URL.createObjectURL(photoFile);
+
+  const entry = { id, nom, adresse, type, lat, lng, date, photo: photoUrl, createdAt:Date.now() };
+  entries.unshift(entry); // Ajout au début pour le "Plus récent"
+  saveToStorage();
+  addEntryToMap(entry, true);
+  
+  if (tempMarker) { map.removeLayer(tempMarker); tempMarker = null; }
+  map.setView([lat, lng], 13);
+
+  applyFiltersAndSort(); // Met à jour la liste et les stats
+  showFormMessage('✅ تم إضافة الشجرة بنجاح!', 'success');
+  resetForm();
+  validateForm(); 
+  toggleSidebar(false);
+}
+
+/**
+ * Gestion de la modification (Update)
+ */
+function handleEditSubmit(e){
+    e.preventDefault();
+    const id = document.getElementById('editId').value;
+    let entry = entries.find(x => x.id === id);
+
+    if(!entry) { toast('خطأ: لم يتم العثور على المساهمة', 'error'); return; }
+
+    const newLat = parseFloat(document.getElementById('editLatitude').value);
+    const newLng = parseFloat(document.getElementById('editLongitude').value);
+    
+    // Mettre à jour les propriétés
+    entry.nom = document.getElementById('editNom').value.trim();
+    entry.adresse = document.getElementById('editAdresse').value.trim();
+    entry.type = document.getElementById('editTypeArbre').value;
+    entry.date = document.getElementById('editDatePlanted').value || null;
+    entry.lat = newLat;
+    entry.lng = newLng;
+    entry.updatedAt = Date.now(); // Marque la modification
+
+    // Mise à jour de la carte (retirer l'ancien marqueur, ajouter le nouveau)
+    let markerToRemove = null;
+    markerCluster.eachLayer(l => { if(l._entryId === id) markerToRemove = l; });
+    if(markerToRemove) markerCluster.removeLayer(markerToRemove);
+    
+    // Réinjecter le marqueur mis à jour
+    addEntryToMap(entry, true);
+    centerOn(entry.lat, entry.lng);
+
+    saveToStorage();
+    applyFiltersAndSort();
+    closeModal();
+    toast('✅ تم تحديث المساهمة بنجاح.', 'success');
+}
+
+
+/**
+ * Gestion de la suppression (Delete)
+ */
+function removeEntry(id){
+  if(!confirm('هل تريد حذف هذه الإضافة بشكل نهائي؟')) return;
+  entries = entries.filter(e=>e.id!==id);
+  saveToStorage();
+  let toRemove = null;
+  markerCluster.eachLayer(l=>{ if(l._entryId===id) toRemove=l; });
+  if(toRemove) markerCluster.removeLayer(toRemove);
+  applyFiltersAndSort(); 
+  toast('تم حذف المساهمة.', 'error');
+}
+
+
+/* --------------------------------- */
+/* Modal d'édition et Formulaires    */
+/* --------------------------------- */
+
+/**
+ * Ouvre la modale d'édition et pré-remplit les champs.
+ */
+function openEditModal(id){
+    const entry = entries.find(x => x.id === id);
+    if (!entry) { toast('خطأ: لم يتم العثور على العنصر', 'error'); return; }
+
+    // Remplissage de la modale
+    document.getElementById('editId').value = entry.id;
+    document.getElementById('editNom').value = entry.nom;
+    document.getElementById('editAdresse').value = entry.adresse || '';
+    document.getElementById('editTypeArbre').value = entry.type || '';
+    document.getElementById('editDatePlanted').value = entry.date || '';
+    document.getElementById('editLatitude').value = entry.lat.toFixed(6);
+    document.getElementById('editLongitude').value = entry.lng.toFixed(6);
+
+    // Initialiser le marqueur temporaire sur la carte
+    setTempMarker(L.latLng(entry.lat, entry.lng), true);
+
+    // Afficher la modale
+    document.getElementById('editModalOverlay').classList.add('open');
+    validateEditForm();
+    toast('اسحب العلامة على الخريطة لتغيير الموقع.', 'alert');
+}
+
+/**
+ * Ferme la modale d'édition.
+ */
+function closeModal() {
+    document.getElementById('editModalOverlay').classList.remove('open');
+    if (tempMarker) { map.removeLayer(tempMarker); tempMarker = null; }
+}
+
+/**
+ * Validation du formulaire d'ajout
+ */
+function validateForm() {
+    const nom = document.getElementById('nom').value.trim();
+    const type = document.getElementById('type_arbre').value;
+    const lat = document.getElementById('latitude').value;
+    const lng = document.getElementById('longitude').value;
+    
+    const isValid = nom && type && !isNaN(parseFloat(lat)) && !isNaN(parseFloat(lng));
+    
+    document.querySelector('button[type="submit"]').disabled = !isValid;
+}
+
+/**
+ * Validation du formulaire d'édition
+ */
+function validateEditForm() {
+    const nom = document.getElementById('editNom').value.trim();
+    const type = document.getElementById('editTypeArbre').value;
+    const lat = document.getElementById('editLatitude').value;
+    const lng = document.getElementById('editLongitude').value;
+
+    const isValid = nom && type && !isNaN(parseFloat(lat)) && !isNaN(parseFloat(lng));
+    
+    document.getElementById('saveEditBtn').disabled = !isValid;
+}
+
+/**
+ * Affiche le message de validation pour le formulaire d'ajout
+ */
+function showFormMessage(text, type='success'){
+  const el = document.getElementById('formMessage');
+  el.textContent = text;
+  el.style.color = (type==='success')? '#065f46' : '#7f1d1d';
+  el.style.backgroundColor = (type==='success')? '#e8f5e9' : '#ffebee';
+  el.style.border = (type==='success')? '1px solid var(--color-success)' : '1px solid var(--color-danger)';
+  setTimeout(()=>{
+    el.textContent='';
+    el.style.backgroundColor='transparent';
+    el.style.border='none';
+  }, 4000);
+}
+
+/**
+ * Réinitialise le formulaire d'ajout
+ */
+function resetForm(){
+  document.getElementById('treeForm').reset();
+  document.getElementById('preview').style.display='none';
+  document.getElementById('preview').src='';
+  document.getElementById('latitude').value=''; 
+  document.getElementById('longitude').value='';
+  if (tempMarker) { map.removeLayer(tempMarker); tempMarker = null; }
+  validateForm();
+}
+
+/* --------------------------------- */
+/* Services de Géolocalisation       */
+/* --------------------------------- */
+
+/**
+ * Gère la géolocalisation de l'utilisateur
+ */
+function handleGeolocation(){
+  if(!navigator.geolocation){ showFormMessage('المتصفح لا يدعم الموقع', 'error'); return; }
+  
+  const btn = document.querySelector('.form-button-group .btn.primary');
+  const originalHtml = btn.innerHTML;
+  btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري البحث...';
+  btn.disabled = true;
+
+  navigator.geolocation.getCurrentPosition(pos=>{
+    const latlng = L.latLng(pos.coords.latitude, pos.coords.longitude);
+    document.getElementById('latitude').value = latlng.lat.toFixed(6);
+    document.getElementById('longitude').value = latlng.lng.toFixed(6);
+    
+    setTempMarker(latlng, true); 
+    
+    showFormMessage('تم تحديد الموقع بنجاح. يمكنك سحب العلامة لضبط الموقع.', 'success');
+    
+    btn.innerHTML = originalHtml;
+    btn.disabled = false;
+    validateForm();
+  }, err=>{ 
+    showFormMessage('فشل في الحصول على الموقع. تحقق من أذونات المتصفح.', 'error'); 
+    btn.innerHTML = originalHtml;
+    btn.disabled = false;
+  }, { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 });
+}
+
+
+/* --------------------------------- */
+/* Gestion du Stockage & Statistiques*/
+/* --------------------------------- */
+
+function saveToStorage(){
+  try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(entries)); }catch(e){ console.error(e); toast('فشل في الحفظ المحلي', 'error'); }
+}
+
+function loadFromStorage(){
+  const raw = localStorage.getItem(STORAGE_KEY);
+  if(raw){
+    try{ entries = JSON.parse(raw); }catch(e){ console.warn('parse error',e); entries = []; }
+  } else { entries = []; }
+  
+  // Initialiser les marqueurs
+  markerCluster.clearLayers();
+  entries.forEach(e=> addEntryToMap(e));
+
+  applyFiltersAndSort();
+}
+
+/**
+ * Mise à jour des compteurs de la barre latérale
+ */
+function updateStats(filteredCount = entries.length){
+  document.getElementById('stat-count').textContent = entries.length;
+  const types = new Set(entries.map(e=>e.type)); 
+  document.getElementById('stat-types').textContent = types.size;
+  document.getElementById('lastUpdate').textContent = new Date().toLocaleString('fr-FR', {timeZone: 'Africa/Algiers'});
+  document.getElementById('filterInfo').textContent = (filteredCount < entries.length) ? `(${filteredCount} نتيجة من ${entries.length})` : `الكل (${entries.length})`;
+}
+
+/* --------------------------------- */
+/* Filtres et Affichage de Liste     */
+/* --------------------------------- */
+
+/**
+ * Applique les filtres et le tri, puis met à jour la liste et la carte
+ */
+function applyFiltersAndSort(){
+    let filtered = [...entries];
+    const query = (document.getElementById('quickSearch').value || '').toLowerCase().trim();
+    const typeFilter = document.getElementById('typeFilter').value;
+    const sortOrder = document.getElementById('sortOrder').value;
+
+    // 1. Filtrage par recherche
+    if (query) {
+        filtered = filtered.filter(e => (
+            e.nom + ' ' + (e.adresse || '') + ' ' + e.type
+        ).toLowerCase().includes(query));
+    }
+    
+    // 2. Filtrage par type
+    if (typeFilter) {
+        filtered = filtered.filter(e => e.type === typeFilter);
+    }
+    
+    // 3. Tri
+    filtered.sort((a, b) => {
+        if (sortOrder === 'nom') return a.nom.localeCompare(b.nom);
+        if (sortOrder === 'type') return a.type.localeCompare(b.type);
+        // Défaut ou 'createdAt' (plus récent d'abord)
+        return b.createdAt - a.createdAt; 
+    });
+
+    updateList(filtered);
+    updateMapMarkers(filtered.map(e => e.id));
+    updateStats(filtered.length);
+}
+
+/**
+ * Met à jour la liste latérale avec les entrées filtrées/triées
+ */
+function updateList(filteredEntries){
+  const container = document.getElementById('locationsList'); container.innerHTML='';
+  const items = filteredEntries.slice(0, 50); // Limiter à 50 pour la performance
+
+  if(items.length === 0){ container.innerHTML = '<div class="muted text-center p-1" style="text-align:center;">لا توجد نتائج مطابقة</div>'; return; }
+  
+  items.forEach(e=>{
+    const div = document.createElement('div'); 
+    div.className='location-item';
+    div.setAttribute('data-id', e.id);
+    div.onclick = (event)=> { 
+        if (!event.target.closest('.location-actions button')) { // Ignorer si clique sur un bouton
+            centerOn(e.lat,e.lng); 
+            openPopupForEntry(e.id); 
+        }
+    };
+    
+    const img = document.createElement('img'); 
+    img.src = e.photo || 'https://via.placeholder.com/400x240?text=No+Image';
+    
+    const typeIcon = getTreeIconClass(e.type);
+    
+    const meta = document.createElement('div'); meta.className='meta';
+    meta.innerHTML = `
+      <h4>
+        <i class="${typeIcon} type-icon"></i> ${escapeHtml(e.type)}
+      </h4>
+      <p>${escapeHtml(e.nom)} — ${escapeHtml(e.adresse||'غير محدد')}</p>
+      <small class="muted">أُضيف في: ${e.date || '—'}</small>
+    `;
+
+    const actions = document.createElement('div'); actions.className='location-actions';
+    actions.innerHTML = `
+        <button class="btn icon-only primary" title="تعديل" onclick="openEditModal('${e.id}')">
+            <i class="fas fa-edit"></i>
+        </button>
+        <button class="btn icon-only danger" title="حذف" onclick="removeEntry('${e.id}')">
+            <i class="fas fa-trash-alt"></i>
+        </button>
+    `;
+
+    div.appendChild(img); 
+    div.appendChild(meta); 
+    div.appendChild(actions);
+    container.appendChild(div);
+  });
+}
+
+/**
+ * Met à jour la visibilité des marqueurs sur la carte.
+ */
+function updateMapMarkers(visibleIds) {
+    markerCluster.clearLayers();
+    entries.forEach(entry => {
+        if (visibleIds.includes(entry.id)) {
+            addEntryToMap(entry);
+        }
+    });
+}
+
+
+/* --------------------------------- */
+/* Gestion UX/UI Mobile (Bottom Sheet) */
+/* --------------------------------- */
+
+function toggleSidebar(visible, initialPanel = 'form-panel') {
+    const sidebar = document.getElementById('sidebar');
+    const isMobile = window.matchMedia('(max-width: 1024px)').matches;
+
+    if (!isMobile) return; 
+    
+    if (visible) {
+        sidebar.classList.add('visible');
+        switchPanel(initialPanel); 
+    } else {
+        sidebar.classList.remove('visible');
+    }
+}
+
+function switchPanel(targetId, clickedElement = null) {
+    const panels = document.querySelectorAll('.mobile-panel');
+    const navItems = document.querySelectorAll('.mobile-nav-item');
+
+    panels.forEach(panel => {
+        panel.style.display = (panel.id === targetId) ? 'block' : 'none';
+    });
+
+    navItems.forEach(item => {
+        item.classList.remove('active');
+    });
+
+    if (clickedElement) {
+        clickedElement.classList.add('active');
+    } else {
+        const matchingNav = document.querySelector(`.mobile-nav-item[data-target="${targetId}"]`);
+        if (matchingNav) matchingNav.classList.add('active');
+    }
+    
+    // Assurer la mise à jour des données lors du changement vers l'onglet List/Stats
+    if (targetId === 'list-panel' || targetId === 'stats-panel') {
+        applyFiltersAndSort();
+    }
+}
+
+
+/* --------------------------------- */
+/* Outils de Carte                   */
+/* --------------------------------- */
+function fitAllMarkers(){
+  const layers = markerCluster.getLayers();
+  if(layers.length === 0) { toast('لا توجد مساهمات لعرضها على الخريطة.', 'alert'); return; }
+  const bounds = L.latLngBounds(layers.map(m=>m.getLatLng()));
+  map.fitBounds(bounds.pad(0.25));
+}
+function zoomToAlgeria(){ 
+    if(geojsonBounds) map.fitBounds(geojsonBounds.pad(0.02)); 
+    else map.setView(ALGERIA_CENTER,5); 
+}
+let heatOn=false;
+function toggleHeatmap(){
+  heatOn = !heatOn;
+  const toggleBtn = document.getElementById('toggleHeat');
+  if(heatOn){
+    const pts = entries.map(e=>[e.lat, e.lng, 0.6]);
+    heatLayer.setLatLngs(pts);
+    heatLayer.addTo(map);
+    toggleBtn.classList.add('active');
+    toast('خريطة الحرارة مفعلة');
+  } else {
+    map.removeLayer(heatLayer);
+    toggleBtn.classList.remove('active');
+    toast('خريطة الحرارة معطلة');
+  }
+}
+let dark=false;
+function toggleStyle(){
+  dark = !dark;
+  const toggleBtn = document.getElementById('toggleStyle');
+  if(dark){ 
+      map.removeLayer(tileDefault); 
+      tileToner.addTo(map); 
+      toast('سمة داكنة', 'alert'); 
+      toggleBtn.classList.add('active');
+  }
+  else { 
+      map.removeLayer(tileToner); 
+      tileDefault.addTo(map); 
+      toast('سمة افتراضية'); 
+      toggleBtn.classList.remove('active');
+  }
+}
+
+
+/* --------------------------------- */
+/* Import/Export                     */
+/* --------------------------------- */
+function exportData(){
+  const blob = new Blob([JSON.stringify(entries, null, 2)], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href = url; a.download = 'algerie_verte_export.json'; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+  toast('تم تصدير البيانات بنجاح.', 'success');
+}
+function importData(evt){
+  const f = evt.target.files[0]; if(!f) return;
+  const r = new FileReader();
+  r.onload = e => {
+    try{
+      const parsed = JSON.parse(e.target.result);
+      if(!Array.isArray(parsed)) throw new Error('تنسيق الملف غير صحيح.');
+      
+      let importedCount = 0;
+      parsed.forEach(p=>{ 
+        if(!p.id) p.id='imp_'+Date.now()+'_'+Math.random().toString(36).slice(2,6); 
+        // Vérifie si l'ID existe déjà (pour éviter les doublons lors de l'importation)
+        if(!entries.find(ex => ex.id === p.id)) {
+           entries.unshift(p); 
+           addEntryToMap(p); 
+           importedCount++;
+        }
+      });
+      saveToStorage(); 
+      applyFiltersAndSort(); 
+      toast(`✅ تم استيراد ${importedCount} مساهمة.`, 'success');
+      document.getElementById('importFile').value = ''; // Réinitialiser l'input file
+    }catch(err){ 
+        toast('خطأ في ملف الاستيراد: '+err.message, 'error'); 
+        document.getElementById('importFile').value = '';
+    }
+  };
+  r.readAsText(f);
+}
+function clearAllData(){
+  if(!confirm('هل تريد مسح كل البيانات المحفوظة محلياً؟ هذا الإجراء لا يمكن التراجع عنه!')) return;
+  entries=[]; saveToStorage(); markerCluster.clearLayers(); applyFiltersAndSort(); toast('تم مسح كل البيانات.', 'error');
+  if (tempMarker) { map.removeLayer(tempMarker); tempMarker = null; }
+}
+
+
+/* --------------------------------- */
+/* Initialisation                    */
+/* --------------------------------- */
+document.addEventListener('DOMContentLoaded', function(){
+  initMap();
+  
+  // NOUVEAU: Pré-remplir la liste des options de filtre de type
+  const typeFilterSelect = document.getElementById('typeFilter');
+  document.getElementById('type_arbre').querySelectorAll('option').forEach(option => {
+      if (option.value && option.value !== 'أخرى' && !typeFilterSelect.querySelector(`option[value="${option.value}"]`)) {
+          const newOption = option.cloneNode(true);
+          typeFilterSelect.appendChild(newOption);
+      }
+  });
+});
+</script>
+
+</body>
+</html>
