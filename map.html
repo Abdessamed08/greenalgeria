@@ -17,396 +17,522 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
 
 <style>
-  /* --------------------------------- */
-  /* 1. Variables de Design (Palette)  */
-  /* --------------------------------- */
-  :root{
-    /* Couleurs */
-    --color-primary: #1e88e5;       /* Bleu vif pour l'action */
-    --color-primary-dark: #0d47a1;
-    --color-secondary: #4caf50;     /* Vert pour le succès/ajout */
-    --color-secondary-dark: #388e3c;
-    --color-bg-light: #f7f9fc;      /* Arrière-plan général */
-    --color-bg-panel: #ffffff;      /* Fonds de panneaux */
-    --color-text-dark: #212529;     /* Texte principal */
-    --color-text-muted: #6c757d;    /* Texte secondaire */
-    --color-border: #e9ecef;        /* Bordures légères */
-    --color-danger: #ef5350;        /* Rouge pour les erreurs/suppression */
-    --color-success: #43a047;       /* Vert pour les messages de succès */
-    --color-warning: #ffb300;       /* Orange pour les alertes */
+/* --------------------------------- */
+/* 1. Variables de Design (Palette)  */
+/* --------------------------------- */
+:root{
+  --color-primary: #1e88e5;       /* Bleu vif pour l'action */
+  --color-primary-dark: #0d47a1;
+  --color-secondary: #4caf50;      /* Vert pour le succès/ajout */
+  --color-secondary-dark: #388e3c;
+  --color-bg-light: #f7f9fc;      /* Arrière-plan général */
+  --color-bg-panel: #ffffff;      /* Fonds de panneaux */
+  --color-text-dark: #212529;      /* Texte principal */
+  --color-text-muted: #6c757d;    /* Texte secondaire */
+  --color-border: #e9ecef;        /* Bordures légères */
+  --color-danger: #ef5350;        /* Rouge pour les erreurs/suppression */
+  --color-success: #43a047;        /* Vert pour les messages de succès */
+  --color-warning: #ffb300;        /* Orange pour les alertes */
 
-    /* Espace et Ombre */
-    --radius-default: 16px; 
-    --radius-small: 10px;
-    --spacing-unit: 20px; 
+  /* Espace et Ombre */
+  --radius-default: 16px;
+  --radius-small: 10px;
+  --spacing-unit: 20px;
 
-    --shadow-default: 0 2px 8px rgba(0, 0, 0, 0.04); 
-    --shadow-panel-hover: 0 6px 16px rgba(0, 0, 0, 0.08); 
-    --shadow-heavy: 0 10px 25px rgba(0, 0, 0, 0.15);
-    --glass-bg: rgba(255, 255, 255, 0.85); 
-    --color-hover-bg: #f2f5f7; 
+  --shadow-default: 0 2px 8px rgba(0, 0, 0, 0.04);
+  --shadow-panel-hover: 0 6px 16px rgba(0, 0, 0, 0.08);
+  --shadow-heavy: 0 10px 25px rgba(0, 0, 0, 0.15);
+  --glass-bg: rgba(255, 255, 255, 0.85);
+  --color-hover-bg: #f2f5f7;
 
-    /* Typographie */
-    --font-primary: 'Cairo', 'Noto Sans Arabic', sans-serif;
-  }
+  /* Typographie */
+  --font-primary: 'Cairo', 'Noto Sans Arabic', sans-serif;
+  --transition-speed: 0.3s;
+}
 
-  /* Keyframes */
-  @keyframes pulse {
-    0% { transform: scale(1); opacity: 1; }
-    50% { transform: scale(1.1); opacity: 0.8; }
-    100% { transform: scale(1); opacity: 1; }
-  }
-  @keyframes fadein {
-    from { opacity: 0; transform: translateY(10px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
+/* Keyframes */
+@keyframes pulse {
+  0% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.1); opacity: 0.8; }
+  100% { transform: scale(1); opacity: 1; }
+}
+@keyframes fadein {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
 
-  /* --------------------------------- */
-  /* 2. Base et Réinitialisation     */
-  /* --------------------------------- */
-  *, *::before, *::after {
-    box-sizing: border-box;
-    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); /* Transition plus douce */
-  }
-  html, body {
-    height: 100%;
-    margin: 0;
-    font-family: var(--font-primary);
-    background: var(--color-bg-light);
-    color: var(--color-text-dark);
-    -webkit-font-smoothing: antialiased;
-    direction: rtl; 
-    font-size: 16px;
-  }
-  h1, h2, h3, h4, h5, h6 {
-    font-weight: 800;
-    margin: 0;
-    color: var(--color-text-dark);
-  }
-  .required { color: var(--color-danger); }
-  .muted { color: var(--color-text-muted); font-size: 0.85rem; font-weight: 400; }
+/* Marker Icon Styles */
+.tree-marker-icon {
+  background: none !important;
+  border: none !important;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  color: var(--color-secondary-dark); /* Couleur de l'arbre */
+  text-shadow: 0 0 5px rgba(0,0,0,0.2);
+}
+.tree-marker-icon i {
+  background: var(--color-bg-panel);
+  padding: 8px;
+  border-radius: 50%;
+  box-shadow: var(--shadow-default);
+  border: 3px solid var(--color-secondary);
+}
+.temp-marker-icon i {
+  color: var(--color-primary);
+  font-size: 2rem;
+  animation: pulse 1s infinite;
+}
 
-  /* --------------------------------- */
-  /* 3. Structure de l'Application     */
-  /* --------------------------------- */
-  .app {
-    display: grid;
-    grid-template-columns: 400px 1fr;
-    gap: var(--spacing-unit);
-    padding: var(--spacing-unit);
-    height: 100vh;
-    box-sizing: border-box;
-  }
+/* --------------------------------- */
+/* 2. Base et Réinitialisation       */
+/* --------------------------------- */
+*, *::before, *::after {
+  box-sizing: border-box;
+  transition: all var(--transition-speed) cubic-bezier(0.4, 0, 0.2, 1);
+}
+html, body {
+  height: 100%;
+  margin: 0;
+  font-family: var(--font-primary);
+  background: var(--color-bg-light);
+  color: var(--color-text-dark);
+  -webkit-font-smoothing: antialiased;
+  direction: rtl;
+  font-size: 16px;
+}
+h1, h2, h3, h4, h5, h6 {
+  font-weight: 800;
+  margin: 0;
+  color: var(--color-text-dark);
+}
+.required { color: var(--color-danger); }
+.muted { color: var(--color-text-muted); font-size: 0.85rem; font-weight: 400; }
 
-  .sidebar {
-    background: var(--color-bg-panel);
-    border-radius: var(--radius-default);
-    padding: var(--spacing-unit);
-    box-shadow: var(--shadow-default);
-    overflow-y: auto;
+/* --------------------------------- */
+/* 3. Structure de l'Application     */
+/* --------------------------------- */
+.app {
+  display: grid;
+  grid-template-columns: 400px 1fr;
+  gap: var(--spacing-unit);
+  padding: var(--spacing-unit);
+  height: 100vh;
+  box-sizing: border-box;
+}
+.row { display: flex; gap: 10px; }
+.row .col { flex: 1; }
+
+.sidebar {
+  background: var(--color-bg-panel);
+  border-radius: var(--radius-default);
+  padding: var(--spacing-unit);
+  box-shadow: var(--shadow-default);
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  z-index: 500;
+}
+.mapwrap {
+  position: relative;
+  border-radius: var(--radius-default);
+  overflow: hidden;
+  box-shadow: var(--shadow-default);
+}
+#map {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+}
+
+/* --------------------------------- */
+/* 4. Brand & Header                 */
+/* --------------------------------- */
+.brand {
+  display: flex; align-items: center; gap: 15px; margin-bottom: var(--spacing-unit);
+  padding-bottom: 15px; border-bottom: 1px solid var(--color-border);
+}
+.brand .logo {
+  width: 50px; height: 50px; border-radius: 50%;
+  background: linear-gradient(135deg, var(--color-primary), var(--color-primary-dark));
+  display: flex; align-items: center; justify-content: center;
+  color: #fff; font-weight: 800; font-size: 20px;
+  box-shadow: 0 4px 10px rgba(30, 136, 229, 0.3);
+}
+.brand h1 { font-size: 1.4rem; font-weight: 800; }
+.brand p { margin-top: 4px; color: var(--color-text-muted); font-size: 0.85rem; }
+
+/* --------------------------------- */
+/* 5. Panneaux et Formulaires        */
+/* --------------------------------- */
+.panel {
+  background: var(--color-bg-panel);
+  padding: 18px;
+  border-radius: var(--radius-default);
+  border: 1px solid var(--color-border);
+  margin-bottom: 18px;
+  box-shadow: var(--shadow-default);
+}
+.panel h3 {
+  font-size: 1.3rem; font-weight: 800; margin-bottom: 18px !important;
+  border-bottom: 3px solid var(--color-primary);
+  padding-bottom: 5px; width: fit-content;
+}
+.field { margin-bottom: 18px; display: flex; flex-direction: column; gap: 6px; }
+.field label { font-size: 0.95rem; color: var(--color-text-dark); font-weight: 700; }
+
+/* Inputs */
+input[type="text"], select, textarea, input[type="date"], input[type="file"], input[type="number"] {
+  padding: 12px; border-radius: var(--radius-small);
+  border: 1px solid var(--color-border); font-size: 1rem;
+  font-family: var(--font-primary); background-color: var(--color-bg-light);
+  box-shadow: inset 2px 2px 5px rgba(0, 0, 0, 0.04);
+}
+input[type="text"]:focus, select:focus, textarea:focus, input[type="date"]:focus, input[type="number"]:focus {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(30, 136, 229, 0.15), inset 2px 2px 5px rgba(0, 0, 0, 0.04);
+  outline: none; background-color: var(--color-bg-panel);
+}
+input[type="file"] { padding: 8px 12px; } /* Ajustement pour le type file */
+
+.location-group .coords-inputs { display: flex; gap: 10px; }
+.location-group .coords-inputs input { flex: 1; text-align: center; font-weight: 700; }
+.location-group .muted { margin-top: 5px; display: block; }
+
+.preview {
+  width: 100%; height: 160px; object-fit: cover;
+  border-radius: var(--radius-small); border: 2px dashed var(--color-border);
+  margin-top: 10px !important; background-color: var(--color-hover-bg);
+}
+
+/* Validation message */
+#formMessage, .toast {
+  font-weight: 700; animation: fadein 0.3s;
+  padding: 8px 12px; border-radius: var(--radius-small);
+}
+
+/* --------------------------------- */
+/* 6. Boutons (Buttons)              */
+/* --------------------------------- */
+.form-button-group { display: flex; gap: 8px; margin-top: 10px; align-items: center; }
+.btn {
+  display: inline-flex; align-items: center; justify-content: center;
+  gap: 8px; padding: 10px 16px; border-radius: var(--radius-small);
+  border: 0; cursor: pointer; font-weight: 700; font-size: 0.95rem;
+  text-decoration: none; user-select: none; white-space: nowrap;
+  line-height: 1.2;
+}
+.btn.primary { background: var(--color-primary); color: #fff; box-shadow: 0 4px 10px rgba(30, 136, 229, 0.2); }
+.btn.primary:hover { background: var(--color-primary-dark); box-shadow: 0 6px 12px rgba(30, 136, 229, 0.3); }
+.btn.secondary { background: var(--color-secondary); color: #fff; }
+.btn.secondary:hover { background: var(--color-secondary-dark); }
+.btn[type="submit"] { flex-grow: 1; }
+.btn[type="submit"]:disabled {
+  background: #e9ecef; color: #aeb4b9; cursor: not-allowed;
+  box-shadow: none; pointer-events: none; opacity: 0.6;
+}
+.btn.danger { background: var(--color-danger); color: #fff; }
+.btn.danger:hover { background: #c62828; }
+.btn.icon-only { width: 36px; height: 36px; padding: 0; font-size: 1rem; border-radius: 50%; }
+
+/* --------------------------------- */
+/* 7. Statistiques et Recherche      */
+/* --------------------------------- */
+.stat-grid {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 15px;
+}
+.stat-item {
+  padding: 18px 10px; border-radius: var(--radius-default);
+  background: var(--color-bg-panel); border: 1px solid var(--color-border);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
+}
+.stat-item strong { font-weight: 800; font-size: 1.6rem; display: block; line-height: 1.2; margin-bottom: 4px; }
+
+.filter-group {
+    display: flex; gap: 8px; margin-top: 15px; align-items: center;
+    flex-wrap: wrap; /* Pour le mobile */
+}
+.filter-group input, .filter-group select {
+    flex: 1; min-width: 150px;
+}
+
+/* --------------------------------- */
+/* 8. Liste des Localisations        */
+/* --------------------------------- */
+.list-title {
+  display: flex; justify-content: space-between; align-items: center;
+  margin-bottom: 15px; padding-bottom: 5px; border-bottom: 1px solid var(--color-border);
+}
+#locationsList { max-height: 400px; overflow-y: auto; padding-left: 5px; }
+
+.location-item {
+  display: flex; gap: 10px; padding: 12px; border-radius: var(--radius-small);
+  border: 1px solid var(--color-border); align-items: center;
+  background: var(--color-bg-panel); margin-bottom: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.03); animation: fadein 0.3s;
+  cursor: pointer; /* Le curseur indique qu'on peut cliquer sur tout l'élément */
+}
+.location-item:hover {
+  background: var(--color-hover-bg); border-color: var(--color-primary);
+  transform: translateY(-2px); box-shadow: var(--shadow-panel-hover);
+}
+.location-item img {
+  width: 60px; height: 60px; border-radius: 50%; object-fit: cover; border: 1px solid var(--color-border);
+}
+.location-item .meta { flex: 1; }
+.location-item h4 { margin: 0; font-size: 1rem; font-weight: 800; }
+.location-item .type-icon { color: var(--color-secondary); font-size: 1.1rem; margin-left: 8px; }
+.location-item p { margin: 2px 0 0 0; font-size: 0.9rem; color: var(--color-text-muted); }
+
+/* Groupe d'actions dans la liste */
+.location-actions {
+    display: flex; gap: 6px; align-items: center;
+}
+.location-actions .btn, .location-actions button {
+    cursor: pointer;
+}
+
+
+/* Fiche Détaillée (Side Panel Detail) */
+#detail-panel {
     display: flex;
     flex-direction: column;
-    z-index: 500;
-  }
-
-  .mapwrap {
-    position: relative;
-    border-radius: var(--radius-default);
-    overflow: hidden;
-    box-shadow: var(--shadow-default);
-  }
-  #map {
-    position: absolute;
-    inset: 0;
-    z-index: 1;
-  }
-
-  /* --------------------------------- */
-  /* 4. Brand & Header (Inchangé)      */
-  /* --------------------------------- */
-  .brand {
-    display: flex; align-items: center; gap: 15px; margin-bottom: var(--spacing-unit);
-    padding-bottom: 15px; border-bottom: 1px solid var(--color-border);
-  }
-  .brand .logo {
-    width: 50px; height: 50px; border-radius: 50%;
-    background: linear-gradient(135deg, var(--color-primary), var(--color-primary-dark));
-    display: flex; align-items: center; justify-content: center;
-    color: #fff; font-weight: 800; font-size: 20px;
-    box-shadow: 0 4px 10px rgba(30, 136, 229, 0.3);
-  }
-  .brand h1 { font-size: 1.4rem; font-weight: 800; }
-  .brand p { margin-top: 4px; color: var(--color-text-muted); font-size: 0.85rem; }
-
-  /* --------------------------------- */
-  /* 5. Panneaux et Formulaires        */
-  /* --------------------------------- */
-  .panel {
-    background: var(--color-bg-panel);
-    padding: 18px; 
-    border-radius: var(--radius-default);
+    gap: 15px;
+    padding: 0; 
+    border: none;
+    box-shadow: none;
+    margin: 0;
+}
+.detail-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding-bottom: 10px;
+    border-bottom: 3px solid var(--color-secondary);
+}
+.detail-header h3 {
+    flex-grow: 1;
+    font-size: 1.4rem;
+    color: var(--color-text-dark);
+    border: none;
+    padding: 0;
+    margin: 0 !important;
+}
+.detail-img {
+    width: 100%;
+    height: 200px;
+    object-fit: cover;
+    border-radius: var(--radius-small);
     border: 1px solid var(--color-border);
-    margin-bottom: 18px; 
-    box-shadow: var(--shadow-default); 
-  }
-  .panel h3 {
-    font-size: 1.3rem; font-weight: 800; margin-bottom: 18px !important;
-    border-bottom: 3px solid var(--color-primary);
-    padding-bottom: 5px; width: fit-content;
-  }
-  .field { margin-bottom: 18px; display: flex; flex-direction: column; gap: 6px; }
-  .field label { font-size: 0.95rem; color: var(--color-text-dark); font-weight: 700; }
-  
-  /* Inputs */
-  input[type="text"], select, textarea, input[type="date"], input[type="file"] {
-    padding: 12px; border-radius: var(--radius-small);
-    border: 1px solid var(--color-border); font-size: 1rem;
-    font-family: var(--font-primary); background-color: var(--color-bg-light);
-    box-shadow: inset 2px 2px 5px rgba(0, 0, 0, 0.04);
-  }
-  input[type="text"]:focus, select:focus, textarea:focus, input[type="date"]:focus {
-    border-color: var(--color-primary);
-    box-shadow: 0 0 0 3px rgba(30, 136, 229, 0.15), inset 2px 2px 5px rgba(0, 0, 0, 0.04);
-    outline: none; background-color: var(--color-bg-panel);
-  }
-  input[type="file"] { padding: 8px 12px; } /* Ajustement pour le type file */
-  
-  .location-group .coords-inputs { display: flex; gap: 10px; }
-  .location-group .coords-inputs input { flex: 1; text-align: center; font-weight: 700; }
-  .location-group .muted { margin-top: 5px; display: block; }
-
-  .preview {
-    width: 100%; height: 160px; object-fit: cover;
-    border-radius: var(--radius-small); border: 2px dashed var(--color-border);
-    margin-top: 10px !important; background-color: var(--color-hover-bg);
-  }
-
-  /* Validation message */
-  #formMessage, .toast {
-    font-weight: 700; animation: fadein 0.3s;
-  }
-
-  /* --------------------------------- */
-  /* 6. Boutons (Buttons)            */
-  /* --------------------------------- */
-  .form-button-group { display: flex; gap: 8px; margin-top: 10px; align-items: center; }
-  .btn {
-    display: inline-flex; align-items: center; justify-content: center;
-    gap: 8px; padding: 10px 16px; border-radius: var(--radius-small);
-    border: 0; cursor: pointer; font-weight: 700; font-size: 0.95rem;
-    text-decoration: none; user-select: none; white-space: nowrap;
-    line-height: 1.2;
-  }
-  .btn.primary { background: var(--color-primary); color: #fff; box-shadow: 0 4px 10px rgba(30, 136, 229, 0.2); }
-  .btn.primary:hover { background: var(--color-primary-dark); box-shadow: 0 6px 12px rgba(30, 136, 229, 0.3); }
-  .btn.ghost { background: transparent; border: 1px solid var(--color-border); color: var(--color-text-dark); }
-  .btn.ghost:hover { background: var(--color-hover-bg); border-color: #ced4da; }
-  .btn.secondary { background: var(--color-secondary); color: #fff; }
-  .btn.secondary:hover { background: var(--color-secondary-dark); }
-  .btn[type="submit"] { flex-grow: 1; }
-  .btn[type="submit"]:disabled {
-    background: #e9ecef; color: #aeb4b9; cursor: not-allowed;
-    box-shadow: none; pointer-events: none; opacity: 0.6; 
-  }
-  .btn.danger { background: var(--color-danger); color: #fff; }
-  .btn.danger:hover { background: #c62828; }
-  .btn.icon-only { width: 36px; height: 36px; padding: 0; font-size: 1rem; border-radius: 50%; }
+    margin-bottom: 15px;
+}
+.detail-meta-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px 0;
+    border-bottom: 1px dashed var(--color-border);
+}
+.detail-meta-item:last-child { border-bottom: none; }
+.detail-meta-item strong {
+    font-weight: 800;
+    color: var(--color-text-dark);
+}
+.detail-meta-item span {
+    color: var(--color-text-muted);
+    font-weight: 700;
+}
+.detail-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 20px;
+}
 
 
-  /* --------------------------------- */
-  /* 7. Statistiques et Recherche      */
-  /* --------------------------------- */
-  .stat-grid {
-    display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 15px;
-  }
-  .stat-item {
-    padding: 18px 10px; border-radius: var(--radius-default);
-    background: var(--color-bg-panel); border: 1px solid var(--color-border);
-    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05); 
-  }
-  .stat-item strong { font-weight: 800; font-size: 1.6rem; display: block; line-height: 1.2; margin-bottom: 4px; }
-  
-  .filter-group {
-      display: flex; gap: 8px; margin-top: 15px; align-items: center;
-      flex-wrap: wrap; /* Pour le mobile */
-  }
-  .filter-group input, .filter-group select {
-      flex: 1; min-width: 150px;
-  }
-
-  /* --------------------------------- */
-  /* 8. Liste des Localisations        */
-  /* --------------------------------- */
-  .list-title {
-    display: flex; justify-content: space-between; align-items: center;
-    margin-bottom: 15px; padding-bottom: 5px; border-bottom: 1px solid var(--color-border);
-  }
-  #locationsList { max-height: 400px; overflow-y: auto; padding-left: 5px; }
-
-  .location-item {
-    display: flex; gap: 10px; padding: 12px; border-radius: var(--radius-small);
-    border: 1px solid var(--color-border); align-items: center;
-    background: var(--color-bg-panel); margin-bottom: 8px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.03); animation: fadein 0.3s;
-  }
-  .location-item:hover {
-    background: var(--color-hover-bg); border-color: var(--color-primary);
-    transform: translateY(-2px); box-shadow: var(--shadow-panel-hover);
-  }
-  .location-item img {
-    width: 60px; height: 60px; border-radius: 50%; object-fit: cover; border: 1px solid var(--color-border);
-  }
-  .location-item .meta { flex: 1; }
-  .location-item h4 { margin: 0; font-size: 1rem; font-weight: 800; }
-  .location-item .type-icon { color: var(--color-secondary); font-size: 1.1rem; margin-left: 8px; }
-  .location-item p { margin: 2px 0 0 0; font-size: 0.9rem; color: var(--color-text-muted); }
-  
-  /* NOUVEAU: Groupe d'actions dans la liste */
-  .location-actions {
-      display: flex; gap: 6px; align-items: center;
-  }
-  .location-actions .btn {
-      padding: 6px; font-size: 0.9rem;
-  }
-
-  /* --------------------------------- */
-  /* 9. Contrôles de Carte et Toast    */
-  /* --------------------------------- */
-  .map-controls {
-    position: absolute; left: var(--spacing-unit); top: var(--spacing-unit);
-    z-index: 1000; background: var(--glass-bg); backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px); padding: 10px; border-radius: var(--radius-default);
-    display: flex; gap: 8px; align-items: center; box-shadow: var(--shadow-default);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-  }
-  .toggle {
-    padding: 8px 10px; border-radius: var(--radius-small); border: 0;
-    background: transparent; cursor: pointer; color: var(--color-text-dark); font-size: 1.1rem;
-  }
-  .toggle:hover { background: rgba(30, 136, 229, 0.1); color: var(--color-primary); }
-  .toggle.active { background: var(--color-primary) !important; color: #fff !important; }
-
-  /* Toast (Notifications) */
-  .toast {
-    position: fixed; left: 50%; transform: translateX(-50%); bottom: var(--spacing-unit);
-    padding: 12px 18px; border-radius: var(--radius-small); z-index: 2000;
-    font-weight: 700; box-shadow: var(--shadow-heavy); opacity: 0; pointer-events: none;
-    display: flex; align-items: center; gap: 10px;
-  }
-  .toast.success { background: var(--color-success); color: #fff; }
-  .toast.error { background: var(--color-danger); color: #fff; }
-  .toast.alert { background: var(--color-warning); color: var(--color-text-dark); }
+/* NOUVEAU: Style des Popups (Popup Elégante) */
+.leaflet-popup-content-wrapper {
+    padding: 0 !important;
+    border-radius: var(--radius-small) !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1) !important;
+    background: var(--color-bg-panel) !important;
+    display: block !important; /* Rétablit l'affichage de la popup */
+}
+.leaflet-popup-content {
+    margin: 0 !important;
+    padding: 15px !important;
+    font-family: var(--font-primary) !important;
+    min-width: 200px;
+    direction: rtl; /* Important pour l'arabe */
+}
+.elegant-popup h4 {
+    font-size: 1.1rem;
+    font-weight: 800;
+    margin-bottom: 5px;
+    color: var(--color-primary-dark);
+}
+.elegant-popup p {
+    font-size: 0.9rem;
+    color: var(--color-text-muted);
+    margin-bottom: 10px;
+}
+.elegant-popup .popup-btn {
+    width: 100%;
+    padding: 8px 10px;
+    margin-top: 5px;
+    background: var(--color-secondary);
+    color: #fff;
+    border: none;
+    border-radius: var(--radius-small);
+    cursor: pointer;
+    font-weight: 700;
+    transition: background 0.2s;
+    font-size: 0.9rem;
+}
+.elegant-popup .popup-btn:hover {
+    background: var(--color-secondary-dark);
+}
 
 
-  /* --------------------------------- */
-  /* 10. MODAL (NOUVEAU)               */
-  /* --------------------------------- */
-  .modal-overlay {
-    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-    background: rgba(0, 0, 0, 0.6); z-index: 3000;
-    display: none; justify-content: center; align-items: center;
-    opacity: 0; transition: opacity 0.3s ease-in-out;
-  }
-  .modal-overlay.open { display: flex; opacity: 1; }
-  .modal-content {
-    background: var(--color-bg-panel); border-radius: var(--radius-default);
-    width: 90%; max-width: 500px; box-shadow: var(--shadow-heavy);
-    transform: translateY(-50px); opacity: 0; transition: all 0.4s ease-in-out;
-    padding: 25px; position: relative;
-  }
-  .modal-overlay.open .modal-content { transform: translateY(0); opacity: 1; }
-  .modal-close {
-      position: absolute; top: 15px; left: 15px;
-      background: none; border: none; font-size: 1.2rem;
-      color: var(--color-text-muted); cursor: pointer;
-  }
-  .modal-content h3 {
-      border-bottom: 2px solid var(--color-secondary);
-      width: 100%; padding-bottom: 8px; margin-bottom: 20px !important;
-  }
+/* --------------------------------- */
+/* 9. Contrôles de Carte et Toast    */
+/* --------------------------------- */
+.map-controls {
+  position: absolute; left: var(--spacing-unit); top: var(--spacing-unit);
+  z-index: 1000; background: var(--glass-bg); backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px); padding: 10px; border-radius: var(--radius-default);
+  display: flex; gap: 8px; align-items: center; box-shadow: var(--shadow-default);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+.toggle {
+  padding: 8px 10px; border-radius: var(--radius-small); border: 0;
+  background: transparent; cursor: pointer; color: var(--color-text-dark); font-size: 1.1rem;
+}
+.toggle:hover { background: rgba(30, 136, 229, 0.1); color: var(--color-primary); }
+.toggle.active { background: var(--color-primary) !important; color: #fff !important; }
+
+/* Toast (Notifications) */
+.toast {
+  position: fixed; left: 50%; transform: translateX(-50%); bottom: var(--spacing-unit);
+  padding: 12px 18px; border-radius: var(--radius-small); z-index: 2000;
+  font-weight: 700; box-shadow: var(--shadow-heavy); opacity: 0; pointer-events: none;
+  display: flex; align-items: center; gap: 10px;
+}
+.toast.success { background: var(--color-success); color: #fff; }
+.toast.error { background: var(--color-danger); color: #fff; }
+.toast.alert { background: var(--color-warning); color: var(--color-text-dark); }
 
 
-  /* --------------------------------- */
-  /* 11. Responsive Design (Mobile)    */
-  /* --------------------------------- */
-  @media(max-width: 1024px){ 
-    .app {
-      grid-template-columns: 1fr; padding: 0; height: 100vh; display: block;
-    }
-    .mapwrap {
-      height: 100vh; border-radius: 0; box-shadow: none;
-    }
-    .sidebar {
-      position: fixed; left: 0; right: 0; bottom: 0;
-      top: 25vh; /* Laisser plus de carte visible */
-      height: 75vh;
-      min-height: 400px;
-      max-height: 90vh;
+/* --------------------------------- */
+/* 10. MODAL                         */
+/* --------------------------------- */
+.modal-overlay {
+  position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+  background: rgba(0, 0, 0, 0.6); z-index: 3000;
+  display: none; justify-content: center; align-items: center;
+  opacity: 0; transition: opacity var(--transition-speed) ease-in-out;
+}
+.modal-overlay.open { display: flex; opacity: 1; }
+.modal-content {
+  background: var(--color-bg-panel); border-radius: var(--radius-default);
+  width: 90%; max-width: 500px; box-shadow: var(--shadow-heavy);
+  transform: translateY(-50px); opacity: 0; transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  padding: 25px; position: relative;
+}
+.modal-overlay.open .modal-content { transform: translateY(0); opacity: 1; }
+.modal-close {
+    position: absolute; top: 15px; left: 15px;
+    background: none; border: none; font-size: 1.2rem;
+    color: var(--color-text-muted); cursor: pointer;
+}
+.modal-content h3 {
+    border-bottom: 2px solid var(--color-secondary);
+    width: 100%; padding-bottom: 8px; margin-bottom: 20px !important;
+}
+
+
+/* --------------------------------- */
+/* 11. Responsive Design (Mobile)    */
+/* --------------------------------- */
+@media(max-width: 1024px){
+  .app {
+    grid-template-columns: 1fr; padding: 0; height: 100vh; display: block;
+  }
+  .mapwrap {
+    height: 100vh; border-radius: 0; box-shadow: none;
+  }
+  .sidebar {
+    position: fixed; left: 0; right: 0; bottom: 0;
+    top: 25vh; /* Laisser plus de carte visible */
+    height: 75vh;
+    min-height: 400px;
+    max-height: 90vh;
+    border-top-left-radius: var(--radius-default);
+    border-top-right-radius: var(--radius-default);
+    border-bottom-left-radius: 0; border-bottom-right-radius: 0;
+    padding: 0; box-shadow: var(--shadow-heavy); z-index: 1500;
+    transform: translateY(100%); visibility: hidden;
+    overflow-y: hidden;
+    transition: transform var(--transition-speed) ease-out, visibility 0s linear var(--transition-speed);
+  }
+  .sidebar.visible {
+      transform: translateY(0); visibility: visible;
+      transition: transform var(--transition-speed) ease-out;
+  }
+
+  .sidebar-content {
+      padding: 0 var(--spacing-unit);
+      overflow-y: auto;
+      flex-grow: 1;
+      padding-bottom: 80px; /* Espace pour ne pas cacher le bas */
+  }
+  .brand, #desktop-footer { display: none; } /* Masquer éléments desktop */
+
+  /* Barre de navigation/Onglets Mobile */
+  .mobile-nav {
+      display: flex; justify-content: space-around; align-items: center;
+      padding: 10px 0; border-bottom: 1px solid var(--color-border);
+      background: var(--color-bg-panel);
       border-top-left-radius: var(--radius-default);
       border-top-right-radius: var(--radius-default);
-      border-bottom-left-radius: 0; border-bottom-right-radius: 0;
-      padding: 0; box-shadow: var(--shadow-heavy); z-index: 1500;
-      transform: translateY(100%); visibility: hidden;
-      overflow-y: hidden;
-    }
-    .sidebar.visible {
-        transform: translateY(0); visibility: visible;
-    }
-    
-    .sidebar-content {
-        padding: 0 var(--spacing-unit);
-        overflow-y: auto;
-        flex-grow: 1;
-        padding-bottom: 80px; /* Espace pour ne pas cacher le bas */
-    }
-    .brand, #desktop-footer { display: none; } /* Masquer éléments desktop */
-    
-    /* Barre de navigation/Onglets Mobile */
-    .mobile-nav {
-        display: flex; justify-content: space-around; align-items: center;
-        padding: 10px 0; border-bottom: 1px solid var(--color-border);
-        background: var(--color-bg-panel);
-        border-top-left-radius: var(--radius-default);
-        border-top-right-radius: var(--radius-default);
-        position: sticky; top: 0; z-index: 10;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.03);
-    }
-    .mobile-nav-item {
-        flex: 1; text-align: center; padding: 10px 0; cursor: pointer;
-        font-weight: 700; color: var(--color-text-muted);
-        border-bottom: 3px solid transparent; font-size: 0.9rem;
-    }
-    .mobile-nav-item.active { color: var(--color-primary); border-color: var(--color-primary); }
-
-    /* Floating Action Button (FAB) */
-    .fab-button {
-        display: flex; position: fixed; bottom: 20px; right: 20px; z-index: 1200;
-        width: 55px; height: 55px; background: var(--color-primary);
-        border-radius: 50%; color: white; font-size: 1.5rem;
-        align-items: center; justify-content: center; cursor: pointer;
-        box-shadow: var(--shadow-heavy);
-    }
-    .map-controls {
-        left: 50%; transform: translateX(-50%); top: 15px;
-        border-radius: 50px; padding: 6px 12px;
-    }
-    .sidebar-close {
-        position: absolute; top: 15px; left: 15px;
-        background: none; border: none; font-size: 1.5rem;
-        color: var(--color-text-muted); cursor: pointer; padding: 5px; z-index: 20;
-    }
-    .sidebar .panel {
-        border: none; box-shadow: none; padding: 10px 0; margin-bottom: 0;
-        border-top: 1px solid var(--color-border);
-    }
-    .sidebar .panel:first-child { border-top: none; }
-    
-    /* Correction de la modale sur mobile */
-    .modal-content {
-        max-width: 95%; margin: 20px;
-    }
-    #locationsList { max-height: 50vh; }
+      position: sticky; top: 0; z-index: 10;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.03);
   }
+  .mobile-nav-item {
+      flex: 1; text-align: center; padding: 10px 0; cursor: pointer;
+      font-weight: 700; color: var(--color-text-muted);
+      border-bottom: 3px solid transparent; font-size: 0.9rem;
+  }
+  .mobile-nav-item.active { color: var(--color-primary); border-color: var(--color-primary); }
+
+  /* Floating Action Button (FAB) */
+  .fab-button {
+      display: flex; position: fixed; bottom: 20px; right: 20px; z-index: 1200;
+      width: 55px; height: 55px; background: var(--color-primary);
+      border-radius: 50%; color: white; font-size: 1.5rem;
+      align-items: center; justify-content: center; cursor: pointer;
+      box-shadow: var(--shadow-heavy);
+  }
+  .map-controls {
+      left: 50%; transform: translateX(-50%); top: 15px;
+      border-radius: 50px; padding: 6px 12px;
+  }
+  .sidebar-close {
+      position: absolute; top: 15px; left: 15px;
+      background: none; border: none; font-size: 1.5rem;
+      color: var(--color-text-muted); cursor: pointer; padding: 5px; z-index: 20;
+  }
+  .sidebar .panel {
+      border: none; box-shadow: none; padding: 10px 0; margin-bottom: 0;
+      border-top: 1px solid var(--color-border);
+  }
+  .sidebar .panel:first-child { border-top: none; }
+
+  /* Correction de la modale sur mobile */
+  .modal-content {
+      max-width: 95%; margin: 20px;
+  }
+  #locationsList { max-height: 50vh; }
+}
 </style>
 </head>
 <body>
@@ -421,22 +547,23 @@
         <p>منصة متقدمة للمساهمات البيئية</p>
       </div>
     </div>
-    
+
     <button class="sidebar-close" onclick="toggleSidebar(false)" aria-label="Fermer la barre latérale"><i class="fas fa-times"></i></button>
 
     <div class="mobile-nav" id="mobileNav">
         <div class="mobile-nav-item active" data-target="form-panel" onclick="switchPanel('form-panel', this)"><i class="fas fa-plus-circle"></i> إضافة شجرة</div>
         <div class="mobile-nav-item" data-target="list-panel" onclick="switchPanel('list-panel', this)"><i class="fas fa-list-ul"></i> المساهمات</div>
         <div class="mobile-nav-item" data-target="stats-panel" onclick="switchPanel('stats-panel', this)"><i class="fas fa-chart-bar"></i> الإحصاءات</div>
+        <div class="mobile-nav-item" data-target="detail-panel" id="detailNav" style="display:none;" onclick="switchPanel('detail-panel', this)"><i class="fas fa-eye"></i> التفاصيل</div>
     </div>
-    
+
     <div class="sidebar-content">
         <div class="panel mobile-panel" id="form-panel">
           <h3 id="form-title">سجل شجرتك الجديدة</h3>
-          <form id="treeForm" onsubmit="event.preventDefault(); handleSubmit();">
+          <form id="treeForm" onsubmit="event.preventDefault(); handleSubmit();" aria-live="polite">
             <div class="field">
               <label for="nom">الاسم الكامل / الجهة <span class="required">*</span></label>
-              <input id="nom" name="nom" type="text" placeholder="مثال: محمد بن — جمعية زراعة" required />
+              <input id="nom" name="nom" type="text" placeholder="مثال: محمد بن — جمعية زراعة" required aria-required="true" />
             </div>
             <div class="field">
               <label for="adresse">المنطقة / العنوان (اختياري)</label>
@@ -445,7 +572,7 @@
             <div class="row">
               <div class="col field">
                 <label for="type_arbre">نوع الشجرة <span class="required">*</span></label>
-                <select id="type_arbre" required>
+                <select id="type_arbre" required aria-required="true">
                   <option value="">اختر نوع</option>
                   <option>صنوبر حلبي</option>
                   <option>أرز الأطلس</option>
@@ -455,6 +582,12 @@
                   <option>أخرى</option>
                 </select>
               </div>
+              <div class="col field">
+                <label for="quantite">عدد الأشجار المزروعة <span class="required">*</span></label>
+                <input id="quantite" type="number" min="1" placeholder="العدد" required aria-required="true" value="1" />
+              </div>
+            </div>
+            <div class="row">
               <div class="col field">
                 <label for="date_planted">تاريخ الزرع</label>
                 <input id="date_planted" type="date" />
@@ -468,17 +601,17 @@
             <div class="field location-group">
               <label>موقع الزرع <span class="required">*</span></label>
               <div class="row coords-inputs">
-                <input id="latitude" type="text" readonly placeholder="خط العرض" required />
-                <input id="longitude" type="text" readonly placeholder="خط الطول" required />
+                <input id="latitude" type="text" readonly placeholder="خط العرض" required aria-required="true" />
+                <input id="longitude" type="text" readonly placeholder="خط الطول" required aria-required="true" />
               </div>
-              <small class="muted">اضغط على الخريطة لتحديد الموقع أو استخدم زر تحديد الموقع</small>
+              <small class="muted">استخدم زر **تحديد موقعي** أدناه لوضع العلامة.</small>
             </div>
             <div class="form-button-group">
-              <button type="button" class="btn primary" onclick="handleGeolocation();"><i class="fas fa-location-arrow"></i> تحديد موقعي</button>
-              <button type="submit" class="btn secondary" title="أضف الشجرة" disabled>إضافة</button>
-              <button type="button" class="btn ghost small-action" onclick="resetForm();"><i class="fas fa-eraser"></i> مسح</button>
+              <button type="button" class="btn primary" onclick="handleGeolocation();" aria-label="تحديد موقعي الحالي"><i class="fas fa-location-arrow"></i> تحديد موقعي</button>
+              <button type="submit" class="btn secondary" title="أضف الشجرة" disabled aria-disabled="true">إضافة</button>
+              <button type="button" class="btn ghost small-action" onclick="resetForm();" aria-label="مسح الحقول"><i class="fas fa-eraser"></i> مسح</button>
             </div>
-            <div id="formMessage" class="muted"></div>
+            <div id="formMessage" class="muted" role="status"></div>
           </form>
         </div>
 
@@ -489,24 +622,28 @@
             <small class="muted" id="lastUpdate">—</small>
           </div>
           <div class="stat-grid">
+            <div class="stat-item" role="status" aria-live="polite">
+              <strong id="stat-total-trees">0</strong>
+              <div class="muted">مجموع الأشجار المزروعة</div>
+            </div>
             <div class="stat-item">
               <strong id="stat-count">0</strong>
-              <div class="muted">مجموع المشاركات</div>
+              <div class="muted">مجموع المساهمات (نقاط)</div>
             </div>
             <div class="stat-item">
               <strong id="stat-types">0</strong>
               <div class="muted">أنواع الأشجار</div>
             </div>
           </div>
-          
+
           <div class="filter-group">
-            <input id="quickSearch" placeholder="ابحث بالاسم، الموقع، أو النوع..." oninput="debouncedSearch()" />
-            <select id="sortOrder" onchange="applyFiltersAndSort()">
+            <input id="quickSearch" placeholder="ابحث بالاسم، الموقع، أو النوع..." oninput="debouncedSearch()" aria-label="بحث سريع" />
+            <select id="sortOrder" onchange="applyFiltersAndSort()" aria-label="ترتيب حسب">
                 <option value="createdAt">الأحدث أولاً</option>
                 <option value="nom">ترتيب أبجدي (الاسم)</option>
                 <option value="type">ترتيب أبجدي (النوع)</option>
             </select>
-            <select id="typeFilter" onchange="applyFiltersAndSort()">
+            <select id="typeFilter" onchange="applyFiltersAndSort()" aria-label="فلتر حسب نوع الشجرة">
                 <option value="">كل الأنواع</option>
                 <option>صنوبر حلبي</option>
                 <option>أرز الأطلس</option>
@@ -520,10 +657,10 @@
           <div class="panel-footer-actions" style="margin-top:20px;">
             <div class="list-title"><strong>إدارة البيانات</strong></div>
             <div class="file-actions" style="display:flex; gap:8px;">
-              <button class="btn ghost" onclick="exportData()"><i class="fas fa-download"></i> تصدير (JSON)</button>
-              <input id="importFile" type="file" accept="application/json" style="display:none" onchange="importData(event)">
-              <button class="btn ghost" onclick="document.getElementById('importFile').click()"><i class="fas fa-file-import"></i> استيراد</button>
-              <button class="btn danger" onclick="clearAllData()"><i class="fas fa-trash-alt"></i> مسح الكل</button>
+              <button class="btn ghost" onclick="exportData()" aria-label="تصدير البيانات بصيغة JSON"><i class="fas fa-download"></i> تصدير (JSON)</button>
+              <input id="importFile" type="file" accept="application/json" style="display:none" onchange="importData(event)" aria-label="استيراد ملف JSON">
+              <button class="btn ghost" onclick="document.getElementById('importFile').click()" aria-label="استيراد بيانات JSON"><i class="fas fa-file-import"></i> استيراد</button>
+              <button class="btn danger" onclick="clearAllData()" aria-label="مسح كل البيانات"><i class="fas fa-trash-alt"></i> مسح الكل</button>
             </div>
             <small class="muted" style="margin-top:8px; display:block;">تصدير/استيراد يحفظ بيانات الخريطة محليًا.</small>
           </div>
@@ -532,10 +669,60 @@
         <div class="panel panel-list mobile-panel" id="list-panel" style="display:none;">
           <h3 id="list-title">قائمة المساهمات</h3>
           <div class="list-title">
-            <strong>النتائج (${entries.length})</strong>
+            <strong>النتائج (<span id="resultsCount">0</span>)</strong>
             <small id="filterInfo">الكل</small>
           </div>
-          <div id="locationsList" style="flex-grow:1;"></div>
+          <div id="locationsList" style="flex-grow:1;" role="list"></div>
+        </div>
+
+        <div class="panel mobile-panel" id="detail-panel" style="display:none;">
+            <div class="detail-header">
+                <h3 id="detail-title">تفاصيل المساهمة</h3>
+                <button class="btn icon-only primary" title="تعديل" onclick="openEditModal(this.dataset.id)" data-id="" id="detailEditBtn">
+                    <i class="fas fa-edit"></i>
+                </button>
+                <button class="btn icon-only danger" title="حذف" onclick="removeEntry(this.dataset.id); switchPanel('list-panel');" data-id="" id="detailDeleteBtn">
+                    <i class="fas fa-trash-alt"></i>
+                </button>
+            </div>
+            
+            <img id="detail-photo" class="detail-img" alt="صورة للمساهمة" src="https://via.placeholder.com/400x200?text=No+Image" />
+
+            <div class="detail-meta-item">
+                <strong>نوع الشجرة</strong>
+                <span id="detail-type">-</span>
+            </div>
+            <div class="detail-meta-item">
+                <strong>العدد</strong>
+                <span id="detail-quantite">-</span>
+            </div>
+            <div class="detail-meta-item">
+                <strong>الزارع / الجهة</strong>
+                <span id="detail-nom">-</span>
+            </div>
+            <div class="detail-meta-item">
+                <strong>العنوان / المنطقة</strong>
+                <span id="detail-adresse">-</span>
+            </div>
+            <div class="detail-meta-item">
+                <strong>تاريخ الزرع</strong>
+                <span id="detail-date">-</span>
+            </div>
+            <div class="detail-meta-item">
+                <strong>أُضيف في</strong>
+                <span id="detail-createdAt">-</span>
+            </div>
+            <div class="detail-meta-item">
+                <strong>إحداثيات</strong>
+                <span id="detail-coords">-</span>
+            </div>
+            <div class="detail-actions">
+                <button class="btn primary" onclick="centerOn(parseFloat(document.getElementById('detail-lat').value), parseFloat(document.getElementById('detail-lng').value), 14);">
+                    <i class="fas fa-crosshairs"></i> توجيه الخريطة
+                </button>
+                <input type="hidden" id="detail-lat">
+                <input type="hidden" id="detail-lng">
+            </div>
         </div>
 
         <div class="meta-footer" id="desktop-footer">تعمل المنصة محلياً — لمشاركة النقاط بين مستخدمين تحتاج backend.</div>
@@ -546,30 +733,30 @@
     <div id="map" aria-label="خريطة الجزائر"></div>
 
     <div class="map-controls" role="toolbar" aria-label="أدوات الخريطة">
-      <button class="toggle" onclick="zoomToAlgeria()" title="ركز على الجزائر"><i class="fas fa-globe"></i></button>
-      <button class="toggle" onclick="fitAllMarkers()" title="اظهر كل العلامات"><i class="fas fa-layer-group"></i></button>
-      <button class="toggle" id="toggleHeat" onclick="toggleHeatmap()" title="تبديل خريطة الحرارة"><i class="fas fa-fire"></i></button>
-      <button class="toggle" id="toggleStyle" onclick="toggleStyle()" title="سمة الخريطة"><i class="fas fa-adjust"></i></button>
+      <button class="toggle" onclick="zoomToAlgeria()" title="ركز على الجزائر" aria-label="ركز على الجزائر"><i class="fas fa-globe"></i></button>
+      <button class="toggle" onclick="fitAllMarkers()" title="اظهر كل العلامات" aria-label="اظهر كل العلامات"><i class="fas fa-layer-group"></i></button>
+      <button class="toggle" id="toggleHeat" onclick="toggleHeatmap()" title="تبديل خريطة الحرارة" aria-pressed="false" aria-label="تبديل خريطة الحرارة"><i class="fas fa-fire"></i></button>
+      <button class="toggle" id="toggleStyle" onclick="toggleStyle()" title="سمة الخريطة" aria-pressed="false" aria-label="تبديل سمة الخريطة"><i class="fas fa-adjust"></i></button>
     </div>
 
-    <div class="fab-button" onclick="toggleSidebar(true, 'form-panel')">
+    <div class="fab-button" onclick="toggleSidebar(true, 'form-panel')" role="button" aria-label="إضافة شجرة جديدة">
         <i class="fas fa-plus"></i>
     </div>
 
-    <div class="toast" id="toast" style="opacity: 0;"></div>
+    <div class="toast" id="toast" style="opacity: 0;" role="alert" aria-live="assertive"></div>
   </main>
 
 </div>
 
 <div class="modal-overlay" id="editModalOverlay">
-    <div class="modal-content" id="editModalContent">
+    <div class="modal-content" id="editModalContent" role="dialog" aria-modal="true" aria-labelledby="modal-edit-title">
         <button class="modal-close" onclick="closeModal()" aria-label="إغلاق"><i class="fas fa-times"></i></button>
-        <h3>تعديل المساهمة</h3>
+        <h3 id="modal-edit-title">تعديل المساهمة</h3>
         <form id="editForm">
             <input type="hidden" id="editId">
             <div class="field">
                 <label for="editNom">الاسم الكامل / الجهة <span class="required">*</span></label>
-                <input id="editNom" type="text" required />
+                <input id="editNom" type="text" required aria-required="true" />
             </div>
             <div class="field">
                 <label for="editAdresse">المنطقة / العنوان (اختياري)</label>
@@ -578,7 +765,7 @@
             <div class="row">
                 <div class="col field">
                     <label for="editTypeArbre">نوع الشجرة <span class="required">*</span></label>
-                    <select id="editTypeArbre" required>
+                    <select id="editTypeArbre" required aria-required="true">
                         <option>صنوبر حلبي</option>
                         <option>أرز الأطلس</option>
                         <option>زيتون</option>
@@ -588,15 +775,21 @@
                     </select>
                 </div>
                 <div class="col field">
+                    <label for="editQuantite">عدد الأشجار المزروعة <span class="required">*</span></label>
+                    <input id="editQuantite" type="number" min="1" placeholder="العدد" required aria-required="true" />
+                </div>
+            </div>
+             <div class="row">
+                <div class="col field">
                     <label for="editDatePlanted">تاريخ الزرع</label>
                     <input id="editDatePlanted" type="date" />
                 </div>
-            </div>
+             </div>
              <div class="field location-group">
                 <label>موقع الزرع <span class="required">*</span></label>
                 <div class="row coords-inputs">
-                    <input id="editLatitude" type="text" readonly placeholder="خط العرض" required />
-                    <input id="editLongitude" type="text" readonly placeholder="خط الطول" required />
+                    <input id="editLatitude" type="text" readonly placeholder="خط العرض" required aria-required="true" />
+                    <input id="editLongitude" type="text" readonly placeholder="خط الطول" required aria-required="true" />
                 </div>
                 <small class="muted">يمكنك سحب العلامة على الخريطة لتغيير الموقع.</small>
             </div>
@@ -618,10 +811,10 @@
 /* --------------------------------- */
 const STORAGE_KEY = 'algerie_verte_v3';
 let map, markerCluster, heatLayer;
-let entries = []; 
+let entries = [];
 let tileDefault, tileToner;
 let geojsonBounds = null;
-let tempMarker = null; 
+let tempMarker = null;
 const ALGERIA_CENTER = [28.0339, 1.6596];
 const APPROX_BOUNDS = L.latLngBounds([18.9681, -8.6675], [37.0937, 11.9795]);
 let searchTimeout;
@@ -640,8 +833,9 @@ const debouncedSearch = debounce(applyFiltersAndSort, 300);
 /* Helper: toast avancé */
 function toast(msg, type='success', timeout=4000){
   const t = document.getElementById('toast');
-  t.textContent = msg; 
+  t.textContent = msg;
   t.className = `toast ${type}`;
+  t.setAttribute('role', 'alert');
   t.style.opacity='1';
   t.style.display='flex';
 
@@ -657,11 +851,19 @@ function escapeHtml(s){ if(!s) return ''; return s.replace(/[&<>"']/g, c=>({'&':
 /* Récupère l'icône Font Awesome basée sur le type */
 function getTreeIconClass(type) {
     type = type.toLowerCase();
-    if (type.includes('صنوبر') || type.includes('أرز') || type.includes('conifer')) return 'fas fa-tree'; 
-    if (type.includes('نخيل') || type.includes('palm')) return 'fas fa-leaf'; 
-    if (type.includes('زيتون') || type.includes('olivier')) return 'fas fa-seedling'; 
-    if (type.includes('بلوط') || type.includes('chêne')) return 'fas fa-tree'; 
-    return 'fas fa-seedling'; 
+    if (type.includes('صنوبر') || type.includes('أرز') || type.includes('conifer')) return 'fas fa-tree';
+    if (type.includes('نخيل') || type.includes('palm')) return 'fas fa-leaf';
+    if (type.includes('زيتون') || type.includes('olivier')) return 'fas fa-seedling';
+    if (type.includes('بلوط') || type.includes('chêne')) return 'fas fa-tree';
+    return 'fas fa-seedling';
+}
+
+/* Formate la date */
+function formatDate(timestamp) {
+    if (!timestamp) return 'غير محدد';
+    const date = new Date(timestamp);
+    const options = { year: 'numeric', month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' };
+    return date.toLocaleDateString('ar-EG', options);
 }
 
 /* --------------------------------- */
@@ -679,6 +881,7 @@ function initMap(){
 
   heatLayer = L.heatLayer([], {radius: 25, blur: 18, maxZoom: 11});
 
+  // Chargement de la frontière GeoJSON de l'Algérie pour les limites
   fetch('https://raw.githubusercontent.com/johan/world.geo.json/master/countries/DZA.geo.json').then(r=>{
     if(!r.ok) throw new Error('GeoJSON load failed');
     return r.json();
@@ -692,27 +895,8 @@ function initMap(){
     map.fitBounds(APPROX_BOUNDS);
     map.setMaxBounds(APPROX_BOUNDS);
   });
-
-  map.on('click', function(e){
-    const latlng = e.latlng;
-    const isEditing = document.getElementById('editModalOverlay').classList.contains('open');
-
-    // Mettre à jour le formulaire approprié (Ajout ou Édition)
-    const latEl = document.getElementById(isEditing ? 'editLatitude' : 'latitude');
-    const lngEl = document.getElementById(isEditing ? 'editLongitude' : 'longitude');
-
-    latEl.value = latlng.lat.toFixed(6);
-    lngEl.value = latlng.lng.toFixed(6);
     
-    setTempMarker(latlng, true);
-    
-    validateForm(); 
-    toast('تم وضع إحداثيات. اسحب العلامة لضبط الموقع.', 'alert');
-  });
-
   document.getElementById('treeForm').addEventListener('input', validateForm);
-
-  // Événements du formulaire d'édition
   document.getElementById('editForm').addEventListener('submit', handleEditSubmit);
   document.getElementById('editForm').addEventListener('input', validateEditForm);
 
@@ -726,16 +910,16 @@ function initMap(){
  */
 function setTempMarker(latlng, draggable) {
     if (tempMarker) map.removeLayer(tempMarker);
-    
+
     const tempIcon = L.divIcon({
         className: 'temp-marker-icon',
         html: '<i class="fas fa-map-pin"></i>',
-        iconSize: [40, 42], 
-        iconAnchor: [20, 40] 
+        iconSize: [40, 42],
+        iconAnchor: [20, 40]
     });
-    
+
     tempMarker = L.marker(latlng, { icon: tempIcon, draggable: draggable });
-    
+
     tempMarker.on('dragend', function(e) {
         const newLatlng = tempMarker.getLatLng();
         const isEditing = document.getElementById('editModalOverlay').classList.contains('open');
@@ -745,81 +929,153 @@ function setTempMarker(latlng, draggable) {
 
         latEl.value = newLatlng.lat.toFixed(6);
         lngEl.value = newLatlng.lng.toFixed(6);
-        
+
         if (isEditing) { validateEditForm(); } else { validateForm(); }
         toast('تم تحديث الإحداثيات عبر السحب', 'alert');
     });
-    
+
     tempMarker.addTo(map);
     map.setView(latlng, map.getZoom() < 10 ? 10 : map.getZoom());
 }
 
 /**
- * Ajout du marqueur d'arbre sur la carte avec Popup
+ * Ajout du marqueur d'arbre sur la carte (avec Popup élégante)
  */
-function addEntryToMap(entry, open=false){
-  
+function addEntryToMap(entry){
+
   const treeIconClass = getTreeIconClass(entry.type);
 
   const customIcon = L.divIcon({
-    className: 'tree-marker-icon', 
+    className: 'tree-marker-icon',
     html: `<i class="${treeIconClass}"></i>`,
     iconSize: [30, 42],
     iconAnchor: [15, 42],
     popupAnchor: [0, -36]
   });
 
-  const marker = L.marker([entry.lat, entry.lng], {icon: customIcon}); 
+  const marker = L.marker([entry.lat, entry.lng], {icon: customIcon});
 
-  // Popup HTML avec actions de gestion (Edition/Suppression)
-  const popupHtml = `
-    <div dir="rtl" style="min-width:240px; font-family:var(--font-primary);">
-      <h3 style="margin:0 0 5px 0; color:#1e88e5; border-bottom:1px solid #eee; padding-bottom:5px;">
-        <i class="${treeIconClass}" style="margin-left:5px;"></i> ${escapeHtml(entry.type)}
-      </h3>
-      <p style="margin:4px 0;">
-        <strong style="color:#212529;">الزارع:</strong> ${escapeHtml(entry.nom)}
-      </p>
-      ${entry.adresse ? `<p style="margin:4px 0; color:#6c757d;">
-        <strong style="color:#212529;">الموقع:</strong> ${escapeHtml(entry.adresse)}
-      </p>` : ''}
-      ${entry.date ? `<p style="margin:4px 0; color:#6c757d;">
-        <strong style="color:#212529;">تاريخ الزرع:</strong> ${entry.date.replace(/-/g, '/')}
-      </p>` : ''}
-      
-      <img src="${entry.photo || 'https://via.placeholder.com/320x180?text=No+Image'}" 
-            style="width:100%; height:120px; object-fit:cover; border-radius:8px; margin-top:10px; border:1px solid #ccc;" 
-            onerror="this.src='https://via.placeholder.com/320x180?text=No+Image'"/>
-            
-      <div style="display:flex;gap:6px;margin-top:12px">
-        <button onclick="centerOn(${entry.lat}, ${entry.lng})" class="btn small-action primary" style="border-radius:6px;border:0">
-            <i class="fas fa-crosshairs"></i> توجيه
+  // --- CONTENU DE LA POPUP ÉLÉGANTE ---
+  const popupContent = `
+    <div class="elegant-popup" dir="rtl">
+        <h4><i class="${treeIconClass}" style="margin-left:5px; color:var(--color-secondary);"></i> ${escapeHtml(entry.type)}</h4>
+        <p>العدد: ${entry.quantite} شجرة</p>
+        <button class="popup-btn" onclick="centerAndOpenPanel('${entry.id}')">
+            عرض التفاصيل <i class="fas fa-arrow-left" style="margin-right:5px;"></i>
         </button>
-        <button onclick="openEditModal('${entry.id}')" class="btn small-action ghost">
-            <i class="fas fa-edit"></i> تعديل
-        </button>
-      </div>
-    </div>`;
-  
-  marker.bindPopup(popupHtml);
+    </div>
+  `;
+  // ---------------------------------------------
+
+  marker.bindPopup(popupContent, {
+      closeButton: false, 
+      autoClose: true, 
+      closeOnClick: true,
+      // La taille maximale est ajustée par le CSS min-width: 200px
+  });
+
+  // Le clic sur le marqueur Ouvre la popup par défaut. 
+  // Sur mobile, on ferme la sidebar pour ne pas masquer la popup.
+  marker.on('click', function(){
+      const isMobile = window.matchMedia('(max-width: 1024px)').matches;
+      if (isMobile) { toggleSidebar(false); }
+  });
+
   marker._entryId = entry.id;
   markerCluster.addLayer(marker);
-  if(open) marker.openPopup();
 
   return marker;
 }
 
-function centerOn(lat,lng){ 
-    map.setView([lat,lng], 12); 
-    // Fermer le bottom sheet après l'action sur mobile
-    if (window.matchMedia('(max-width: 1024px)').matches) { toggleSidebar(false); }
+/**
+ * Centre la carte sur des coordonnées et ajuste le zoom
+ */
+function centerOn(lat,lng, zoomLevel=12){
+    map.setView([lat,lng], zoomLevel);
 }
 
-function openPopupForEntry(id){
-  let found = null;
-  markerCluster.eachLayer(l => { if(l._entryId === id) found = l; });
-  if(found) found.openPopup();
+/**
+ * Fonction combinée pour centrer et ouvrir le panneau de détail
+ * Utilisé par le bouton dans la popup et les actions de la liste.
+ */
+function centerAndOpenPanel(id) {
+    const entry = entries.find(x => x.id === id);
+    if (!entry) return;
+
+    centerOn(entry.lat, entry.lng, 15); 
+    showDetailPanel(id);
 }
+
+/**
+ * Trouve l'entrée et l'affiche dans le panneau de détail
+ */
+function showDetailPanel(id){
+    const entry = entries.find(x => x.id === id);
+    if (!entry) { toast('خطأ: لم يتم العثور على المساهمة', 'error'); return; }
+
+    const typeIcon = getTreeIconClass(entry.type);
+
+    // Mise à jour des boutons d'action
+    document.getElementById('detailEditBtn').dataset.id = entry.id;
+    document.getElementById('detailDeleteBtn').dataset.id = entry.id;
+
+    // Mise à jour du contenu
+    document.getElementById('detail-title').innerHTML = `<i class="${typeIcon}" style="margin-left:5px; color:var(--color-secondary);"></i> ${escapeHtml(entry.type)}`;
+    document.getElementById('detail-photo').src = entry.photo || 'https://via.placeholder.com/400x200?text=No+Image';
+    document.getElementById('detail-photo').onerror = function(){ this.src='https://via.placeholder.com/400x200?text=No+Image'; };
+
+    document.getElementById('detail-type').textContent = `${escapeHtml(entry.type)} ${entry.updatedAt ? '(معدّل)' : ''}`;
+    document.getElementById('detail-quantite').textContent = `${entry.quantite} شجرة`;
+    document.getElementById('detail-nom').textContent = escapeHtml(entry.nom);
+    document.getElementById('detail-adresse').textContent = escapeHtml(entry.adresse || 'غير محدد');
+    document.getElementById('detail-date').textContent = entry.date ? entry.date.replace(/-/g, '/') : 'غير محدد';
+    document.getElementById('detail-createdAt').textContent = formatDate(entry.createdAt);
+    document.getElementById('detail-coords').textContent = `${entry.lat.toFixed(6)}, ${entry.lng.toFixed(6)}`;
+    
+    // Pour l'action "Télécopie"
+    document.getElementById('detail-lat').value = entry.lat;
+    document.getElementById('detail-lng').value = entry.lng;
+
+    // Afficher le panneau de détail (et changer l'onglet sur mobile)
+    switchPanel('detail-panel');
+    toggleSidebar(true, 'detail-panel'); // Ouvre la barre latérale sur le détail si mobile
+    
+    // Fermer toutes les popups
+    map.closePopup();
+
+    // Assurer que le marqueur est visible et ouvrir sa *quickPopup* (optionnel)
+    let found = null;
+    markerCluster.eachLayer(l => { if(l._entryId === id) found = l; });
+    if(found) found.openPopup();
+}
+
+/**
+ * Fonction combinée pour centrer et ouvrir la popup (utilisée par la liste)
+ */
+function centerAndOpenPopup(id) {
+    const entry = entries.find(x => x.id === id);
+    if (!entry) return;
+    
+    // 1. Centrer la carte
+    centerOn(entry.lat, entry.lng, 15); 
+
+    // 2. Trouver le marqueur et ouvrir sa popup
+    let markerToOpen = null;
+    markerCluster.eachLayer(l => { 
+        if(l._entryId === id) {
+            markerToOpen = l;
+        }
+    });
+
+    if(markerToOpen) {
+        markerToOpen.openPopup();
+    }
+    
+    // Sur mobile, on ouvre la liste juste pour le contexte
+    const isMobile = window.matchMedia('(max-width: 1024px)').matches;
+    if (isMobile) { toggleSidebar(true, 'list-panel'); }
+}
+
 
 /* --------------------------------- */
 /* Gestion des Données (CRUD)        */
@@ -832,12 +1088,15 @@ function handleSubmit(){
   const nom = document.getElementById('nom').value.trim();
   const adresse = document.getElementById('adresse').value.trim();
   const type = document.getElementById('type_arbre').value;
+  const quantite = parseInt(document.getElementById('quantite').value);
   const lat = parseFloat(document.getElementById('latitude').value);
   const lng = parseFloat(document.getElementById('longitude').value);
   const date = document.getElementById('date_planted').value || null;
-  const photoFile = document.getElementById('photo').files[0];
+  const photoInput = document.getElementById('photo');
+  const photoFile = photoInput.files[0];
 
   if(!nom || !type){ showFormMessage('الاسم ونوع الشجرة مطلوبان', 'error'); return; }
+  if(isNaN(quantite) || quantite < 1){ showFormMessage('الرجاء تحديد عدد الأشجار (1 على الأقل)', 'error'); return; }
   if(isNaN(lat) || isNaN(lng)){ showFormMessage('المرجو وضع الإحداثيات', 'error'); return; }
 
   const checkBounds = geojsonBounds || APPROX_BOUNDS;
@@ -847,19 +1106,21 @@ function handleSubmit(){
   let photoUrl = null;
   if(photoFile) photoUrl = URL.createObjectURL(photoFile);
 
-  const entry = { id, nom, adresse, type, lat, lng, date, photo: photoUrl, createdAt:Date.now() };
+  const entry = { id, nom, adresse, type, quantite, lat, lng, date, photo: photoUrl, createdAt:Date.now() };
   entries.unshift(entry); // Ajout au début pour le "Plus récent"
   saveToStorage();
-  addEntryToMap(entry, true);
-  
+  addEntryToMap(entry);
+
   if (tempMarker) { map.removeLayer(tempMarker); tempMarker = null; }
   map.setView([lat, lng], 13);
 
   applyFiltersAndSort(); // Met à jour la liste et les stats
   showFormMessage('✅ تم إضافة الشجرة بنجاح!', 'success');
   resetForm();
-  validateForm(); 
-  toggleSidebar(false);
+  validateForm();
+  
+  // Afficher le détail de la nouvelle entrée
+  showDetailPanel(id);
 }
 
 /**
@@ -874,11 +1135,13 @@ function handleEditSubmit(e){
 
     const newLat = parseFloat(document.getElementById('editLatitude').value);
     const newLng = parseFloat(document.getElementById('editLongitude').value);
-    
+    const newQuantite = parseInt(document.getElementById('editQuantite').value);
+
     // Mettre à jour les propriétés
     entry.nom = document.getElementById('editNom').value.trim();
     entry.adresse = document.getElementById('editAdresse').value.trim();
     entry.type = document.getElementById('editTypeArbre').value;
+    entry.quantite = newQuantite;
     entry.date = document.getElementById('editDatePlanted').value || null;
     entry.lat = newLat;
     entry.lng = newLng;
@@ -888,14 +1151,15 @@ function handleEditSubmit(e){
     let markerToRemove = null;
     markerCluster.eachLayer(l => { if(l._entryId === id) markerToRemove = l; });
     if(markerToRemove) markerCluster.removeLayer(markerToRemove);
-    
+
     // Réinjecter le marqueur mis à jour
-    addEntryToMap(entry, true);
+    addEntryToMap(entry);
     centerOn(entry.lat, entry.lng);
 
     saveToStorage();
     applyFiltersAndSort();
     closeModal();
+    showDetailPanel(id); // Afficher la fiche de détail mise à jour
     toast('✅ تم تحديث المساهمة بنجاح.', 'success');
 }
 
@@ -910,23 +1174,21 @@ function removeEntry(id){
   let toRemove = null;
   markerCluster.eachLayer(l=>{ if(l._entryId===id) toRemove=l; });
   if(toRemove) markerCluster.removeLayer(toRemove);
-  applyFiltersAndSort(); 
+  applyFiltersAndSort();
   toast('تم حذف المساهمة.', 'error');
+  // Revenir à la liste après suppression
+  switchPanel('list-panel'); 
 }
 
 
 /* --------------------------------- */
 /* Modal d'édition et Formulaires    */
 /* --------------------------------- */
-
-/**
- * Ouvre la modale d'édition et pré-remplit les champs.
- */
 function openEditModal(id){
     const entry = entries.find(x => x.id === id);
     if (!entry) { toast('خطأ: لم يتم العثور على العنصر', 'error'); return; }
 
-    // Remplissage de la modale
+    // Remplissage de la modale (inchangé)
     document.getElementById('editId').value = entry.id;
     document.getElementById('editNom').value = entry.nom;
     document.getElementById('editAdresse').value = entry.adresse || '';
@@ -934,6 +1196,7 @@ function openEditModal(id){
     document.getElementById('editDatePlanted').value = entry.date || '';
     document.getElementById('editLatitude').value = entry.lat.toFixed(6);
     document.getElementById('editLongitude').value = entry.lng.toFixed(6);
+    document.getElementById('editQuantite').value = entry.quantite || 1; 
 
     // Initialiser le marqueur temporaire sur la carte
     setTempMarker(L.latLng(entry.lat, entry.lng), true);
@@ -944,45 +1207,34 @@ function openEditModal(id){
     toast('اسحب العلامة على الخريطة لتغيير الموقع.', 'alert');
 }
 
-/**
- * Ferme la modale d'édition.
- */
 function closeModal() {
     document.getElementById('editModalOverlay').classList.remove('open');
     if (tempMarker) { map.removeLayer(tempMarker); tempMarker = null; }
 }
+// ... (validateForm, validateEditForm, showFormMessage, resetForm, handleGeolocation restent inchangées)
 
-/**
- * Validation du formulaire d'ajout
- */
 function validateForm() {
     const nom = document.getElementById('nom').value.trim();
     const type = document.getElementById('type_arbre').value;
+    const quantite = parseInt(document.getElementById('quantite').value);
     const lat = document.getElementById('latitude').value;
     const lng = document.getElementById('longitude').value;
-    
-    const isValid = nom && type && !isNaN(parseFloat(lat)) && !isNaN(parseFloat(lng));
-    
-    document.querySelector('button[type="submit"]').disabled = !isValid;
+    const isQuantiteValid = !isNaN(quantite) && quantite >= 1;
+    const isValid = nom && type && isQuantiteValid && !isNaN(parseFloat(lat)) && !isNaN(parseFloat(lng));
+    document.querySelector('#treeForm button[type="submit"]').disabled = !isValid;
 }
 
-/**
- * Validation du formulaire d'édition
- */
 function validateEditForm() {
     const nom = document.getElementById('editNom').value.trim();
     const type = document.getElementById('editTypeArbre').value;
+    const quantite = parseInt(document.getElementById('editQuantite').value);
     const lat = document.getElementById('editLatitude').value;
     const lng = document.getElementById('editLongitude').value;
-
-    const isValid = nom && type && !isNaN(parseFloat(lat)) && !isNaN(parseFloat(lng));
-    
+    const isQuantiteValid = !isNaN(quantite) && quantite >= 1;
+    const isValid = nom && type && isQuantiteValid && !isNaN(parseFloat(lat)) && !isNaN(parseFloat(lng));
     document.getElementById('saveEditBtn').disabled = !isValid;
 }
 
-/**
- * Affiche le message de validation pour le formulaire d'ajout
- */
 function showFormMessage(text, type='success'){
   const el = document.getElementById('formMessage');
   el.textContent = text;
@@ -996,29 +1248,20 @@ function showFormMessage(text, type='success'){
   }, 4000);
 }
 
-/**
- * Réinitialise le formulaire d'ajout
- */
 function resetForm(){
   document.getElementById('treeForm').reset();
   document.getElementById('preview').style.display='none';
   document.getElementById('preview').src='';
-  document.getElementById('latitude').value=''; 
+  document.getElementById('latitude').value='';
   document.getElementById('longitude').value='';
+  document.getElementById('photo').value = '';
+  document.getElementById('quantite').value = '1';
   if (tempMarker) { map.removeLayer(tempMarker); tempMarker = null; }
   validateForm();
 }
 
-/* --------------------------------- */
-/* Services de Géolocalisation       */
-/* --------------------------------- */
-
-/**
- * Gère la géolocalisation de l'utilisateur
- */
 function handleGeolocation(){
   if(!navigator.geolocation){ showFormMessage('المتصفح لا يدعم الموقع', 'error'); return; }
-  
   const btn = document.querySelector('.form-button-group .btn.primary');
   const originalHtml = btn.innerHTML;
   btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري البحث...';
@@ -1028,16 +1271,13 @@ function handleGeolocation(){
     const latlng = L.latLng(pos.coords.latitude, pos.coords.longitude);
     document.getElementById('latitude').value = latlng.lat.toFixed(6);
     document.getElementById('longitude').value = latlng.lng.toFixed(6);
-    
-    setTempMarker(latlng, true); 
-    
+    setTempMarker(latlng, true);
     showFormMessage('تم تحديد الموقع بنجاح. يمكنك سحب العلامة لضبط الموقع.', 'success');
-    
     btn.innerHTML = originalHtml;
     btn.disabled = false;
     validateForm();
-  }, err=>{ 
-    showFormMessage('فشل في الحصول على الموقع. تحقق من أذونات المتصفح.', 'error'); 
+  }, err=>{
+    showFormMessage('فشل في الحصول على الموقع. تحقق من أذونات المتصفح.', 'error');
     btn.innerHTML = originalHtml;
     btn.disabled = false;
   }, { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 });
@@ -1047,7 +1287,6 @@ function handleGeolocation(){
 /* --------------------------------- */
 /* Gestion du Stockage & Statistiques*/
 /* --------------------------------- */
-
 function saveToStorage(){
   try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(entries)); }catch(e){ console.error(e); toast('فشل في الحفظ المحلي', 'error'); }
 }
@@ -1057,56 +1296,46 @@ function loadFromStorage(){
   if(raw){
     try{ entries = JSON.parse(raw); }catch(e){ console.warn('parse error',e); entries = []; }
   } else { entries = []; }
-  
-  // Initialiser les marqueurs
+  entries = entries.map(e => ({...e, quantite: parseInt(e.quantite) || 1}));
   markerCluster.clearLayers();
   entries.forEach(e=> addEntryToMap(e));
-
   applyFiltersAndSort();
 }
 
-/**
- * Mise à jour des compteurs de la barre latérale
- */
 function updateStats(filteredCount = entries.length){
+  const totalTrees = entries.reduce((sum, entry) => sum + (parseInt(entry.quantite) || 0), 0);
   document.getElementById('stat-count').textContent = entries.length;
-  const types = new Set(entries.map(e=>e.type)); 
+  document.getElementById('stat-total-trees').textContent = totalTrees.toLocaleString();
+  const types = new Set(entries.map(e=>e.type));
   document.getElementById('stat-types').textContent = types.size;
-  document.getElementById('lastUpdate').textContent = new Date().toLocaleString('fr-FR', {timeZone: 'Africa/Algiers'});
+  document.getElementById('lastUpdate').textContent = new Date().toLocaleString('ar-EG', {timeZone: 'Africa/Algiers'});
   document.getElementById('filterInfo').textContent = (filteredCount < entries.length) ? `(${filteredCount} نتيجة من ${entries.length})` : `الكل (${entries.length})`;
+  document.getElementById('resultsCount').textContent = filteredCount;
 }
 
 /* --------------------------------- */
 /* Filtres et Affichage de Liste     */
 /* --------------------------------- */
 
-/**
- * Applique les filtres et le tri, puis met à jour la liste et la carte
- */
 function applyFiltersAndSort(){
     let filtered = [...entries];
     const query = (document.getElementById('quickSearch').value || '').toLowerCase().trim();
     const typeFilter = document.getElementById('typeFilter').value;
     const sortOrder = document.getElementById('sortOrder').value;
 
-    // 1. Filtrage par recherche
     if (query) {
         filtered = filtered.filter(e => (
             e.nom + ' ' + (e.adresse || '') + ' ' + e.type
         ).toLowerCase().includes(query));
     }
-    
-    // 2. Filtrage par type
     if (typeFilter) {
         filtered = filtered.filter(e => e.type === typeFilter);
     }
-    
-    // 3. Tri
+
     filtered.sort((a, b) => {
         if (sortOrder === 'nom') return a.nom.localeCompare(b.nom);
         if (sortOrder === 'type') return a.type.localeCompare(b.type);
-        // Défaut ou 'createdAt' (plus récent d'abord)
-        return b.createdAt - a.createdAt; 
+        return b.createdAt - a.createdAt;
     });
 
     updateList(filtered);
@@ -1115,59 +1344,69 @@ function applyFiltersAndSort(){
 }
 
 /**
- * Met à jour la liste latérale avec les entrées filtrées/triées
+ * Met à jour la liste latérale (Le clic ouvre le panneau de détail)
  */
 function updateList(filteredEntries){
   const container = document.getElementById('locationsList'); container.innerHTML='';
-  const items = filteredEntries.slice(0, 50); // Limiter à 50 pour la performance
+  const items = filteredEntries.slice(0, 50);
 
   if(items.length === 0){ container.innerHTML = '<div class="muted text-center p-1" style="text-align:center;">لا توجد نتائج مطابقة</div>'; return; }
-  
+
   items.forEach(e=>{
-    const div = document.createElement('div'); 
+    const div = document.createElement('div');
     div.className='location-item';
     div.setAttribute('data-id', e.id);
-    div.onclick = (event)=> { 
-        if (!event.target.closest('.location-actions button')) { // Ignorer si clique sur un bouton
-            centerOn(e.lat,e.lng); 
-            openPopupForEntry(e.id); 
+    div.setAttribute('role', 'listitem');
+    div.setAttribute('tabindex', '0');
+    
+    // Le clic sur l'élément (pas sur les boutons d'action) ouvre la fiche de détail
+    div.onclick = (event)=> {
+        if (!event.target.closest('.location-actions button')) {
+            centerAndOpenPanel(e.id); // Centrer sur la contribution et ouvrir le détail
         }
     };
-    
-    const img = document.createElement('img'); 
+    div.onkeydown = (event) => {
+        if (event.key === 'Enter' || event.key === ' ') {
+            event.preventDefault();
+            centerAndOpenPanel(e.id); 
+        }
+    };
+
+
+    const img = document.createElement('img');
     img.src = e.photo || 'https://via.placeholder.com/400x240?text=No+Image';
-    
+
     const typeIcon = getTreeIconClass(e.type);
-    
+
     const meta = document.createElement('div'); meta.className='meta';
     meta.innerHTML = `
       <h4>
-        <i class="${typeIcon} type-icon"></i> ${escapeHtml(e.type)}
+        <i class="${typeIcon} type-icon"></i> ${escapeHtml(e.type)} (${e.quantite} شجرة)
       </h4>
       <p>${escapeHtml(e.nom)} — ${escapeHtml(e.adresse||'غير محدد')}</p>
-      <small class="muted">أُضيف في: ${e.date || '—'}</small>
+      <small class="muted">أُضيف في: ${formatDate(e.createdAt)}</small>
     `;
 
     const actions = document.createElement('div'); actions.className='location-actions';
     actions.innerHTML = `
-        <button class="btn icon-only primary" title="تعديل" onclick="openEditModal('${e.id}')">
-            <i class="fas fa-edit"></i>
-        </button>
-        <button class="btn icon-only danger" title="حذف" onclick="removeEntry('${e.id}')">
-            <i class="fas fa-trash-alt"></i>
-        </button>
+      <button class="btn icon-only primary" title="عرض البطاقة" onclick="centerAndOpenPopup('${e.id}')" aria-label="عرض بطاقة ${escapeHtml(e.type)}">
+          <i class="fas fa-map-marker-alt"></i>
+      </button>
+      <button class="btn icon-only primary" title="عرض التفاصيل" onclick="centerAndOpenPanel('${e.id}')" aria-label="عرض تفاصيل ${escapeHtml(e.type)}">
+          <i class="fas fa-eye"></i>
+      </button>
+      <button class="btn icon-only danger" title="حذف" onclick="removeEntry('${e.id}')" aria-label="حذف ${escapeHtml(e.type)}">
+          <i class="fas fa-trash-alt"></i>
+      </button>
     `;
 
-    div.appendChild(img); 
-    div.appendChild(meta); 
+    div.appendChild(img);
+    div.appendChild(meta);
     div.appendChild(actions);
     container.appendChild(div);
   });
 }
 
-/**
- * Met à jour la visibilité des marqueurs sur la carte.
- */
 function updateMapMarkers(visibleIds) {
     markerCluster.clearLayers();
     entries.forEach(entry => {
@@ -1186,11 +1425,11 @@ function toggleSidebar(visible, initialPanel = 'form-panel') {
     const sidebar = document.getElementById('sidebar');
     const isMobile = window.matchMedia('(max-width: 1024px)').matches;
 
-    if (!isMobile) return; 
-    
+    if (!isMobile) return;
+
     if (visible) {
         sidebar.classList.add('visible');
-        switchPanel(initialPanel); 
+        switchPanel(initialPanel);
     } else {
         sidebar.classList.remove('visible');
     }
@@ -1199,27 +1438,61 @@ function toggleSidebar(visible, initialPanel = 'form-panel') {
 function switchPanel(targetId, clickedElement = null) {
     const panels = document.querySelectorAll('.mobile-panel');
     const navItems = document.querySelectorAll('.mobile-nav-item');
+    const detailNav = document.getElementById('detailNav');
+    const isDetailPanel = targetId === 'detail-panel';
 
+    // 1. Gérer l'affichage du panneau
     panels.forEach(panel => {
         panel.style.display = (panel.id === targetId) ? 'block' : 'none';
     });
-
+    
+    // 2. Gérer la navigation mobile
     navItems.forEach(item => {
         item.classList.remove('active');
+        item.setAttribute('aria-selected', 'false');
     });
 
-    if (clickedElement) {
-        clickedElement.classList.add('active');
+    if (isDetailPanel) {
+        // Le panneau Détail est un onglet "spécial" qui apparaît temporairement
+        detailNav.style.display = 'flex';
+        detailNav.classList.add('active');
+        detailNav.setAttribute('aria-selected', 'true');
     } else {
-        const matchingNav = document.querySelector(`.mobile-nav-item[data-target="${targetId}"]`);
-        if (matchingNav) matchingNav.classList.add('active');
+        // Les onglets normaux
+        detailNav.style.display = 'none';
+        let currentItem = clickedElement;
+        if (!currentItem) {
+            currentItem = document.querySelector(`.mobile-nav-item[data-target="${targetId}"]`);
+        }
+        if (currentItem) {
+            currentItem.classList.add('active');
+            currentItem.setAttribute('aria-selected', 'true');
+        }
     }
-    
-    // Assurer la mise à jour des données lors du changement vers l'onglet List/Stats
+
+
+    // 3. Assurer la mise à jour des données lors du changement vers l'onglet List/Stats
     if (targetId === 'list-panel' || targetId === 'stats-panel') {
         applyFiltersAndSort();
     }
 }
+
+// Preview de l'image
+document.getElementById('photo').addEventListener('change', function(event) {
+    const preview = document.getElementById('preview');
+    if (event.target.files.length > 0) {
+        const file = event.target.files[0];
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            preview.src = e.target.result;
+            preview.style.display = 'block';
+        };
+        reader.readAsDataURL(file);
+    } else {
+        preview.src = '';
+        preview.style.display = 'none';
+    }
+});
 
 
 /* --------------------------------- */
@@ -1231,9 +1504,9 @@ function fitAllMarkers(){
   const bounds = L.latLngBounds(layers.map(m=>m.getLatLng()));
   map.fitBounds(bounds.pad(0.25));
 }
-function zoomToAlgeria(){ 
-    if(geojsonBounds) map.fitBounds(geojsonBounds.pad(0.02)); 
-    else map.setView(ALGERIA_CENTER,5); 
+function zoomToAlgeria(){
+    if(geojsonBounds) map.fitBounds(geojsonBounds.pad(0.02));
+    else map.setView(ALGERIA_CENTER,5);
 }
 let heatOn=false;
 function toggleHeatmap(){
@@ -1244,10 +1517,12 @@ function toggleHeatmap(){
     heatLayer.setLatLngs(pts);
     heatLayer.addTo(map);
     toggleBtn.classList.add('active');
+    toggleBtn.setAttribute('aria-pressed', 'true');
     toast('خريطة الحرارة مفعلة');
   } else {
     map.removeLayer(heatLayer);
     toggleBtn.classList.remove('active');
+    toggleBtn.setAttribute('aria-pressed', 'false');
     toast('خريطة الحرارة معطلة');
   }
 }
@@ -1255,17 +1530,19 @@ let dark=false;
 function toggleStyle(){
   dark = !dark;
   const toggleBtn = document.getElementById('toggleStyle');
-  if(dark){ 
-      map.removeLayer(tileDefault); 
-      tileToner.addTo(map); 
-      toast('سمة داكنة', 'alert'); 
+  if(dark){
+      map.removeLayer(tileDefault);
+      tileToner.addTo(map);
+      toast('سمة داكنة', 'alert');
       toggleBtn.classList.add('active');
+      toggleBtn.setAttribute('aria-pressed', 'true');
   }
-  else { 
-      map.removeLayer(tileToner); 
-      tileDefault.addTo(map); 
-      toast('سمة افتراضية'); 
+  else {
+      map.removeLayer(tileToner);
+      tileDefault.addTo(map);
+      toast('سمة افتراضية');
       toggleBtn.classList.remove('active');
+      toggleBtn.setAttribute('aria-pressed', 'false');
   }
 }
 
@@ -1286,23 +1563,24 @@ function importData(evt){
     try{
       const parsed = JSON.parse(e.target.result);
       if(!Array.isArray(parsed)) throw new Error('تنسيق الملف غير صحيح.');
-      
+
       let importedCount = 0;
-      parsed.forEach(p=>{ 
-        if(!p.id) p.id='imp_'+Date.now()+'_'+Math.random().toString(36).slice(2,6); 
-        // Vérifie si l'ID existe déjà (pour éviter les doublons lors de l'importation)
+      parsed.forEach(p=>{
+        if(!p.id) p.id='imp_'+Date.now()+'_'+Math.random().toString(36).slice(2,6);
+        p.quantite = parseInt(p.quantite) || 1; 
+        
         if(!entries.find(ex => ex.id === p.id)) {
-           entries.unshift(p); 
-           addEntryToMap(p); 
+           entries.unshift(p);
+           addEntryToMap(p);
            importedCount++;
         }
       });
-      saveToStorage(); 
-      applyFiltersAndSort(); 
+      saveToStorage();
+      applyFiltersAndSort();
       toast(`✅ تم استيراد ${importedCount} مساهمة.`, 'success');
-      document.getElementById('importFile').value = ''; // Réinitialiser l'input file
-    }catch(err){ 
-        toast('خطأ في ملف الاستيراد: '+err.message, 'error'); 
+      document.getElementById('importFile').value = '';
+    }catch(err){
+        toast('خطأ في ملف الاستيراد: '+err.message, 'error');
         document.getElementById('importFile').value = '';
     }
   };
@@ -1320,15 +1598,24 @@ function clearAllData(){
 /* --------------------------------- */
 document.addEventListener('DOMContentLoaded', function(){
   initMap();
-  
-  // NOUVEAU: Pré-remplir la liste des options de filtre de type
+
+  // Pré-remplir la liste des options de filtre de type
   const typeFilterSelect = document.getElementById('typeFilter');
+  const existingTypes = new Set(Array.from(typeFilterSelect.options).map(o => o.value).filter(v => v));
+
   document.getElementById('type_arbre').querySelectorAll('option').forEach(option => {
-      if (option.value && option.value !== 'أخرى' && !typeFilterSelect.querySelector(`option[value="${option.value}"]`)) {
+      if (option.value && !existingTypes.has(option.value)) {
           const newOption = option.cloneNode(true);
           typeFilterSelect.appendChild(newOption);
+          existingTypes.add(option.value);
       }
   });
+
+  // Gérer l'ouverture initiale du sidebar sur desktop (pour l'affichage du formulaire)
+  const isMobile = window.matchMedia('(max-width: 1024px)').matches;
+  if (!isMobile) {
+      switchPanel('form-panel'); 
+  }
 });
 </script>
 
