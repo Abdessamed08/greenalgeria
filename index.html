@@ -858,35 +858,123 @@
         }
 
         /* --- XIV. RESPONSIVE DESIGN (UX Mobile) --- */
+        /* Optimisations tactiles et performance mobile */
+        @media (hover: none) and (pointer: coarse) {
+            /* Désactiver les effets hover sur mobile */
+            .btn:hover {
+                transform: none;
+            }
+            .mission__card:hover {
+                transform: none;
+            }
+            .news__card:hover {
+                transform: none;
+            }
+            /* Améliorer les zones tactiles */
+            .btn, .navbar__link, .faq__question {
+                min-height: 44px;
+                min-width: 44px;
+            }
+        }
+
+        /* Optimisations de performance mobile */
+        @media (max-width: 992px) {
+            * {
+                -webkit-tap-highlight-color: rgba(30, 96, 42, 0.1);
+            }
+            .btn, .navbar__link, .faq__question {
+                touch-action: manipulation;
+                -webkit-touch-callout: none;
+            }
+            
+            /* Amélioration des animations */
+            .btn:active {
+                transform: scale(0.96);
+            }
+            
+            /* Ripple effect pour les boutons */
+            .btn {
+                position: relative;
+                overflow: hidden;
+            }
+            .btn::after {
+                content: '';
+                position: absolute;
+                top: 50%;
+                left: 50%;
+                width: 0;
+                height: 0;
+                border-radius: 50%;
+                background: rgba(255, 255, 255, 0.3);
+                transform: translate(-50%, -50%);
+                transition: width 0.4s, height 0.4s;
+            }
+            .btn:active::after {
+                width: 300px;
+                height: 300px;
+            }
+            
+            /* Animation des cartes au touch */
+            .mission__card:active,
+            .news__card:active {
+                transform: scale(0.98);
+            }
+            
+            /* Smooth scroll amélioré */
+            html {
+                scroll-behavior: smooth;
+                -webkit-overflow-scrolling: touch;
+            }
+        }
+
         @media (max-width: 1200px) {
             .container {
                 padding: 0 20px;
             }
             .hero__title {
-                font-size: clamp(3rem, 6vw, 5.5rem);
+                font-size: clamp(2.5rem, 5vw, 5.5rem);
             }
             .stats__grid {
                 grid-template-columns: repeat(2, 1fr);
+                gap: 20px;
             }
             .stats__item {
-                padding: 30px;
+                padding: 25px 15px;
+            }
+            .stats__number {
+                font-size: 2.8rem;
+            }
+            section {
+                padding: 80px 0;
             }
         }
         
         @media (max-width: 992px) {
+            /* Header optimisé mobile */
+            .navbar {
+                height: 70px;
+                padding: 0 15px;
+            }
+            .navbar__logo {
+                font-size: 1.5rem;
+            }
             .navbar__links {
-                position: absolute;
-                top: var(--header-height);
+                position: fixed;
+                top: 70px;
                 right: 0;
                 background-color: var(--bg-body);
                 border-top: 1px solid var(--border-color);
                 width: 100%;
+                max-width: 350px;
                 flex-direction: column;
                 padding: 20px 0;
-                gap: 15px;
+                gap: 0;
                 transform: translateX(100%);
-                transition: transform 0.4s ease-out;
-                box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+                transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+                box-shadow: -5px 0 20px rgba(0, 0, 0, 0.15);
+                height: calc(100vh - 70px);
+                overflow-y: auto;
+                z-index: 999;
             }
 
             .navbar__links.active {
@@ -894,10 +982,14 @@
             }
             
             .navbar__link {
-                padding: 10px 20px;
-                width: 90%;
+                padding: 15px 25px;
+                width: 100%;
                 text-align: right;
                 border-bottom: 1px solid var(--border-color);
+                font-size: 1.1rem;
+                display: flex;
+                align-items: center;
+                min-height: 50px;
             }
 
             .navbar__link:last-child {
@@ -905,57 +997,315 @@
             }
 
             .navbar__link::after {
-                right: 20px; 
+                display: none;
             }
 
             .navbar__toggle {
-                display: block;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                min-width: 44px;
+                min-height: 44px;
+                transition: transform 0.2s;
+            }
+            .navbar__toggle:active {
+                transform: scale(0.9);
             }
 
+            /* Hero section mobile */
+            .hero {
+                padding: 100px 0 60px;
+            }
             .hero__grid {
                 grid-template-columns: 1fr;
+                gap: 40px;
                 text-align: center;
             }
             
             .hero__title {
-                text-align: center;
+                font-size: clamp(2.2rem, 8vw, 4rem);
+                margin-bottom: 20px;
+                line-height: 1.2;
+            }
+            
+            .hero__subtitle {
+                font-size: 1.1rem;
+                margin-bottom: 35px;
+            }
+
+            .hero__tagline {
+                font-size: 0.9rem;
+                padding: 6px 18px;
             }
             
             .hero__actions {
                 justify-content: center;
+                flex-wrap: wrap;
+                gap: 15px;
+            }
+
+            .hero__actions .btn {
+                flex: 1;
+                min-width: 160px;
+                padding: 14px 25px;
+                font-size: 1rem;
             }
             
             .hero__image-grid-wrapper {
-                height: 400px;
+                height: 350px;
+                margin-top: 20px;
+            }
+
+            /* Section titles mobile */
+            .section-title {
+                font-size: clamp(2rem, 6vw, 3.5rem);
+                margin-bottom: 20px;
+            }
+            .section-subtitle {
+                font-size: 1.1rem;
+                margin-bottom: 50px;
+                padding: 0 10px;
+            }
+
+            /* Mission cards mobile */
+            .mission__grid {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+            .mission__card {
+                padding: 30px 25px;
+            }
+            .mission__icon {
+                font-size: 2.5rem;
+            }
+
+            /* Stats section mobile */
+            .stats {
+                padding: 80px 0;
+                clip-path: none;
+            }
+            .stats__grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 15px;
+            }
+            .stats__item {
+                padding: 20px 15px;
+            }
+            .stats__number {
+                font-size: 2.5rem;
+            }
+            .stats__label {
+                font-size: 1rem;
             }
             
+            /* Map section mobile */
             .map__content {
                 grid-template-columns: 1fr;
-                gap: 50px;
+                gap: 40px;
             }
             
             .map .section-title {
                 text-align: center;
+                font-size: clamp(2rem, 6vw, 3rem);
             }
-            
+
+            .map__description {
+                font-size: 1rem;
+                text-align: center;
+            }
+
+            .map__text ul {
+                margin-bottom: 30px;
+            }
+
+            .map__text ul li {
+                font-size: 1rem;
+                margin-bottom: 12px;
+            }
+
+            .map__placeholder {
+                min-height: 400px;
+            }
+
+            /* News section mobile */
+            .news__grid {
+                grid-template-columns: 1fr;
+                gap: 25px;
+            }
+            .news__card {
+                border-radius: var(--border-radius-md);
+            }
+            .news__image {
+                height: 200px;
+            }
+            .news__content {
+                padding: 20px;
+            }
+            .news__title {
+                font-size: 1.2rem;
+            }
+
+            /* FAQ mobile */
+            .faq__question {
+                padding: 20px 20px;
+                font-size: 1.05rem;
+                transition: background-color 0.2s, transform 0.1s;
+            }
+            .faq__question:active {
+                transform: scale(0.98);
+                background-color: var(--color-hover-bg);
+            }
+            .faq__answer {
+                padding: 0 20px;
+            }
+            .faq__question[aria-expanded="true"] + .faq__answer {
+                padding: 0 20px 20px;
+            }
+
+            /* Footer mobile */
+            .footer {
+                padding-top: 60px;
+            }
             .footer__grid {
-                grid-template-columns: 1fr 1fr;
+                grid-template-columns: 1fr;
+                gap: 40px;
+            }
+            .footer__col {
+                text-align: center;
+            }
+            .footer__links {
+                text-align: center;
+            }
+            .footer__social {
+                justify-content: center;
+                margin-top: 15px;
+            }
+            .newsletter__form {
+                flex-direction: column;
+                gap: 10px;
+            }
+            .newsletter__form input {
+                border-radius: var(--border-radius-md);
+                width: 100%;
+            }
+            .newsletter__btn {
+                border-radius: var(--border-radius-md);
+                width: 100%;
             }
             
             .top-bar {
                 display: none;
             }
+
+            /* Final CTA mobile */
+            .final-cta {
+                padding: 60px 20px;
+                margin-top: 40px;
+                border-radius: var(--border-radius-lg);
+            }
         }
         
         @media (max-width: 600px) {
+            .container {
+                padding: 0 15px;
+            }
+            section {
+                padding: 60px 0;
+            }
+            .hero {
+                padding: 80px 0 50px;
+            }
+            .hero__title {
+                font-size: clamp(1.8rem, 7vw, 3rem);
+            }
+            .hero__subtitle {
+                font-size: 1rem;
+            }
             .stats__grid {
                 grid-template-columns: 1fr;
+                gap: 12px;
+            }
+            .stats__item {
+                padding: 18px 12px;
+            }
+            .stats__number {
+                font-size: 2rem;
+            }
+            .stats__label {
+                font-size: 0.9rem;
             }
             .hero__actions {
                 flex-direction: column;
+                width: 100%;
+            }
+            .hero__actions .btn {
+                width: 100%;
+                min-width: unset;
+            }
+            .mission__card {
+                padding: 25px 20px;
+            }
+            .mission__icon {
+                font-size: 2rem;
+            }
+            .section-title {
+                font-size: clamp(1.8rem, 7vw, 2.5rem);
+            }
+            .section-subtitle {
+                font-size: 1rem;
+                margin-bottom: 40px;
+            }
+            .news__image {
+                height: 180px;
+            }
+            .news__title {
+                font-size: 1.1rem;
             }
             .footer__grid {
                 grid-template-columns: 1fr;
+                gap: 30px;
+            }
+            .map__placeholder {
+                min-height: 300px;
+            }
+            .map__icon-lg {
+                font-size: 3.5rem;
+            }
+            #back-to-top {
+                width: 45px;
+                height: 45px;
+                bottom: 20px;
+                right: 20px;
+                font-size: 1rem;
+            }
+            #back-to-top:active {
+                transform: translateY(-2px) scale(0.95);
+            }
+        }
+
+        /* Très petits écrans (< 400px) */
+        @media (max-width: 400px) {
+            .container {
+                padding: 0 12px;
+            }
+            .navbar__logo {
+                font-size: 1.3rem;
+            }
+            .hero__title {
+                font-size: 1.6rem;
+            }
+            .section-title {
+                font-size: 1.6rem;
+            }
+            .btn {
+                padding: 12px 20px;
+                font-size: 0.95rem;
+            }
+            .stats__number {
+                font-size: 1.8rem;
+            }
+            .mission__card {
+                padding: 20px 15px;
             }
         }
         
@@ -1427,10 +1777,23 @@
         if (menuToggle && navLinks) {
             menuToggle.addEventListener('click', () => {
                 const isExpanded = navLinks.classList.toggle('active');
-                menuToggle.setAttribute('aria-expanded', isExpanded); 
+                menuToggle.setAttribute('aria-expanded', isExpanded);
+                
+                // Haptic feedback sur mobile
+                if (navigator.vibrate) {
+                    navigator.vibrate(10);
+                }
+                
                 const icon = menuToggle.querySelector('i');
                 icon.classList.toggle('fa-bars');
-                icon.classList.toggle('fa-times'); 
+                icon.classList.toggle('fa-times');
+                
+                // Empêcher le scroll du body quand le menu est ouvert
+                if (isExpanded) {
+                    document.body.style.overflow = 'hidden';
+                } else {
+                    document.body.style.overflow = '';
+                }
             });
 
             navLinks.querySelectorAll('a').forEach(link => {
@@ -1454,6 +1817,11 @@
             question.addEventListener('click', () => {
                 const isExpanded = question.getAttribute('aria-expanded') === 'true' || false;
                 
+                // Haptic feedback
+                if (navigator.vibrate) {
+                    navigator.vibrate(10);
+                }
+                
                 // Fermer les autres pour un meilleur confort (UX)
                 faqItems.forEach(otherItem => {
                     const otherQuestion = otherItem.querySelector('.faq__question');
@@ -1467,12 +1835,20 @@
                 question.setAttribute('aria-expanded', !isExpanded);
                 if (!isExpanded) {
                     answer.style.maxHeight = answer.scrollHeight + 'px';
+                    // Animation d'ouverture
+                    answer.style.opacity = '0';
+                    setTimeout(() => {
+                        answer.style.transition = 'opacity 0.3s';
+                        answer.style.opacity = '1';
+                    }, 10);
                 } else {
                     answer.style.maxHeight = '0';
+                    answer.style.opacity = '0';
                 }
             });
             // Initialisation de l'accordéon
             answer.style.maxHeight = '0';
+            answer.style.opacity = '0';
         });
 
         // 6. BOUTON "RETOUR EN HAUT"
