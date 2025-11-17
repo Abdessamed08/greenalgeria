@@ -2742,6 +2742,20 @@ function initMap(){
   document.getElementById('editForm').addEventListener('submit', handleEditSubmit);
   document.getElementById('editForm').addEventListener('input', validateEditForm);
 
+  // Ajouter un event listener supplémentaire pour le bouton de géolocalisation (pour mobile)
+  // Cela garantit que la fonction fonctionne même si l'onclick ne se déclenche pas correctement
+  const geolocBtn = document.querySelector('button[onclick*="handleGeolocation"]');
+  if (geolocBtn) {
+    // Retirer l'onclick pour éviter les doubles appels et utiliser uniquement l'event listener
+    geolocBtn.removeAttribute('onclick');
+    
+    // Ajouter un listener qui fonctionne bien sur mobile (click et touch)
+    geolocBtn.addEventListener('click', function(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      handleGeolocation();
+    }, { passive: false });
+  }
 
   loadFromStorage();
   validateForm();
@@ -3207,34 +3221,114 @@ function resetForm(){
 }
 
 function handleGeolocation(){
-  if(!navigator.geolocation){ showFormMessage('المتصفح لا يدعم الموقع', 'error'); return; }
-  const btn = document.querySelector('.form-button-group .btn.primary');
-  const originalHtml = btn.innerHTML;
-  btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري البحث...';
-  btn.disabled = true;
+  // Vérifier le support de la géolocalisation
+  if(!navigator.geolocation){ 
+    showFormMessage('المتصفح لا يدعم الموقع. يرجى استخدام متصفح حديث.', 'error'); 
+    hapticFeedback('error');
+    return; 
+  }
 
-  // Augmentation du timeout à 10 secondes (10000ms) pour une meilleure chance sur mobile
-  navigator.geolocation.getCurrentPosition(pos=>{
-    const latlng = L.latLng(pos.coords.latitude, pos.coords.longitude);
-    document.getElementById('latitude').value = latlng.lat.toFixed(6);
-    document.getElementById('longitude').value = latlng.lng.toFixed(6);
-    setTempMarker(latlng, true);
-    showFormMessage('تم تحديد الموقع بنجاح. يمكنك سحب العلامة لضبط الموقع.', 'success');
-    btn.innerHTML = originalHtml;
-    btn.disabled = false;
-    validateForm();
-  }, err=>{
-    // Afficher le code d'erreur exact pour le débogage
-    let errMsg = 'فشل في الحصول على الموقع.';
-    if (err.code === 1) { errMsg += ' (الرفض: تحقق من الأذونات)'; }
-    else if (err.code === 2) { errMsg += ' (غير متوفر: حاول مجدداً)'; }
-    else if (err.code === 3) { errMsg += ' (انتهت المهلة: حاول في مكان مفتوح)'; }
-    else { errMsg += ` (خطأ غير معروف: ${err.code})`; }
+  // Trouver le bouton de manière plus robuste
+  const btn = document.querySelector('button[onclick*="handleGeolocation"]') || 
+              document.querySelector('.form-button-group .btn.primary');
+  
+  if (!btn) {
+    showFormMessage('خطأ في العثور على الزر', 'error');
+    return;
+  }
 
-    showFormMessage(errMsg, 'error');
-    btn.innerHTML = originalHtml;
-    btn.disabled = false;
-  }, { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }); // Timeout augmenté
+  const originalHtml = btn.innerHTML;
+  const originalDisabled = btn.disabled;
+  
+  // Feedback visuel immédiat
+  btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري البحث...';
+  btn.disabled = true;
+  hapticFeedback('light');
+  
+  // Message informatif
+  showFormMessage('جاري تحديد موقعك... يرجى السماح بالوصول إلى الموقع.', 'alert');
+
+  // Options optimisées pour mobile
+  const options = {
+    enableHighAccuracy: true,  // Utiliser GPS si disponible
+    timeout: 20000,             // 20 secondes pour mobile (plus long)
+    maximumAge: 60000           // Accepter une position récente (1 minute)
+  };
+
+  navigator.geolocation.getCurrentPosition(
+    // Succès
+    function(pos){
+      const latlng = L.latLng(pos.coords.latitude, pos.coords.longitude);
+      
+      // Vérifier que les coordonnées sont valides
+      if (isNaN(latlng.lat) || isNaN(latlng.lng)) {
+        showFormMessage('خطأ: إحداثيات غير صحيحة', 'error');
+        btn.innerHTML = originalHtml;
+        btn.disabled = originalDisabled;
+        hapticFeedback('error');
+        return;
+      }
+
+      // Vérifier que les coordonnées sont dans les limites de l'Algérie
+      const checkBounds = geojsonBounds || APPROX_BOUNDS;
+      if(!checkBounds.contains([latlng.lat, latlng.lng])) {
+        showFormMessage('موقعك خارج حدود الجزائر. يرجى التأكد من الموقع.', 'error');
+        btn.innerHTML = originalHtml;
+        btn.disabled = originalDisabled;
+        hapticFeedback('error');
+        return;
+      }
+
+      // Mettre à jour les champs
+      document.getElementById('latitude').value = latlng.lat.toFixed(6);
+      document.getElementById('longitude').value = latlng.lng.toFixed(6);
+      
+      // Placer le marqueur temporaire
+      setTempMarker(latlng, true);
+      
+      // Centrer la carte sur la position
+      map.setView(latlng, 15);
+      
+      // Feedback de succès
+      showFormMessage('✅ تم تحديد الموقع بنجاح! يمكنك سحب العلامة لضبط الموقع.', 'success');
+      hapticFeedback('success');
+      
+      // Restaurer le bouton
+      btn.innerHTML = originalHtml;
+      btn.disabled = originalDisabled;
+      
+      // Valider le formulaire
+      validateForm();
+    },
+    // Erreur
+    function(err){
+      let errMsg = 'فشل في الحصول على الموقع.';
+      
+      switch(err.code) {
+        case 1: // PERMISSION_DENIED
+          errMsg = 'تم رفض الوصول إلى الموقع. يرجى السماح بالوصول في إعدادات المتصفح.';
+          break;
+        case 2: // POSITION_UNAVAILABLE
+          errMsg = 'الموقع غير متوفر. يرجى التأكد من تفعيل GPS والمحاولة في مكان مفتوح.';
+          break;
+        case 3: // TIMEOUT
+          errMsg = 'انتهت المهلة. يرجى المحاولة مرة أخرى في مكان مفتوح مع GPS مفعل.';
+          break;
+        default:
+          errMsg = `خطأ غير معروف (${err.code}). يرجى المحاولة مرة أخرى.`;
+      }
+
+      showFormMessage(errMsg, 'error');
+      hapticFeedback('error');
+      
+      // Restaurer le bouton
+      btn.innerHTML = originalHtml;
+      btn.disabled = originalDisabled;
+      
+      console.error('Erreur de géolocalisation:', err);
+    },
+    options
+  );
 }
 
 
