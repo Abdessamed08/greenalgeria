@@ -2742,20 +2742,8 @@ function initMap(){
   document.getElementById('editForm').addEventListener('submit', handleEditSubmit);
   document.getElementById('editForm').addEventListener('input', validateEditForm);
 
-  // Ajouter un event listener supplémentaire pour le bouton de géolocalisation (pour mobile)
-  // Cela garantit que la fonction fonctionne même si l'onclick ne se déclenche pas correctement
-  const geolocBtn = document.querySelector('button[onclick*="handleGeolocation"]');
-  if (geolocBtn) {
-    // Retirer l'onclick pour éviter les doubles appels et utiliser uniquement l'event listener
-    geolocBtn.removeAttribute('onclick');
-    
-    // Ajouter un listener qui fonctionne bien sur mobile (click et touch)
-    geolocBtn.addEventListener('click', function(e) {
-      e.preventDefault();
-      e.stopPropagation();
-      handleGeolocation();
-    }, { passive: false });
-  }
+  // Attacher le bouton de géolocalisation (sera aussi fait dans DOMContentLoaded pour sécurité)
+  attachGeolocationButton();
 
   loadFromStorage();
   validateForm();
@@ -3220,6 +3208,43 @@ function resetForm(){
   validateForm();
 }
 
+/**
+ * Attache les event listeners au bouton de géolocalisation
+ * Cette fonction peut être appelée plusieurs fois en sécurité
+ */
+function attachGeolocationButton() {
+  // Utiliser plusieurs sélecteurs pour être sûr de trouver le bouton
+  const geolocBtn = document.querySelector('button[aria-label*="تحديد موقعي"]') ||
+                    document.querySelector('button[onclick*="handleGeolocation"]') ||
+                    document.querySelector('.form-button-group .btn.primary');
+  
+  if (geolocBtn && !geolocBtn.hasAttribute('data-geoloc-attached')) {
+    // Marquer comme attaché pour éviter les doubles
+    geolocBtn.setAttribute('data-geoloc-attached', 'true');
+    
+    // Retirer l'onclick si présent
+    geolocBtn.removeAttribute('onclick');
+    
+    // Fonction pour gérer le clic
+    const handleGeolocClick = function(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      handleGeolocation();
+    };
+    
+    // Ajouter plusieurs listeners pour meilleure compatibilité mobile
+    geolocBtn.addEventListener('click', handleGeolocClick, { passive: false });
+    geolocBtn.addEventListener('touchend', handleGeolocClick, { passive: false });
+    
+    // S'assurer que le bouton est cliquable
+    geolocBtn.style.cursor = 'pointer';
+    geolocBtn.style.touchAction = 'manipulation';
+    geolocBtn.style.webkitTapHighlightColor = 'transparent';
+    
+    console.log('Bouton de géolocalisation attaché avec succès');
+  }
+}
+
 function handleGeolocation(){
   // Vérifier le support de la géolocalisation
   if(!navigator.geolocation){ 
@@ -3228,11 +3253,14 @@ function handleGeolocation(){
     return; 
   }
 
-  // Trouver le bouton de manière plus robuste
-  const btn = document.querySelector('button[onclick*="handleGeolocation"]') || 
-              document.querySelector('.form-button-group .btn.primary');
+  // Trouver le bouton de manière plus robuste (plusieurs sélecteurs pour mobile)
+  const btn = document.querySelector('button[aria-label*="تحديد موقعي"]') ||
+              document.querySelector('button[onclick*="handleGeolocation"]') || 
+              document.querySelector('.form-button-group .btn.primary') ||
+              document.querySelector('.form-button-group button:first-child');
   
   if (!btn) {
+    console.error('Bouton de géolocalisation non trouvé');
     showFormMessage('خطأ في العثور على الزر', 'error');
     return;
   }
@@ -3249,10 +3277,12 @@ function handleGeolocation(){
   showFormMessage('جاري تحديد موقعك... يرجى السماح بالوصول إلى الموقع.', 'alert');
 
   // Options optimisées pour mobile
+  // Sur mobile, on peut avoir besoin de plus de temps et de moins de précision initialement
+  const isMobile = window.matchMedia('(max-width: 1024px)').matches;
   const options = {
     enableHighAccuracy: true,  // Utiliser GPS si disponible
-    timeout: 20000,             // 20 secondes pour mobile (plus long)
-    maximumAge: 60000           // Accepter une position récente (1 minute)
+    timeout: isMobile ? 30000 : 20000,  // 30 secondes sur mobile, 20 sur desktop
+    maximumAge: isMobile ? 120000 : 60000  // 2 minutes sur mobile, 1 minute sur desktop
   };
 
   navigator.geolocation.getCurrentPosition(
@@ -3270,8 +3300,9 @@ function handleGeolocation(){
       }
 
       // Vérifier que les coordonnées sont dans les limites de l'Algérie
+      // Utiliser geojsonBounds si disponible, sinon APPROX_BOUNDS
       const checkBounds = geojsonBounds || APPROX_BOUNDS;
-      if(!checkBounds.contains([latlng.lat, latlng.lng])) {
+      if(checkBounds && !checkBounds.contains([latlng.lat, latlng.lng])) {
         showFormMessage('موقعك خارج حدود الجزائر. يرجى التأكد من الموقع.', 'error');
         btn.innerHTML = originalHtml;
         btn.disabled = originalDisabled;
@@ -3808,6 +3839,12 @@ document.addEventListener('DOMContentLoaded', function(){
   // Gestion de l'orientation
   window.addEventListener('orientationchange', handleOrientationChange);
   handleOrientationChange();
+  
+  // Attacher le bouton de géolocalisation après l'initialisation complète
+  // Attendre un peu pour s'assurer que tous les éléments sont chargés (important pour mobile)
+  setTimeout(function() {
+    attachGeolocationButton();
+  }, 300);
 });
 
 /* Pull-to-refresh functionality */
