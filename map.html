@@ -2403,12 +2403,15 @@ input[type="file"] { padding: 8px 12px; } /* Ajustement pour le type file */
               </div>
               <div class="help-message">
                 <i class="fas fa-info-circle"></i>
-                <span>استخدم زر "تحديد موقعي" أدناه لتحديد موقعك تلقائياً. يمكنك أيضاً سحب العلامة على الخريطة لتعديل الموقع.</span>
+                <span id="locationHelpText">استخدم زر "تحديد موقعي" لتحديد موقعك تلقائياً، أو "اختر على الخريطة" ثم انقر على الخريطة لتحديد الموقع.</span>
               </div>
             </div>
             <div class="form-button-group">
               <button type="button" class="btn primary" id="geolocationBtn" aria-label="تحديد موقعي الحالي">
                 <i class="fas fa-location-arrow"></i> تحديد موقعي
+              </button>
+              <button type="button" class="btn secondary" id="selectOnMapBtn" aria-label="اختر على الخريطة">
+                <i class="fas fa-map-marker-alt"></i> اختر على الخريطة
               </button>
               <button type="submit" class="btn secondary" title="أضف الشجرة" disabled aria-disabled="true">
                 <i class="fas fa-plus-circle"></i> إضافة شجرة
@@ -2633,6 +2636,7 @@ let entries = [];
 let tileDefault, tileToner;
 let geojsonBounds = null;
 let tempMarker = null;
+let mapSelectionMode = false; // Mode "sélection sur la carte"
 const ALGERIA_CENTER = [28.0339, 1.6596];
 const APPROX_BOUNDS = L.latLngBounds([18.9681, -8.6675], [37.0937, 11.9795]);
 let searchTimeout;
@@ -2722,6 +2726,21 @@ function initMap(){
   map.addLayer(markerCluster);
 
   heatLayer = L.heatLayer([], {radius: 25, blur: 18, maxZoom: 11});
+  
+  // Gérer les clics sur la carte pour définir la position (mode sélection)
+  map.on('click', function(e) {
+    if (mapSelectionMode) {
+      const latlng = e.latlng;
+      document.getElementById('latitude').value = latlng.lat.toFixed(6);
+      document.getElementById('longitude').value = latlng.lng.toFixed(6);
+      setTempMarker(latlng, true);
+      validateForm();
+      showFormMessage('✅ تم تحديد الموقع على الخريطة! يمكنك سحب العلامة لضبط الموقع.', 'success');
+      hapticFeedback('success');
+      // Désactiver le mode sélection
+      toggleMapSelectionMode(false);
+    }
+  });
 
   // Chargement de la frontière GeoJSON de l'Algérie pour les limites
   fetch('https://raw.githubusercontent.com/johan/world.geo.json/master/countries/DZA.geo.json').then(r=>{
@@ -3209,6 +3228,34 @@ function resetForm(){
 }
 
 /**
+ * Active/désactive le mode "sélection sur la carte"
+ */
+function toggleMapSelectionMode(enable) {
+  mapSelectionMode = enable;
+  const selectBtn = document.getElementById('selectOnMapBtn');
+  const helpText = document.getElementById('locationHelpText');
+  
+  if (selectBtn) {
+    if (enable) {
+      selectBtn.classList.add('active');
+      selectBtn.innerHTML = '<i class="fas fa-times"></i> إلغاء الاختيار';
+      selectBtn.style.background = 'var(--color-danger)';
+      helpText.innerHTML = '<i class="fas fa-hand-pointer"></i> <strong>انقر على الخريطة لتحديد موقع الزرع</strong>';
+      // Changer le curseur de la carte
+      map.getContainer().style.cursor = 'crosshair';
+      toast('انقر على الخريطة لتحديد الموقع', 'alert');
+    } else {
+      selectBtn.classList.remove('active');
+      selectBtn.innerHTML = '<i class="fas fa-map-marker-alt"></i> اختر على الخريطة';
+      selectBtn.style.background = '';
+      helpText.innerHTML = 'استخدم زر "تحديد موقعي" لتحديد موقعك تلقائياً، أو "اختر على الخريطة" ثم انقر على الخريطة لتحديد الموقع.';
+      // Restaurer le curseur normal
+      map.getContainer().style.cursor = '';
+    }
+  }
+}
+
+/**
  * Attache les event listeners au bouton de géolocalisation
  * Cette fonction peut être appelée plusieurs fois en sécurité
  */
@@ -3262,17 +3309,39 @@ function attachGeolocationButton() {
   geolocBtn.style.webkitUserSelect = 'none';
   
   console.log('Bouton de géolocalisation attaché avec succès:', geolocBtn);
+  
+  // Attacher aussi le bouton "sélection sur carte"
+  const selectOnMapBtn = document.getElementById('selectOnMapBtn');
+  if (selectOnMapBtn && !selectOnMapBtn.hasAttribute('data-attached')) {
+    selectOnMapBtn.setAttribute('data-attached', 'true');
+    selectOnMapBtn.addEventListener('click', function(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      toggleMapSelectionMode(!mapSelectionMode);
+    }, { passive: false });
+    console.log('Bouton "sélection sur carte" attaché');
+  }
 }
 
 function handleGeolocation(){
   console.log('handleGeolocation appelé');
   
+  // Désactiver le mode sélection sur carte si actif
+  if (mapSelectionMode) {
+    toggleMapSelectionMode(false);
+  }
+  
   // Vérifier le support de la géolocalisation
   if(!navigator.geolocation){ 
-    const errorMsg = 'المتصفح لا يدعم الموقع. يرجى استخدام متصفح حديث.';
+    const errorMsg = 'المتصفح لا يدعم الموقع. يرجى استخدام زر "اختر على الخريطة" لتحديد الموقع يدوياً.';
     console.error('Geolocation non supporté');
     showFormMessage(errorMsg, 'error'); 
     hapticFeedback('error');
+    // Proposer automatiquement le mode sélection sur carte
+    setTimeout(() => {
+      toggleMapSelectionMode(true);
+      showFormMessage('يمكنك الآن النقر على الخريطة لتحديد الموقع', 'alert');
+    }, 2000);
     return; 
   }
 
@@ -3380,15 +3449,25 @@ function handleGeolocation(){
       
       switch(err.code) {
         case 1: // PERMISSION_DENIED
-          errMsg = 'تم رفض الوصول إلى الموقع. يرجى السماح بالوصول في إعدادات المتصفح أو تطبيق الهاتف.';
+          errMsg = 'تم رفض الوصول إلى الموقع. استخدم زر "اختر على الخريطة" لتحديد الموقع يدوياً.';
           console.error('Permission refusée');
+          // Proposer automatiquement le mode sélection sur carte
+          setTimeout(() => {
+            toggleMapSelectionMode(true);
+            showFormMessage('يمكنك الآن النقر على الخريطة لتحديد الموقع', 'alert');
+          }, 2000);
           break;
         case 2: // POSITION_UNAVAILABLE
-          errMsg = 'الموقع غير متوفر. يرجى التأكد من تفعيل GPS والمحاولة في مكان مفتوح.';
+          errMsg = 'الموقع غير متوفر. استخدم زر "اختر على الخريطة" لتحديد الموقع يدوياً.';
           console.error('Position non disponible');
+          // Proposer automatiquement le mode sélection sur carte
+          setTimeout(() => {
+            toggleMapSelectionMode(true);
+            showFormMessage('يمكنك الآن النقر على الخريطة لتحديد الموقع', 'alert');
+          }, 2000);
           break;
         case 3: // TIMEOUT
-          errMsg = 'انتهت المهلة. يرجى المحاولة مرة أخرى في مكان مفتوح مع GPS مفعل.';
+          errMsg = 'انتهت المهلة. استخدم زر "اختر على الخريطة" لتحديد الموقع يدوياً.';
           console.error('Timeout');
           // Sur mobile, essayer une fois de plus avec moins de précision
           if (isMobile) {
