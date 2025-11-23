@@ -2637,6 +2637,7 @@ let tileDefault, tileToner;
 let geojsonBounds = null;
 let tempMarker = null;
 let mapSelectionMode = false; // Mode "sélection sur la carte"
+let watchPositionId = null; // ID pour watchPosition (géolocalisation mobile)
 const ALGERIA_CENTER = [28.0339, 1.6596];
 const APPROX_BOUNDS = L.latLngBounds([18.9681, -8.6675], [37.0937, 11.9795]);
 let searchTimeout;
@@ -3224,6 +3225,11 @@ function resetForm(){
   document.getElementById('photo').value = '';
   document.getElementById('quantite').value = '1';
   if (tempMarker) { map.removeLayer(tempMarker); tempMarker = null; }
+  // Arrêter la géolocalisation en cours si active
+  if (watchPositionId !== null && navigator.geolocation) {
+    navigator.geolocation.clearWatch(watchPositionId);
+    watchPositionId = null;
+  }
   validateForm();
 }
 
@@ -3234,6 +3240,12 @@ function toggleMapSelectionMode(enable) {
   mapSelectionMode = enable;
   const selectBtn = document.getElementById('selectOnMapBtn');
   const helpText = document.getElementById('locationHelpText');
+  
+  // Arrêter la géolocalisation en cours si on active le mode sélection manuelle
+  if (enable && watchPositionId !== null && navigator.geolocation) {
+    navigator.geolocation.clearWatch(watchPositionId);
+    watchPositionId = null;
+  }
   
   if (selectBtn) {
     if (enable) {
@@ -3326,6 +3338,12 @@ function attachGeolocationButton() {
 function handleGeolocation(){
   console.log('handleGeolocation appelé');
   
+  // Arrêter tout watchPosition en cours
+  if (watchPositionId !== null) {
+    navigator.geolocation.clearWatch(watchPositionId);
+    watchPositionId = null;
+  }
+  
   // Désactiver le mode sélection sur carte si actif
   if (mapSelectionMode) {
     toggleMapSelectionMode(false);
@@ -3348,11 +3366,18 @@ function handleGeolocation(){
   // Vérifier si on est en HTTPS ou localhost (requis pour la géolocalisation)
   const isSecure = window.location.protocol === 'https:' || 
                    window.location.hostname === 'localhost' || 
-                   window.location.hostname === '127.0.0.1';
+                   window.location.hostname === '127.0.0.1' ||
+                   window.location.hostname === '0.0.0.0';
   
   if (!isSecure) {
+    const insecureMsg = '⚠️ يتطلب الموقع HTTPS للعمل على الهاتف. يرجى استخدام HTTPS أو "اختر على الخريطة".';
     console.warn('Géolocalisation nécessite HTTPS (sauf localhost)');
-    // On continue quand même, certains navigateurs peuvent fonctionner
+    showFormMessage(insecureMsg, 'error');
+    setTimeout(() => {
+      toggleMapSelectionMode(true);
+      showFormMessage('يمكنك الآن النقر على الخريطة لتحديد الموقع', 'alert');
+    }, 3000);
+    return;
   }
 
   // Trouver le bouton de manière plus robuste (plusieurs sélecteurs pour mobile)
@@ -3377,142 +3402,213 @@ function handleGeolocation(){
   btn.disabled = true;
   hapticFeedback('light');
   
-  // Message informatif
-  showFormMessage('جاري تحديد موقعك... يرجى السماح بالوصول إلى الموقع.', 'alert');
-
-  // Options optimisées pour mobile
+  // Message informatif avec instructions pour mobile
   const isMobile = window.matchMedia('(max-width: 1024px)').matches;
+  const helpMsg = isMobile 
+    ? 'جاري تحديد موقعك... يرجى السماح بالوصول إلى الموقع في إعدادات المتصفح وتأكد من تفعيل GPS.'
+    : 'جاري تحديد موقعك... يرجى السماح بالوصول إلى الموقع.';
+  showFormMessage(helpMsg, 'alert');
+  
   console.log('Mobile détecté:', isMobile);
   
+  // Options optimisées pour mobile - ACTIVER GPS avec enableHighAccuracy: true
   const options = {
-    enableHighAccuracy: isMobile ? false : true,  // Sur mobile, commencer sans haute précision pour être plus rapide
-    timeout: isMobile ? 30000 : 20000,  // 30 secondes sur mobile, 20 sur desktop
-    maximumAge: isMobile ? 300000 : 60000  // 5 minutes sur mobile (accepter position récente), 1 minute sur desktop
+    enableHighAccuracy: true,  // IMPORTANT: Activer pour utiliser le GPS réel sur mobile
+    timeout: isMobile ? 45000 : 25000,  // 45 secondes sur mobile (plus de temps pour GPS), 25 sur desktop
+    maximumAge: isMobile ? 60000 : 30000  // 1 minute sur mobile, 30 secondes sur desktop
   };
   
   console.log('Options de géolocalisation:', options);
 
+  // Fonction pour traiter la position avec succès
+  const handleSuccess = function(pos){
+    console.log('Position obtenue avec succès:', pos.coords);
+    console.log('Précision:', pos.coords.accuracy, 'mètres');
+    console.log('Source:', pos.coords.altitude !== null ? 'GPS' : 'Réseau');
+    
+    const latlng = L.latLng(pos.coords.latitude, pos.coords.longitude);
+    
+    // Vérifier que les coordonnées sont valides
+    if (isNaN(latlng.lat) || isNaN(latlng.lng)) {
+      console.error('Coordonnées invalides:', latlng);
+      showFormMessage('خطأ: إحداثيات غير صحيحة', 'error');
+      btn.innerHTML = originalHtml;
+      btn.disabled = originalDisabled;
+      hapticFeedback('error');
+      return;
+    }
+
+    // Vérifier que les coordonnées sont dans les limites de l'Algérie
+    // Utiliser geojsonBounds si disponible, sinon APPROX_BOUNDS
+    const checkBounds = geojsonBounds || APPROX_BOUNDS;
+    if(checkBounds && !checkBounds.contains([latlng.lat, latlng.lng])) {
+      console.warn('Position hors limites:', latlng);
+      showFormMessage('موقعك خارج حدود الجزائر. يرجى التأكد من الموقع.', 'error');
+      btn.innerHTML = originalHtml;
+      btn.disabled = originalDisabled;
+      hapticFeedback('error');
+      return;
+    }
+
+    // Arrêter watchPosition si actif
+    if (watchPositionId !== null) {
+      navigator.geolocation.clearWatch(watchPositionId);
+      watchPositionId = null;
+    }
+
+    // Mettre à jour les champs
+    document.getElementById('latitude').value = latlng.lat.toFixed(6);
+    document.getElementById('longitude').value = latlng.lng.toFixed(6);
+    
+    // Placer le marqueur temporaire
+    setTempMarker(latlng, true);
+    
+    // Centrer la carte sur la position avec zoom adapté selon la précision
+    const zoomLevel = pos.coords.accuracy < 100 ? 16 : (pos.coords.accuracy < 500 ? 14 : 12);
+    map.setView(latlng, zoomLevel);
+    
+    // Feedback de succès avec info sur la précision
+    const accuracyMsg = pos.coords.accuracy < 50 
+      ? '✅ تم تحديد الموقع بدقة عالية! يمكنك سحب العلامة لضبط الموقع.'
+      : '✅ تم تحديد الموقع بنجاح! يمكنك سحب العلامة لضبط الموقع.';
+    showFormMessage(accuracyMsg, 'success');
+    hapticFeedback('success');
+    
+    // Restaurer le bouton
+    btn.innerHTML = originalHtml;
+    btn.disabled = originalDisabled;
+    
+    // Valider le formulaire
+    validateForm();
+  };
+
+  // Fonction pour gérer les erreurs
+  const handleError = function(err){
+    console.error('Erreur de géolocalisation:', err);
+    let errMsg = 'فشل في الحصول على الموقع.';
+    
+    switch(err.code) {
+      case 1: // PERMISSION_DENIED
+        errMsg = 'تم رفض الوصول إلى الموقع. يرجى السماح بالوصول في إعدادات المتصفح ثم المحاولة مرة أخرى.';
+        console.error('Permission refusée');
+        // Proposer automatiquement le mode sélection sur carte
+        setTimeout(() => {
+          toggleMapSelectionMode(true);
+          showFormMessage('يمكنك الآن النقر على الخريطة لتحديد الموقع', 'alert');
+        }, 2000);
+        break;
+      case 2: // POSITION_UNAVAILABLE
+        errMsg = 'الموقع غير متوفر. تأكد من تفعيل GPS في إعدادات الهاتف.';
+        console.error('Position non disponible');
+        // Sur mobile, essayer avec watchPosition comme fallback
+        if (isMobile) {
+          console.log('Tentative avec watchPosition comme fallback...');
+          showFormMessage('جاري البحث باستخدام GPS...', 'alert');
+          watchPositionId = navigator.geolocation.watchPosition(
+            handleSuccess,
+            function(watchErr) {
+              console.error('Erreur watchPosition:', watchErr);
+              showFormMessage('فشل في الحصول على الموقع. استخدم زر "اختر على الخريطة".', 'error');
+              hapticFeedback('error');
+              btn.innerHTML = originalHtml;
+              btn.disabled = originalDisabled;
+              if (watchPositionId !== null) {
+                navigator.geolocation.clearWatch(watchPositionId);
+                watchPositionId = null;
+              }
+              setTimeout(() => {
+                toggleMapSelectionMode(true);
+                showFormMessage('يمكنك الآن النقر على الخريطة لتحديد الموقع', 'alert');
+              }, 2000);
+            },
+            {
+              enableHighAccuracy: true,
+              timeout: 60000,
+              maximumAge: 0  // Ne pas utiliser de position en cache
+            }
+          );
+          return; // Ne pas restaurer le bouton maintenant
+        } else {
+          setTimeout(() => {
+            toggleMapSelectionMode(true);
+            showFormMessage('يمكنك الآن النقر على الخريطة لتحديد الموقع', 'alert');
+          }, 2000);
+        }
+        break;
+      case 3: // TIMEOUT
+        errMsg = 'انتهت المهلة. جاري المحاولة مرة أخرى...';
+        console.error('Timeout');
+        // Sur mobile, essayer avec watchPosition comme fallback
+        if (isMobile) {
+          console.log('Timeout - Tentative avec watchPosition...');
+          showFormMessage('انتهت المهلة. جاري البحث باستخدام GPS...', 'alert');
+          watchPositionId = navigator.geolocation.watchPosition(
+            handleSuccess,
+            function(watchErr) {
+              console.error('Erreur watchPosition après timeout:', watchErr);
+              showFormMessage('فشل في الحصول على الموقع. استخدم زر "اختر على الخريطة".', 'error');
+              hapticFeedback('error');
+              btn.innerHTML = originalHtml;
+              btn.disabled = originalDisabled;
+              if (watchPositionId !== null) {
+                navigator.geolocation.clearWatch(watchPositionId);
+                watchPositionId = null;
+              }
+              setTimeout(() => {
+                toggleMapSelectionMode(true);
+                showFormMessage('يمكنك الآن النقر على الخريطة لتحديد الموقع', 'alert');
+              }, 2000);
+            },
+            {
+              enableHighAccuracy: true,
+              timeout: 60000,
+              maximumAge: 0
+            }
+          );
+          return; // Ne pas restaurer le bouton maintenant
+        } else {
+          // Sur desktop, essayer une fois de plus avec moins de précision
+          console.log('Tentative avec options moins strictes...');
+          const retryOptions = {
+            enableHighAccuracy: false,
+            timeout: 20000,
+            maximumAge: 300000
+          };
+          navigator.geolocation.getCurrentPosition(
+            handleSuccess,
+            function(retryErr) {
+              console.error('Erreur retry:', retryErr);
+              showFormMessage('فشل في الحصول على الموقع. استخدم زر "اختر على الخريطة".', 'error');
+              hapticFeedback('error');
+              btn.innerHTML = originalHtml;
+              btn.disabled = originalDisabled;
+              setTimeout(() => {
+                toggleMapSelectionMode(true);
+                showFormMessage('يمكنك الآن النقر على الخريطة لتحديد الموقع', 'alert');
+              }, 2000);
+            },
+            retryOptions
+          );
+          return; // Ne pas restaurer le bouton maintenant
+        }
+        break;
+      default:
+        errMsg = `خطأ غير معروف (${err.code}). يرجى المحاولة مرة أخرى.`;
+        console.error('Erreur inconnue:', err);
+    }
+
+    showFormMessage(errMsg, 'error');
+    hapticFeedback('error');
+    
+    // Restaurer le bouton
+    btn.innerHTML = originalHtml;
+    btn.disabled = originalDisabled;
+  };
+
   // Essayer d'abord avec getCurrentPosition
   navigator.geolocation.getCurrentPosition(
-    // Succès
-    function(pos){
-      console.log('Position obtenue avec succès:', pos.coords);
-      const latlng = L.latLng(pos.coords.latitude, pos.coords.longitude);
-      
-      // Vérifier que les coordonnées sont valides
-      if (isNaN(latlng.lat) || isNaN(latlng.lng)) {
-        console.error('Coordonnées invalides:', latlng);
-        showFormMessage('خطأ: إحداثيات غير صحيحة', 'error');
-        btn.innerHTML = originalHtml;
-        btn.disabled = originalDisabled;
-        hapticFeedback('error');
-        return;
-      }
-
-      // Vérifier que les coordonnées sont dans les limites de l'Algérie
-      // Utiliser geojsonBounds si disponible, sinon APPROX_BOUNDS
-      const checkBounds = geojsonBounds || APPROX_BOUNDS;
-      if(checkBounds && !checkBounds.contains([latlng.lat, latlng.lng])) {
-        console.warn('Position hors limites:', latlng);
-        showFormMessage('موقعك خارج حدود الجزائر. يرجى التأكد من الموقع.', 'error');
-        btn.innerHTML = originalHtml;
-        btn.disabled = originalDisabled;
-        hapticFeedback('error');
-        return;
-      }
-
-      // Mettre à jour les champs
-      document.getElementById('latitude').value = latlng.lat.toFixed(6);
-      document.getElementById('longitude').value = latlng.lng.toFixed(6);
-      
-      // Placer le marqueur temporaire
-      setTempMarker(latlng, true);
-      
-      // Centrer la carte sur la position
-      map.setView(latlng, 15);
-      
-      // Feedback de succès
-      showFormMessage('✅ تم تحديد الموقع بنجاح! يمكنك سحب العلامة لضبط الموقع.', 'success');
-      hapticFeedback('success');
-      
-      // Restaurer le bouton
-      btn.innerHTML = originalHtml;
-      btn.disabled = originalDisabled;
-      
-      // Valider le formulaire
-      validateForm();
-    },
-    // Erreur
-    function(err){
-      console.error('Erreur de géolocalisation:', err);
-      let errMsg = 'فشل في الحصول على الموقع.';
-      
-      switch(err.code) {
-        case 1: // PERMISSION_DENIED
-          errMsg = 'تم رفض الوصول إلى الموقع. استخدم زر "اختر على الخريطة" لتحديد الموقع يدوياً.';
-          console.error('Permission refusée');
-          // Proposer automatiquement le mode sélection sur carte
-          setTimeout(() => {
-            toggleMapSelectionMode(true);
-            showFormMessage('يمكنك الآن النقر على الخريطة لتحديد الموقع', 'alert');
-          }, 2000);
-          break;
-        case 2: // POSITION_UNAVAILABLE
-          errMsg = 'الموقع غير متوفر. استخدم زر "اختر على الخريطة" لتحديد الموقع يدوياً.';
-          console.error('Position non disponible');
-          // Proposer automatiquement le mode sélection sur carte
-          setTimeout(() => {
-            toggleMapSelectionMode(true);
-            showFormMessage('يمكنك الآن النقر على الخريطة لتحديد الموقع', 'alert');
-          }, 2000);
-          break;
-        case 3: // TIMEOUT
-          errMsg = 'انتهت المهلة. استخدم زر "اختر على الخريطة" لتحديد الموقع يدوياً.';
-          console.error('Timeout');
-          // Sur mobile, essayer une fois de plus avec moins de précision
-          if (isMobile) {
-            console.log('Tentative avec options moins strictes...');
-            const retryOptions = {
-              enableHighAccuracy: false,
-              timeout: 15000,
-              maximumAge: 300000
-            };
-            navigator.geolocation.getCurrentPosition(
-              function(pos) {
-                const latlng = L.latLng(pos.coords.latitude, pos.coords.longitude);
-                document.getElementById('latitude').value = latlng.lat.toFixed(6);
-                document.getElementById('longitude').value = latlng.lng.toFixed(6);
-                setTempMarker(latlng, true);
-                map.setView(latlng, 15);
-                showFormMessage('✅ تم تحديد الموقع بنجاح!', 'success');
-                hapticFeedback('success');
-                btn.innerHTML = originalHtml;
-                btn.disabled = originalDisabled;
-                validateForm();
-              },
-              function(retryErr) {
-                showFormMessage(errMsg, 'error');
-                hapticFeedback('error');
-                btn.innerHTML = originalHtml;
-                btn.disabled = originalDisabled;
-              },
-              retryOptions
-            );
-            return; // Ne pas restaurer le bouton maintenant, attendre le retry
-          }
-          break;
-        default:
-          errMsg = `خطأ غير معروف (${err.code}). يرجى المحاولة مرة أخرى.`;
-          console.error('Erreur inconnue:', err);
-      }
-
-      showFormMessage(errMsg, 'error');
-      hapticFeedback('error');
-      
-      // Restaurer le bouton
-      btn.innerHTML = originalHtml;
-      btn.disabled = originalDisabled;
-    },
+    handleSuccess,
+    handleError,
     options
   );
 }
