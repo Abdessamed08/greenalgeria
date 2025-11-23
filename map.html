@@ -3529,78 +3529,81 @@ function handleGeolocation(){
   const handleError = function(err){
     console.error('Erreur de géolocalisation:', err);
     let errMsg = 'فشل في الحصول على الموقع.';
+    let showRetry = false;
     
     switch(err.code) {
       case 1: // PERMISSION_DENIED
         errMsg = 'تم رفض الوصول إلى الموقع. يرجى السماح بالوصول في إعدادات المتصفح ثم المحاولة مرة أخرى.';
         console.error('Permission refusée');
-        // Proposer automatiquement le mode sélection sur carte
-        setTimeout(() => {
-          toggleMapSelectionMode(true);
-          showFormMessage('يمكنك الآن النقر على الخريطة لتحديد الموقع', 'alert');
-        }, 2000);
+        showRetry = true;
         break;
       case 2: // POSITION_UNAVAILABLE
-        errMsg = 'الموقع غير متوفر. تأكد من تفعيل GPS في إعدادات الهاتف.';
-        console.error('Position non disponible');
-        // Sur mobile, essayer avec watchPosition comme fallback
+        errMsg = 'الموقع غير متوفر. يرجى تفعيل GPS في إعدادات الهاتف ثم النقر على "تحديد موقعي" مرة أخرى.';
+        console.error('Position non disponible (GPS probablement éteint)');
+        showRetry = true;
+        
+        // Sur mobile, on réessaie quand même une fois avec watchPosition au cas où
         if (isMobile) {
           console.log('Tentative avec watchPosition comme fallback...');
-          showFormMessage('جاري البحث باستخدام GPS...', 'alert');
-          watchPositionId = navigator.geolocation.watchPosition(
-            handleSuccess,
-            function(watchErr) {
-              console.error('Erreur watchPosition:', watchErr);
-              showFormMessage('فشل في الحصول على الموقع. استخدم زر "اختر على الخريطة".', 'error');
-              hapticFeedback('error');
-              btn.innerHTML = originalHtml;
-              btn.disabled = originalDisabled;
-              if (watchPositionId !== null) {
-                navigator.geolocation.clearWatch(watchPositionId);
-                watchPositionId = null;
-              }
-              setTimeout(() => {
-                toggleMapSelectionMode(true);
-                showFormMessage('يمكنك الآن النقر على الخريطة لتحديد الموقع', 'alert');
-              }, 2000);
-            },
-            {
-              enableHighAccuracy: true,
-              timeout: 60000,
-              maximumAge: 0  // Ne pas utiliser de position en cache
-            }
-          );
-          return; // Ne pas restaurer le bouton maintenant
-        } else {
-          setTimeout(() => {
-            toggleMapSelectionMode(true);
-            showFormMessage('يمكنك الآن النقر على الخريطة لتحديد الموقع', 'alert');
-          }, 2000);
+          
+          // Si c'est la première tentative de fallback, on essaie silencieusement
+          if (watchPositionId === null) {
+              showFormMessage('جاري تفعيل GPS... يرجى الانتظار', 'alert');
+              watchPositionId = navigator.geolocation.watchPosition(
+                handleSuccess,
+                function(watchErr) {
+                  console.error('Erreur watchPosition:', watchErr);
+                  // Si échec watchPosition, on affiche le message final demandant d'activer le GPS
+                  if (watchErr.code === 2 || watchErr.code === 3) {
+                      showFormMessage('⚠️ الرجاء تفعيل GPS في هاتفك ثم المحاولة مرة أخرى', 'error');
+                      btn.innerHTML = '<i class="fas fa-redo"></i> إعادة المحاولة';
+                      btn.onclick = function() { handleGeolocation(); };
+                      btn.disabled = false;
+                  } else {
+                      showFormMessage('فشل تحديد الموقع. يرجى تفعيل GPS.', 'error');
+                      btn.innerHTML = originalHtml;
+                      btn.disabled = originalDisabled;
+                  }
+                  
+                  if (watchPositionId !== null) {
+                    navigator.geolocation.clearWatch(watchPositionId);
+                    watchPositionId = null;
+                  }
+                },
+                {
+                  enableHighAccuracy: true,
+                  timeout: 45000,
+                  maximumAge: 0
+                }
+              );
+              return; // Ne pas restaurer le bouton maintenant
+          }
         }
         break;
       case 3: // TIMEOUT
-        errMsg = 'انتهت المهلة. جاري المحاولة مرة أخرى...';
+        errMsg = 'انتهت المهلة. تأكد من تفعيل GPS وحاول مرة أخرى.';
         console.error('Timeout');
+        showRetry = true;
+        
         // Sur mobile, essayer avec watchPosition comme fallback
         if (isMobile) {
           console.log('Timeout - Tentative avec watchPosition...');
-          showFormMessage('انتهت المهلة. جاري البحث باستخدام GPS...', 'alert');
+          showFormMessage('تأكد من تفعيل GPS... جاري المحاولة...', 'alert');
           watchPositionId = navigator.geolocation.watchPosition(
             handleSuccess,
             function(watchErr) {
               console.error('Erreur watchPosition après timeout:', watchErr);
-              showFormMessage('فشل في الحصول على الموقع. استخدم زر "اختر على الخريطة".', 'error');
+              showFormMessage('تعذر تحديد الموقع. يرجى التحقق من GPS والمحاولة مجدداً.', 'error');
               hapticFeedback('error');
-              btn.innerHTML = originalHtml;
-              btn.disabled = originalDisabled;
+              btn.innerHTML = '<i class="fas fa-redo"></i> محاولة مجدداً';
+              btn.disabled = false;
+              // Réattacher l'événement click standard si besoin, ou laisser le bouton actif
+              btn.onclick = function() { handleGeolocation(); };
+              
               if (watchPositionId !== null) {
                 navigator.geolocation.clearWatch(watchPositionId);
                 watchPositionId = null;
               }
-              setTimeout(() => {
-                toggleMapSelectionMode(true);
-                showFormMessage('يمكنك الآن النقر على الخريطة لتحديد الموقع', 'alert');
-              }, 2000);
             },
             {
               enableHighAccuracy: true,
@@ -3609,43 +3612,31 @@ function handleGeolocation(){
             }
           );
           return; // Ne pas restaurer le bouton maintenant
-        } else {
-          // Sur desktop, essayer une fois de plus avec moins de précision
-          console.log('Tentative avec options moins strictes...');
-          const retryOptions = {
-            enableHighAccuracy: false,
-            timeout: 20000,
-            maximumAge: 300000
-          };
-          navigator.geolocation.getCurrentPosition(
-            handleSuccess,
-            function(retryErr) {
-              console.error('Erreur retry:', retryErr);
-              showFormMessage('فشل في الحصول على الموقع. استخدم زر "اختر على الخريطة".', 'error');
-              hapticFeedback('error');
-              btn.innerHTML = originalHtml;
-              btn.disabled = originalDisabled;
-              setTimeout(() => {
-                toggleMapSelectionMode(true);
-                showFormMessage('يمكنك الآن النقر على الخريطة لتحديد الموقع', 'alert');
-              }, 2000);
-            },
-            retryOptions
-          );
-          return; // Ne pas restaurer le bouton maintenant
         }
         break;
       default:
         errMsg = `خطأ غير معروف (${err.code}). يرجى المحاولة مرة أخرى.`;
         console.error('Erreur inconnue:', err);
+        showRetry = true;
     }
 
     showFormMessage(errMsg, 'error');
     hapticFeedback('error');
     
-    // Restaurer le bouton
-    btn.innerHTML = originalHtml;
-    btn.disabled = originalDisabled;
+    if (showRetry) {
+        // Proposer de réessayer au lieu de restaurer simplement
+        btn.innerHTML = '<i class="fas fa-redo"></i> تفعيل GPS والمحاولة';
+        btn.disabled = false;
+        // On s'assure que le clic relance la géolocalisation
+        btn.onclick = function(e) { 
+            e.preventDefault();
+            handleGeolocation(); 
+        };
+    } else {
+        // Restaurer le bouton original
+        btn.innerHTML = originalHtml;
+        btn.disabled = originalDisabled;
+    }
   };
 
   // Essayer d'abord avec getCurrentPosition
