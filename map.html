@@ -3279,27 +3279,60 @@ function attachGeolocationButton() {
   // Marquer comme attaché pour éviter les doubles
   geolocBtn.setAttribute('data-geoloc-attached', 'true');
   
-  // Retirer l'onclick si présent
-  geolocBtn.removeAttribute('onclick');
+  // Détection Android/Chrome mobile spécifique
+  const isAndroid = /Android/i.test(navigator.userAgent);
+  const isChromeMobile = /Chrome/i.test(navigator.userAgent) && /Mobile/i.test(navigator.userAgent);
+  const isMobile = window.matchMedia('(max-width: 1024px)').matches;
+  
+  console.log('Détection:', { isAndroid, isChromeMobile, isMobile });
   
   // Fonction pour gérer le clic - IMPORTANT: doit être appelée directement depuis un événement utilisateur
   const handleGeolocClick = function(e) {
-    console.log('Clic sur le bouton de géolocalisation détecté');
-    e.preventDefault();
-    e.stopPropagation();
+    console.log('Clic sur le bouton de géolocalisation détecté', e.type);
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
     // Appeler directement dans le contexte de l'événement utilisateur
+    // Sur Android, on doit appeler immédiatement sans délai
     handleGeolocation();
   };
   
-  // Ajouter plusieurs listeners pour meilleure compatibilité mobile
-  // Utiliser 'click' qui fonctionne aussi pour les événements tactiles
-  geolocBtn.addEventListener('click', handleGeolocClick, { passive: false, capture: false });
+  // Pour Android/Chrome mobile: utiliser onclick directement (plus fiable)
+  if (isAndroid || isChromeMobile || isMobile) {
+    // Sur mobile/Android, utiliser onclick directement pour garantir l'appel depuis un geste utilisateur
+    geolocBtn.onclick = handleGeolocClick;
+    console.log('onclick attaché pour mobile/Android');
+  } else {
+    // Sur desktop, utiliser addEventListener
+    geolocBtn.removeAttribute('onclick');
+    geolocBtn.addEventListener('click', handleGeolocClick, { passive: false, capture: false });
+  }
   
-  // Ajouter aussi touchstart pour mobile (mais ne pas preventDefault pour permettre le click)
-  geolocBtn.addEventListener('touchstart', function(e) {
-    console.log('Touchstart détecté sur le bouton');
-    // Ne pas preventDefault pour permettre le click de se déclencher aussi
-  }, { passive: true });
+  // Pour Android: ajouter touchend avec gestion spéciale
+  if (isAndroid || isMobile) {
+    let touchHandled = false;
+    
+    geolocBtn.addEventListener('touchstart', function(e) {
+      console.log('Touchstart détecté sur le bouton');
+      touchHandled = false;
+      // Ne pas preventDefault pour permettre le click de se déclencher aussi
+    }, { passive: true });
+    
+    geolocBtn.addEventListener('touchend', function(e) {
+      console.log('Touchend détecté sur le bouton');
+      if (!touchHandled) {
+        touchHandled = true;
+        e.preventDefault();
+        e.stopPropagation();
+        // Appeler directement depuis touchend pour Android
+        // Utiliser requestAnimationFrame pour garantir l'exécution dans le contexte utilisateur
+        requestAnimationFrame(function() {
+          handleGeolocation();
+        });
+      }
+    }, { passive: false });
+  }
   
   // S'assurer que le bouton est cliquable
   geolocBtn.style.cursor = 'pointer';
@@ -3325,6 +3358,8 @@ function attachGeolocationButton() {
 
 function handleGeolocation(){
   console.log('handleGeolocation appelé');
+  console.log('User Agent:', navigator.userAgent);
+  console.log('Protocol:', window.location.protocol);
   
   // Désactiver le mode sélection sur carte si actif
   if (mapSelectionMode) {
@@ -3348,12 +3383,25 @@ function handleGeolocation(){
   // Vérifier si on est en HTTPS ou localhost (requis pour la géolocalisation)
   const isSecure = window.location.protocol === 'https:' || 
                    window.location.hostname === 'localhost' || 
-                   window.location.hostname === '127.0.0.1';
+                   window.location.hostname === '127.0.0.1' ||
+                   window.location.hostname === '0.0.0.0';
   
   if (!isSecure) {
     console.warn('Géolocalisation nécessite HTTPS (sauf localhost)');
-    // On continue quand même, certains navigateurs peuvent fonctionner
+    const errorMsg = 'الموقع يحتاج HTTPS للعمل. يرجى استخدام زر "اختر على الخريطة" لتحديد الموقع يدوياً.';
+    showFormMessage(errorMsg, 'error');
+    hapticFeedback('error');
+    setTimeout(() => {
+      toggleMapSelectionMode(true);
+      showFormMessage('يمكنك الآن النقر على الخريطة لتحديد الموقع', 'alert');
+    }, 2000);
+    return;
   }
+  
+  // Détection Android spécifique
+  const isAndroid = /Android/i.test(navigator.userAgent);
+  const isChromeMobile = /Chrome/i.test(navigator.userAgent) && /Mobile/i.test(navigator.userAgent);
+  console.log('Android détecté:', isAndroid, 'Chrome Mobile:', isChromeMobile);
 
   // Trouver le bouton de manière plus robuste (plusieurs sélecteurs pour mobile)
   const btn = document.querySelector('button[aria-label*="تحديد موقعي"]') ||
@@ -3380,17 +3428,19 @@ function handleGeolocation(){
   // Message informatif
   showFormMessage('جاري تحديد موقعك... يرجى السماح بالوصول إلى الموقع.', 'alert');
 
-  // Options optimisées pour mobile
+  // Options optimisées pour mobile et Android
   const isMobile = window.matchMedia('(max-width: 1024px)').matches;
   console.log('Mobile détecté:', isMobile);
   
+  // Sur Android, utiliser des options plus permissives
   const options = {
-    enableHighAccuracy: isMobile ? false : true,  // Sur mobile, commencer sans haute précision pour être plus rapide
-    timeout: isMobile ? 30000 : 20000,  // 30 secondes sur mobile, 20 sur desktop
-    maximumAge: isMobile ? 300000 : 60000  // 5 minutes sur mobile (accepter position récente), 1 minute sur desktop
+    enableHighAccuracy: (isAndroid || isChromeMobile) ? false : (isMobile ? false : true),  // Android préfère false
+    timeout: (isAndroid || isChromeMobile) ? 20000 : (isMobile ? 30000 : 20000),  // 20s pour Android, 30s pour autres mobiles
+    maximumAge: (isAndroid || isChromeMobile) ? 600000 : (isMobile ? 300000 : 60000)  // 10 minutes pour Android (accepter position récente)
   };
   
   console.log('Options de géolocalisation:', options);
+  console.log('Appel de getCurrentPosition...');
 
   // Essayer d'abord avec getCurrentPosition
   navigator.geolocation.getCurrentPosition(
@@ -3449,8 +3499,12 @@ function handleGeolocation(){
       
       switch(err.code) {
         case 1: // PERMISSION_DENIED
-          errMsg = 'تم رفض الوصول إلى الموقع. استخدم زر "اختر على الخريطة" لتحديد الموقع يدوياً.';
-          console.error('Permission refusée');
+          if (isAndroid || isChromeMobile) {
+            errMsg = 'تم رفض الوصول إلى الموقع. يرجى السماح بالوصول إلى الموقع في إعدادات المتصفح. استخدم زر "اختر على الخريطة" لتحديد الموقع يدوياً.';
+          } else {
+            errMsg = 'تم رفض الوصول إلى الموقع. استخدم زر "اختر على الخريطة" لتحديد الموقع يدوياً.';
+          }
+          console.error('Permission refusée - Code:', err.code, 'Message:', err.message);
           // Proposer automatiquement le mode sélection sur carte
           setTimeout(() => {
             toggleMapSelectionMode(true);
@@ -3468,17 +3522,19 @@ function handleGeolocation(){
           break;
         case 3: // TIMEOUT
           errMsg = 'انتهت المهلة. استخدم زر "اختر على الخريطة" لتحديد الموقع يدوياً.';
-          console.error('Timeout');
-          // Sur mobile, essayer une fois de plus avec moins de précision
-          if (isMobile) {
-            console.log('Tentative avec options moins strictes...');
+          console.error('Timeout - Code:', err.code, 'Message:', err.message);
+          // Sur mobile/Android, essayer une fois de plus avec moins de précision
+          if (isMobile || isAndroid || isChromeMobile) {
+            console.log('Tentative avec options moins strictes pour Android/Mobile...');
             const retryOptions = {
               enableHighAccuracy: false,
-              timeout: 15000,
-              maximumAge: 300000
+              timeout: (isAndroid || isChromeMobile) ? 10000 : 15000,  // Plus court pour Android
+              maximumAge: (isAndroid || isChromeMobile) ? 600000 : 300000  // 10 minutes pour Android
             };
+            console.log('Options de retry:', retryOptions);
             navigator.geolocation.getCurrentPosition(
               function(pos) {
+                console.log('Position obtenue avec retry:', pos.coords);
                 const latlng = L.latLng(pos.coords.latitude, pos.coords.longitude);
                 document.getElementById('latitude').value = latlng.lat.toFixed(6);
                 document.getElementById('longitude').value = latlng.lng.toFixed(6);
@@ -3491,10 +3547,16 @@ function handleGeolocation(){
                 validateForm();
               },
               function(retryErr) {
+                console.error('Erreur lors du retry:', retryErr);
                 showFormMessage(errMsg, 'error');
                 hapticFeedback('error');
                 btn.innerHTML = originalHtml;
                 btn.disabled = originalDisabled;
+                // Proposer le mode sélection sur carte
+                setTimeout(() => {
+                  toggleMapSelectionMode(true);
+                  showFormMessage('يمكنك الآن النقر على الخريطة لتحديد الموقع', 'alert');
+                }, 2000);
               },
               retryOptions
             );
