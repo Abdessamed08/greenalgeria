@@ -2771,8 +2771,11 @@ function initMap(){
 
 /**
  * Gère le marqueur temporaire (pour Ajout et Édition)
+ * @param {L.LatLng} latlng - Coordonnées de la position
+ * @param {boolean} draggable - Si le marqueur peut être déplacé
+ * @param {number} zoomLevel - Niveau de zoom optionnel (si non fourni, conserve le zoom actuel ou utilise 10 minimum)
  */
-function setTempMarker(latlng, draggable) {
+function setTempMarker(latlng, draggable, zoomLevel = null) {
     if (tempMarker) map.removeLayer(tempMarker);
 
     const tempIcon = L.divIcon({
@@ -2799,7 +2802,29 @@ function setTempMarker(latlng, draggable) {
     });
 
     tempMarker.addTo(map);
-    map.setView(latlng, map.getZoom() < 10 ? 10 : map.getZoom());
+    
+    // Centrer la carte avec animation fluide
+    // Si zoomLevel est fourni, l'utiliser, sinon garder le zoom actuel (minimum 10)
+    if (zoomLevel !== null) {
+        map.setView(latlng, zoomLevel, { animate: true, duration: 0.5 });
+    } else {
+        const currentZoom = map.getZoom();
+        const minZoom = currentZoom < 10 ? 10 : currentZoom;
+        map.setView(latlng, minZoom, { animate: true, duration: 0.5 });
+    }
+    
+    // Animation du marqueur pour attirer l'attention
+    setTimeout(() => {
+        if (tempMarker && tempMarker._icon) {
+            tempMarker._icon.style.transition = 'transform 0.3s ease';
+            tempMarker._icon.style.transform = 'scale(1.2)';
+            setTimeout(() => {
+                if (tempMarker && tempMarker._icon) {
+                    tempMarker._icon.style.transform = 'scale(1)';
+                }
+            }, 300);
+        }
+    }, 100);
 }
 
 /**
@@ -3402,20 +3427,27 @@ function handleGeolocation(){
   btn.disabled = true;
   hapticFeedback('light');
   
+  // Détection mobile améliorée
+  const isMobile = window.matchMedia('(max-width: 1024px)').matches || 
+                   /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
+                   ('ontouchstart' in window);
+  
+  console.log('Mobile détecté:', isMobile);
+  console.log('User Agent:', navigator.userAgent);
+  console.log('Protocol:', window.location.protocol);
+  console.log('Hostname:', window.location.hostname);
+  
   // Message informatif avec instructions pour mobile
-  const isMobile = window.matchMedia('(max-width: 1024px)').matches;
   const helpMsg = isMobile 
     ? 'جاري تحديد موقعك... يرجى السماح بالوصول إلى الموقع في إعدادات المتصفح وتأكد من تفعيل GPS.'
     : 'جاري تحديد موقعك... يرجى السماح بالوصول إلى الموقع.';
   showFormMessage(helpMsg, 'alert');
   
-  console.log('Mobile détecté:', isMobile);
-  
   // Options optimisées pour mobile - ACTIVER GPS avec enableHighAccuracy: true
   const options = {
     enableHighAccuracy: true,  // IMPORTANT: Activer pour utiliser le GPS réel sur mobile
-    timeout: isMobile ? 45000 : 25000,  // 45 secondes sur mobile (plus de temps pour GPS), 25 sur desktop
-    maximumAge: isMobile ? 60000 : 30000  // 1 minute sur mobile, 30 secondes sur desktop
+    timeout: isMobile ? 60000 : 25000,  // 60 secondes sur mobile (plus de temps pour GPS), 25 sur desktop
+    maximumAge: isMobile ? 0 : 30000  // 0 sur mobile (toujours obtenir une nouvelle position), 30 secondes sur desktop
   };
   
   console.log('Options de géolocalisation:', options);
@@ -3460,12 +3492,23 @@ function handleGeolocation(){
     document.getElementById('latitude').value = latlng.lat.toFixed(6);
     document.getElementById('longitude').value = latlng.lng.toFixed(6);
     
-    // Placer le marqueur temporaire
-    setTempMarker(latlng, true);
+    // Calculer le niveau de zoom optimal selon la précision GPS
+    // Plus la précision est bonne, plus on zoome
+    const accuracy = pos.coords.accuracy;
+    let zoomLevel;
+    if (accuracy < 50) {
+      zoomLevel = 17; // Très haute précision (GPS actif)
+    } else if (accuracy < 100) {
+      zoomLevel = 16; // Haute précision
+    } else if (accuracy < 500) {
+      zoomLevel = 14; // Précision moyenne
+    } else {
+      zoomLevel = 12; // Précision faible (réseau)
+    }
     
-    // Centrer la carte sur la position avec zoom adapté selon la précision
-    const zoomLevel = pos.coords.accuracy < 100 ? 16 : (pos.coords.accuracy < 500 ? 14 : 12);
-    map.setView(latlng, zoomLevel);
+    // Placer le marqueur temporaire ET centrer la carte avec le bon zoom
+    // setTempMarker va maintenant gérer le centrage avec animation
+    setTempMarker(latlng, true, zoomLevel);
     
     // Feedback de succès avec info sur la précision
     const accuracyMsg = pos.coords.accuracy < 50 
