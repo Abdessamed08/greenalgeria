@@ -2,10 +2,7 @@
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=5,user-scalable=yes,viewport-fit=cover" />
-<meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="viewport" content="width=device-width,initial-scale=1" />
 <title>الجزائر الخضراء — منصة متقدمة للمساهمات البيئية</title>
 
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
@@ -1723,92 +1720,27 @@ input[type="file"] { padding: 8px 12px; } /* Ajustement pour le type file */
 }
 
 @media(max-width: 1024px){
-  /* Support Safe Area (notch, barres système iOS/Android) */
-  :root {
-    --safe-area-inset-top: env(safe-area-inset-top, 0px);
-    --safe-area-inset-right: env(safe-area-inset-right, 0px);
-    --safe-area-inset-bottom: env(safe-area-inset-bottom, 0px);
-    --safe-area-inset-left: env(safe-area-inset-left, 0px);
-    
-    /* Système de spacing mobile conforme aux guidelines */
-    --mobile-spacing-xs: 4px;
-    --mobile-spacing-sm: 8px;
-    --mobile-spacing-md: 16px;  /* Minimum recommandé entre éléments interactifs */
-    --mobile-spacing-lg: 24px;
-    --mobile-spacing-xl: 32px;
-    --mobile-spacing-xxl: 48px;
-    
-    /* Touch targets - Material Design recommande 48px minimum */
-    --touch-target-min: 48px;
-    --touch-target-comfort: 56px;
-    
-    /* Typographie mobile optimisée */
-    --mobile-font-xs: 12px;
-    --mobile-font-sm: 14px;  /* Minimum pour lisibilité */
-    --mobile-font-base: 16px; /* Standard mobile */
-    --mobile-font-lg: 18px;
-    --mobile-font-xl: 20px;
-    --mobile-font-xxl: 24px;
-    
-    /* Line height pour lisibilité */
-    --mobile-line-height-tight: 1.3;
-    --mobile-line-height-normal: 1.5;
-    --mobile-line-height-relaxed: 1.7;
-  }
-
   /* Optimisations de base */
   * {
     -webkit-tap-highlight-color: rgba(30, 136, 229, 0.1);
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
   }
-  
-  /* Typographie de base mobile */
-  body {
-    font-size: var(--mobile-font-base);
-    line-height: var(--mobile-line-height-normal);
-    -webkit-text-size-adjust: 100%;
-  }
-  
-  /* GPU Acceleration pour meilleures performances */
-  .app, .mapwrap, .sidebar, .mobile-nav, .fab-button {
-    transform: translateZ(0);
-    will-change: transform;
-    -webkit-backface-visibility: hidden;
-    backface-visibility: hidden;
-  }
-  
-  /* Touch targets conformes aux guidelines (48px minimum Material Design) */
-  .btn, .toggle, .mobile-nav-item, .location-item, .sidebar-close {
+  .btn, .toggle, .mobile-nav-item, .location-item {
     touch-action: manipulation;
     -webkit-touch-callout: none;
-    min-height: var(--touch-target-min); /* 48px minimum */
-    min-width: var(--touch-target-min);
-    padding: var(--mobile-spacing-sm) var(--mobile-spacing-md);
-  }
-  
-  /* Espacement minimum entre éléments interactifs (16px Material Design) */
-  .btn + .btn, .toggle + .toggle {
-    margin-left: var(--mobile-spacing-md);
   }
 
   .app {
     grid-template-columns: 1fr; 
     padding: 0; 
-    height: 100vh;
-    height: calc(100vh - var(--safe-area-inset-top) - var(--safe-area-inset-bottom));
+    height: 100vh; 
     display: block;
-    padding-top: var(--safe-area-inset-top);
-    padding-bottom: var(--safe-area-inset-bottom);
   }
   .mapwrap {
-    height: 100vh;
-    height: calc(100vh - var(--safe-area-inset-top) - var(--safe-area-inset-bottom));
+    height: 100vh; 
     border-radius: 0; 
     box-shadow: none;
     /* S'assurer que la carte reste interactive même avec la sidebar ouverte */
     pointer-events: auto;
-    padding-top: var(--safe-area-inset-top);
   }
   
   /* S'assurer que la carte peut recevoir les interactions */
@@ -1872,14 +1804,12 @@ input[type="file"] { padding: 8px 12px; } /* Ajustement pour le type file */
   }
 
   .sidebar-content {
-    padding: var(--mobile-spacing-lg) var(--mobile-spacing-md);
+    padding: 0 var(--spacing-unit);
     overflow-y: auto;
     flex-grow: 1;
-    padding-top: calc(var(--mobile-spacing-lg) + var(--safe-area-inset-top));
-    padding-bottom: calc(100px + var(--safe-area-inset-bottom)); /* Espace pour FAB et navigation */
+    padding-top: 20px;
+    padding-bottom: 100px; /* Espace pour FAB et navigation */
     -webkit-overflow-scrolling: touch;
-    /* Améliorer le scroll sur iOS */
-    overscroll-behavior-y: contain;
   }
   .brand, #desktop-footer { display: none; }
 
@@ -1888,8 +1818,7 @@ input[type="file"] { padding: 8px 12px; } /* Ajustement pour le type file */
     display: flex; 
     justify-content: space-around; 
     align-items: center;
-    padding: 12px 5px;
-    padding-top: calc(12px + var(--safe-area-inset-top));
+    padding: 12px 5px; 
     border-bottom: 1px solid var(--color-border);
     background: var(--color-bg-panel);
     border-top-left-radius: 0;
@@ -1899,30 +1828,26 @@ input[type="file"] { padding: 8px 12px; } /* Ajustement pour le type file */
     z-index: 10;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
     margin-bottom: 0;
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
   }
   .mobile-nav-item {
     flex: 1; 
     text-align: center; 
-    padding: var(--mobile-spacing-md) var(--mobile-spacing-sm); 
+    padding: 12px 5px; 
     cursor: pointer;
     font-weight: 700; 
     color: var(--color-text-muted);
     border-bottom: 3px solid transparent; 
-    font-size: var(--mobile-font-sm); /* 14px minimum */
-    min-height: var(--touch-target-comfort); /* 56px pour confort optimal */
+    font-size: 0.85rem;
+    min-height: 50px;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: var(--mobile-spacing-xs); /* 4px entre icône et texte */
+    gap: 4px;
     transition: all 0.2s;
-    /* Espacement horizontal entre items */
-    margin: 0 var(--mobile-spacing-xs);
   }
   .mobile-nav-item i {
-    font-size: 1.3rem; /* Légèrement plus grand pour meilleure visibilité */
+    font-size: 1.2rem;
   }
   .mobile-nav-item.active { 
     color: var(--color-primary); 
@@ -1935,18 +1860,15 @@ input[type="file"] { padding: 8px 12px; } /* Ajustement pour le type file */
     transition: transform 0.1s;
   }
 
-  /* Floating Action Button (FAB) stylé et moderne - Zone de confort */
+  /* Floating Action Button (FAB) stylé et moderne */
   .fab-button {
     display: flex; 
     position: fixed; 
-    /* Position optimisée pour utilisation à une main (zone de confort) */
-    bottom: calc(var(--mobile-spacing-xl) + var(--safe-area-inset-bottom)); /* 32px du bas */
-    right: calc(var(--mobile-spacing-xl) + var(--safe-area-inset-right)); /* 32px de la droite */
+    bottom: 0px; 
+    right: 25px; 
     z-index: 1200;
-    width: 64px; /* Légèrement réduit mais toujours confortable */
-    height: 64px;
-    min-width: var(--touch-target-comfort); /* 56px minimum */
-    min-height: var(--touch-target-comfort); 
+    width: 70px; 
+    height: 70px; 
     background: var(--color-primary-gradient);
     border-radius: 50%; 
     color: white; 
@@ -2035,15 +1957,12 @@ input[type="file"] { padding: 8px 12px; } /* Ajustement pour le type file */
   .map-controls {
     left: 50%; 
     transform: translateX(-50%); 
-    top: calc(15px + var(--safe-area-inset-top));
+    top: 15px;
     border-radius: 50px; 
     padding: 8px 10px;
     flex-wrap: wrap;
     gap: 5px;
-    max-width: calc(100% - 30px - var(--safe-area-inset-left) - var(--safe-area-inset-right));
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
-    background: rgba(255, 255, 255, 0.95);
+    max-width: calc(100% - 30px);
   }
   .toggle {
     min-width: 42px;
@@ -2052,23 +1971,21 @@ input[type="file"] { padding: 8px 12px; } /* Ajustement pour le type file */
     font-size: 1rem;
   }
 
-  /* Bouton fermer sidebar - Zone de confort optimisée */
+  /* Bouton fermer sidebar */
   .sidebar-close {
     position: absolute; 
-    top: calc(var(--mobile-spacing-md) + var(--safe-area-inset-top)); /* 16px du haut */
-    left: var(--mobile-spacing-md); /* 16px de la gauche */
-    background: rgba(255, 255, 255, 0.95); 
+    top: 15px; 
+    left: 15px;
+    background: rgba(255, 255, 255, 0.9); 
     border: none; 
-    font-size: 1.5rem; /* Légèrement plus grand */
+    font-size: 1.4rem;
     color: var(--color-text-muted); 
     cursor: pointer; 
-    padding: var(--mobile-spacing-sm); 
+    padding: 8px; 
     z-index: 20;
     border-radius: 50%;
-    width: var(--touch-target-min); /* 48px */
-    height: var(--touch-target-min);
-    min-width: var(--touch-target-min);
-    min-height: var(--touch-target-min);
+    width: 40px;
+    height: 40px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -2083,76 +2000,28 @@ input[type="file"] { padding: 8px 12px; } /* Ajustement pour le type file */
   .sidebar .panel {
     border: none; 
     box-shadow: none; 
-    padding: var(--mobile-spacing-lg) 0; /* 24px vertical */
+    padding: 20px 0; 
     margin-bottom: 0;
     border-top: 1px solid var(--color-border);
   }
   .sidebar .panel:first-child { 
     border-top: none; 
-    padding-top: var(--mobile-spacing-md);
   }
   .panel h3 {
-    font-size: var(--mobile-font-xl); /* 20px */
-    font-weight: 700;
-    margin-bottom: var(--mobile-spacing-lg) !important; /* 24px */
-    line-height: var(--mobile-line-height-tight);
-    color: var(--color-text-dark);
-  }
-  
-  .panel h4 {
-    font-size: var(--mobile-font-lg); /* 18px */
-    font-weight: 600;
-    margin-bottom: var(--mobile-spacing-md); /* 16px */
-    line-height: var(--mobile-line-height-normal);
-  }
-  
-  .panel p {
-    font-size: var(--mobile-font-base); /* 16px */
-    line-height: var(--mobile-line-height-relaxed); /* 1.7 pour meilleure lisibilité */
-    margin-bottom: var(--mobile-spacing-md);
+    font-size: 1.2rem;
+    margin-bottom: 15px !important;
   }
 
-  /* Formulaires mobile - Conformes aux guidelines */
+  /* Formulaires mobile */
   .field {
-    margin-bottom: var(--mobile-spacing-lg); /* 24px entre les champs */
+    margin-bottom: 15px;
     position: relative;
   }
-  
-  .field label {
-    font-size: var(--mobile-font-sm); /* 14px */
-    font-weight: 600;
-    margin-bottom: var(--mobile-spacing-sm); /* 8px entre label et input */
-    display: block;
-    color: var(--color-text-dark);
-    line-height: var(--mobile-line-height-normal);
-  }
-  
   input[type="text"], select, textarea, input[type="date"], input[type="file"], input[type="number"] {
-    padding: var(--mobile-spacing-md); /* 16px - confortable pour le touch */
-    font-size: var(--mobile-font-base); /* 16px - évite le zoom automatique sur iOS */
+    padding: 14px;
+    font-size: 16px; /* Évite le zoom automatique sur iOS */
     border-radius: 12px;
     transition: border-color 0.2s, box-shadow 0.2s, transform 0.1s;
-    -webkit-appearance: none;
-    appearance: none;
-    /* Améliorer le rendu sur mobile */
-    -webkit-font-smoothing: antialiased;
-    text-rendering: optimizeLegibility;
-    line-height: var(--mobile-line-height-normal);
-    width: 100%;
-    box-sizing: border-box;
-    /* Zone de touch optimale */
-    min-height: var(--touch-target-min); /* 48px */
-  }
-  
-  textarea {
-    min-height: calc(var(--touch-target-min) * 2); /* 96px minimum */
-    resize: vertical;
-  }
-  
-  /* Améliorer le focus sur mobile */
-  input:focus, textarea:focus, select:focus {
-    outline: none;
-    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.2);
   }
   input[type="text"]:focus, select:focus, textarea:focus, input[type="date"]:focus, input[type="number"]:focus {
     transform: scale(1.01);
@@ -2167,26 +2036,15 @@ input[type="file"] { padding: 8px 12px; } /* Ajustement pour le type file */
   }
   .form-button-group {
     flex-wrap: wrap;
-    gap: var(--mobile-spacing-md); /* 16px entre boutons */
-    margin-top: var(--mobile-spacing-lg); /* 24px au-dessus du groupe */
+    gap: 10px;
   }
   .btn {
-    padding: var(--mobile-spacing-md) var(--mobile-spacing-lg); /* 16px 24px */
-    font-size: var(--mobile-font-base); /* 16px */
-    font-weight: 600;
-    min-height: var(--touch-target-min); /* 48px */
-    min-width: var(--touch-target-min);
+    padding: 12px 18px;
+    font-size: 0.95rem;
+    min-height: 44px;
     position: relative;
     overflow: hidden;
     transition: transform 0.1s, box-shadow 0.2s;
-    line-height: var(--mobile-line-height-normal);
-    /* Espacement entre boutons */
-    margin: var(--mobile-spacing-xs);
-  }
-  
-  .btn.primary {
-    min-height: var(--touch-target-comfort); /* 56px pour boutons principaux */
-    padding: var(--mobile-spacing-md) var(--mobile-spacing-xl);
   }
   .btn:active {
     transform: scale(0.96);
@@ -2213,51 +2071,39 @@ input[type="file"] { padding: 8px 12px; } /* Ajustement pour le type file */
     min-width: 120px;
   }
 
-  /* Liste des localisations mobile - Conformes aux guidelines */
+  /* Liste des localisations mobile */
   .location-item {
-    padding: var(--mobile-spacing-md); /* 16px */
-    margin-bottom: var(--mobile-spacing-md); /* 16px entre items */
-    min-height: calc(var(--touch-target-min) * 1.5); /* 72px minimum */
+    padding: 15px;
+    margin-bottom: 10px;
+    min-height: 80px;
     transition: transform 0.2s, box-shadow 0.2s;
-    border-radius: var(--radius-default);
-    /* Espacement interne optimal */
-    gap: var(--mobile-spacing-md);
   }
   .location-item:active {
     transform: scale(0.98);
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
   }
   .location-item img {
-    width: 64px; /* Légèrement réduit mais toujours visible */
-    height: 64px;
-    border-radius: var(--radius-small);
+    width: 70px;
+    height: 70px;
     transition: transform 0.2s;
-    flex-shrink: 0;
   }
   .location-item:active img {
     transform: scale(0.95);
   }
   .location-item h4 {
-    font-size: var(--mobile-font-base); /* 16px */
-    font-weight: 600;
-    line-height: var(--mobile-line-height-tight);
-    margin-bottom: var(--mobile-spacing-xs);
+    font-size: 1rem;
   }
   .location-item p {
-    font-size: var(--mobile-font-sm); /* 14px */
-    line-height: var(--mobile-line-height-normal);
-    color: var(--color-text-muted);
+    font-size: 0.85rem;
   }
   .location-actions {
     flex-direction: column;
-    gap: var(--mobile-spacing-sm); /* 8px entre boutons d'action */
+    gap: 5px;
   }
   .location-actions .btn {
-    width: var(--touch-target-min); /* 48px minimum */
-    height: var(--touch-target-min);
-    min-width: var(--touch-target-min);
-    min-height: var(--touch-target-min);
-    padding: var(--mobile-spacing-sm);
+    width: 36px;
+    height: 36px;
+    padding: 0;
   }
   #locationsList { 
     max-height: 55vh; 
@@ -2267,26 +2113,19 @@ input[type="file"] { padding: 8px 12px; } /* Ajustement pour le type file */
   /* Statistiques mobile */
   .stat-grid {
     grid-template-columns: 1fr;
-    gap: var(--mobile-spacing-md); /* 16px */
+    gap: 10px;
   }
   .stat-item {
-    padding: var(--mobile-spacing-lg); /* 24px */
-    border-radius: var(--radius-default);
+    padding: 15px;
   }
   .stat-item strong {
-    font-size: var(--mobile-font-xxl); /* 24px */
-    line-height: var(--mobile-line-height-tight);
-  }
-  .stat-item p {
-    font-size: var(--mobile-font-sm);
-    margin-top: var(--mobile-spacing-xs);
+    font-size: 1.4rem;
   }
 
   /* Filtres mobile */
   .filter-group {
     flex-direction: column;
-    gap: var(--mobile-spacing-md); /* 16px */
-    margin-bottom: var(--mobile-spacing-lg);
+    gap: 10px;
   }
   .filter-group input, .filter-group select {
     width: 100%;
@@ -2326,11 +2165,10 @@ input[type="file"] { padding: 8px 12px; } /* Ajustement pour le type file */
     border-radius: 24px 24px 0 0;
     max-height: 90vh;
     overflow-y: auto;
-    padding: calc(var(--mobile-spacing-lg) + var(--safe-area-inset-top)) var(--mobile-spacing-md) calc(var(--mobile-spacing-lg) + var(--safe-area-inset-bottom));
+    padding: 25px 20px;
     transform: translateY(100%);
     -webkit-overflow-scrolling: touch;
     box-shadow: 0 -5px 30px rgba(0, 0, 0, 0.3);
-    overscroll-behavior-y: contain;
   }
   .modal-overlay.open .modal-content {
     transform: translateY(0);
@@ -2347,13 +2185,10 @@ input[type="file"] { padding: 8px 12px; } /* Ajustement pour le type file */
     }
   }
   .modal-close {
-    top: calc(var(--mobile-spacing-md) + var(--safe-area-inset-top));
-    left: var(--mobile-spacing-md);
-    width: var(--touch-target-min); /* 48px */
-    height: var(--touch-target-min);
-    min-width: var(--touch-target-min);
-    min-height: var(--touch-target-min);
-    padding: var(--mobile-spacing-sm);
+    top: 10px;
+    left: 10px;
+    width: 36px;
+    height: 36px;
   }
 
   /* Preview image mobile */
@@ -2883,70 +2718,12 @@ function formatDate(timestamp) {
 /* --------------------------------- */
 
 function initMap(){
-  const isMobile = window.matchMedia('(max-width: 1024px)').matches;
-  
-  // Options optimisées pour mobile
-  const mapOptions = {
-    center: ALGERIA_CENTER, 
-    zoom: 5, 
-    minZoom: 5, 
-    maxZoom: 12, 
-    zoomControl: !isMobile, // Désactiver les contrôles par défaut sur mobile (on les ajoute manuellement)
-    touchZoom: true,
-    doubleClickZoom: true,
-    boxZoom: false, // Désactiver box zoom sur mobile
-    keyboard: true,
-    scrollWheelZoom: !isMobile, // Désactiver scroll wheel sur mobile (conflit avec scroll)
-    dragging: true,
-    tap: true,
-    // Optimisations de performance mobile
-    preferCanvas: isMobile, // Utiliser canvas pour meilleures performances
-    fadeAnimation: !isMobile, // Désactiver fade sur mobile pour performance
-    zoomAnimation: true,
-    zoomAnimationThreshold: 4,
-    markerZoomAnimation: true,
-    // Réduire la latence tactile
-    tapTolerance: 15,
-    wheelPxPerZoomLevel: 60
-  };
-  
-  map = L.map('map', mapOptions);
+  map = L.map('map', {center: ALGERIA_CENTER, zoom:5, minZoom:5, maxZoom:12, zoomControl:true});
 
-  // Optimiser les tiles pour mobile (réduire la qualité si nécessaire)
-  const tileOptions = {
-    maxZoom: 19, 
-    attribution: '© OpenStreetMap contributors',
-    // Optimisations mobile
-    updateWhenZooming: !isMobile, // Ne pas mettre à jour pendant le zoom sur mobile
-    updateWhenIdle: true,
-    keepBuffer: isMobile ? 2 : 4, // Réduire le buffer sur mobile
-    maxNativeZoom: 19
-  };
-  
-  tileDefault = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', tileOptions).addTo(map);
+  tileDefault = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19, attribution:'© OpenStreetMap contributors'}).addTo(map);
   tileToner = L.tileLayer('https://stamen-tiles.a.ssl.fastly.net/toner-lite/{z}/{x}/{y}.png',{maxZoom:20, attribution:'Tiles: Stamen'});
 
-  // Optimiser le clustering pour mobile
-  markerCluster = L.markerClusterGroup({
-    chunkedLoading: true,
-    chunkDelay: isMobile ? 100 : 200, // Plus rapide sur mobile
-    chunkInterval: isMobile ? 200 : 500,
-    spiderfyOnMaxZoom: false, // Désactiver spiderfy sur mobile (trop complexe)
-    showCoverageOnHover: false,
-    zoomToBoundsOnClick: true,
-    maxClusterRadius: isMobile ? 50 : 80, // Clusters plus petits sur mobile
-    iconCreateFunction: function(cluster) {
-      const count = cluster.getChildCount();
-      let size = 'small';
-      if (count > 100) size = 'large';
-      else if (count > 20) size = 'medium';
-      return L.divIcon({
-        html: `<div class="cluster-icon cluster-${size}">${count}</div>`,
-        className: 'marker-cluster',
-        iconSize: L.point(40, 40)
-      });
-    }
-  });
+  markerCluster = L.markerClusterGroup({chunkedLoading:true});
   map.addLayer(markerCluster);
 
   heatLayer = L.heatLayer([], {radius: 25, blur: 18, maxZoom: 11});
@@ -3226,71 +3003,7 @@ function convertImageToBase64(file) {
 /**
  * Gestion de l'ajout (Création)
  */
-async function handleSubmit(){
-  const nom = document.getElementById('nom').value.trim();
-  const adresse = document.getElementById('adresse').value.trim();
-  const type = document.getElementById('type_arbre').value;
-  const quantite = parseInt(document.getElementById('quantite').value);
-  const lat = parseFloat(document.getElementById('latitude').value);
-  const lng = parseFloat(document.getElementById('longitude').value);
-  const date = document.getElementById('date_planted').value || null;
-  const photoInput = document.getElementById('photo');
-  const photoFile = photoInput.files[0];
-
-  if(!nom || !type){ 
-    showFormMessage('الاسم ونوع الشجرة مطلوبان', 'error'); 
-    hapticFeedback('error');
-    return; 
-  }
-  if(isNaN(quantite) || quantite < 1){ 
-    showFormMessage('الرجاء تحديد عدد الأشجار (1 على الأقل)', 'error'); 
-    hapticFeedback('error');
-    return; 
-  }
-  if(isNaN(lat) || isNaN(lng)){ 
-    showFormMessage('المرجو وضع الإحداثيات', 'error'); 
-    hapticFeedback('error');
-    return; 
-  }
-
-  const checkBounds = geojsonBounds || APPROX_BOUNDS;
-  if(!checkBounds.contains([lat,lng])){ 
-    showFormMessage('الإحداثيات خارج حدود الجزائر', 'error'); 
-    hapticFeedback('error');
-    return; 
-  }
-
-  // Haptic feedback de succès
-  hapticFeedback('success');
-
-  // Convertir la photo en base64 pour sauvegarde permanente
-  let photoBase64 = null;
-  if(photoFile) {
-    try {
-      photoBase64 = await convertImageToBase64(photoFile);
-    } catch(error) {
-      console.error('Erreur lors de la conversion de la photo:', error);
-      showFormMessage('خطأ في تحميل الصورة', 'error');
-    }
-  }
-
-  const id = 'e_'+Date.now()+'_'+Math.random().toString(36).slice(2,8);
-  const entry = { id, nom, adresse, type, quantite, lat, lng, date, photo: photoBase64, createdAt:Date.now() };
-  entries.unshift(entry); // Ajout au début pour le "Plus récent"
-  saveToStorage();
-  addEntryToMap(entry);
-
-  if (tempMarker) { map.removeLayer(tempMarker); tempMarker = null; }
-  map.setView([lat, lng], 13);
-
-  applyFiltersAndSort(); // Met à jour la liste et les stats
-  showFormMessage('✅ تم إضافة الشجرة بنجاح!', 'success');
-  resetForm();
-  validateForm();
-  
-  // Afficher le détail de la nouvelle entrée
-  showDetailPanel(id);
-}
+// handleSubmit() est définie plus bas dans le fichier avec l'envoi au serveur
 
 /**
  * Gestion de la modification (Update)
@@ -3771,33 +3484,51 @@ function handleGeolocation(){
           
           // Si c'est la première tentative de fallback, on essaie silencieusement
           if (watchPositionId === null) {
-              showFormMessage('جاري تفعيل GPS... يرجى الانتظار', 'alert');
+              showFormMessage('جاري تفعيل GPS... (قد يستغرق دقيقة)', 'alert');
+              
+              // TENTATIVE DE RECUPERATION AVEC OPTIONS PLUS LARGES
+              const fallbackOptions = {
+                  enableHighAccuracy: true, // On insiste sur le GPS
+                  timeout: 60000,
+                  maximumAge: 0
+              };
+
               watchPositionId = navigator.geolocation.watchPosition(
                 handleSuccess,
                 function(watchErr) {
                   console.error('Erreur watchPosition:', watchErr);
-                  // Si échec watchPosition, on affiche le message final demandant d'activer le GPS
-                  if (watchErr.code === 2 || watchErr.code === 3) {
-                      showFormMessage('⚠️ الرجاء تفعيل GPS في هاتفك ثم المحاولة مرة أخرى', 'error');
-                      btn.innerHTML = '<i class="fas fa-redo"></i> إعادة المحاولة';
-                      btn.onclick = function() { handleGeolocation(); };
-                      btn.disabled = false;
-                  } else {
-                      showFormMessage('فشل تحديد الموقع. يرجى تفعيل GPS.', 'error');
-                      btn.innerHTML = originalHtml;
-                      btn.disabled = originalDisabled;
+                  
+                  // Si échec total du GPS, tenter une dernière fois en mode "basse précision" (Wifi/Réseau)
+                  if (watchErr.code === 3 || watchErr.code === 2) {
+                       console.log('Echec GPS, tentative basse précision...');
+                       navigator.geolocation.getCurrentPosition(
+                           handleSuccess,
+                           function(finalErr) {
+                               // Echec final
+                               let finalMsg = 'فشل تحديد الموقع بدقة. يرجى تفعيل GPS والمحاولة مرة أخرى.';
+                               if (finalErr.code === 1) finalMsg = 'تم رفض الإذن. يرجى تفعيل الموقع للمتصفح.';
+                               
+                               showFormMessage(finalMsg, 'error');
+                               
+                               btn.innerHTML = '<i class="fas fa-redo"></i> إعادة المحاولة';
+                               btn.onclick = function() { handleGeolocation(); };
+                               btn.disabled = false;
+                           },
+                           { enableHighAccuracy: false, timeout: 15000, maximumAge: 600000 }
+                       );
+                       return;
                   }
+
+                  showFormMessage('فشل تحديد الموقع. يرجى تفعيل GPS.', 'error');
+                  btn.innerHTML = originalHtml;
+                  btn.disabled = originalDisabled;
                   
                   if (watchPositionId !== null) {
                     navigator.geolocation.clearWatch(watchPositionId);
                     watchPositionId = null;
                   }
                 },
-                {
-                  enableHighAccuracy: true,
-                  timeout: 45000,
-                  maximumAge: 0
-                }
+                fallbackOptions
               );
               return; // Ne pas restaurer le bouton maintenant
           }
@@ -4421,61 +4152,12 @@ function initKeyboardHandling() {
     if (!isMobile) return;
 
     const inputs = document.querySelectorAll('input, textarea, select');
-    let activeInput = null;
-    let keyboardHeight = 0;
-    
-    // Détecter la hauteur du clavier virtuel
-    const detectKeyboardHeight = () => {
-        const viewportHeight = window.visualViewport ? window.visualViewport.height : window.innerHeight;
-        const windowHeight = window.innerHeight;
-        keyboardHeight = windowHeight - viewportHeight;
-        return keyboardHeight;
-    };
-    
     inputs.forEach(input => {
         input.addEventListener('focus', function() {
-            activeInput = this;
-            detectKeyboardHeight();
-            
-            // Attendre que le clavier apparaisse
+            // Scroll vers l'input pour qu'il soit visible
             setTimeout(() => {
-                const rect = this.getBoundingClientRect();
-                const viewportHeight = window.visualViewport ? window.visualViewport.height : window.innerHeight;
-                const inputBottom = rect.bottom;
-                const spaceBelow = viewportHeight - inputBottom;
-                
-                // Si l'input est caché par le clavier, scroller
-                if (spaceBelow < 100) {
-                    const scrollContainer = this.closest('.sidebar-content') || document.body;
-                    const scrollOffset = inputBottom - viewportHeight + 150; // 150px de marge
-                    
-                    if (scrollContainer === document.body) {
-                        window.scrollTo({
-                            top: window.scrollY + scrollOffset,
-                            behavior: 'smooth'
-                        });
-                    } else {
-                        scrollContainer.scrollTo({
-                            top: scrollContainer.scrollTop + scrollOffset,
-                            behavior: 'smooth'
-                        });
-                    }
-                }
+                input.scrollIntoView({ behavior: 'smooth', block: 'center' });
             }, 300);
-        });
-        
-        input.addEventListener('blur', function() {
-            activeInput = null;
-            // Petit délai pour permettre la soumission du formulaire
-            setTimeout(() => {
-                if (keyboardHeight > 0) {
-                    // Le clavier se ferme, restaurer le scroll si nécessaire
-                    window.scrollTo({
-                        top: 0,
-                        behavior: 'smooth'
-                    });
-                }
-            }, 100);
         });
 
         // Gérer la soumission du formulaire avec Enter
@@ -4484,115 +4166,40 @@ function initKeyboardHandling() {
                 const form = e.target.closest('form');
                 if (form) {
                     e.preventDefault();
-                    // Fermer le clavier virtuel
-                    this.blur();
-                    setTimeout(() => {
-                        const submitBtn = form.querySelector('button[type="submit"]');
-                        if (submitBtn && !submitBtn.disabled) {
-                            submitBtn.click();
-                        }
-                    }, 100);
-                }
-            }
-        });
-    });
-    
-    // Gérer le changement de taille du viewport (clavier qui apparaît/disparaît)
-    if (window.visualViewport) {
-        window.visualViewport.addEventListener('resize', () => {
-            if (activeInput) {
-                const rect = activeInput.getBoundingClientRect();
-                const viewportHeight = window.visualViewport.height;
-                const inputBottom = rect.bottom;
-                const spaceBelow = viewportHeight - inputBottom;
-                
-                if (spaceBelow < 50) {
-                    const scrollContainer = activeInput.closest('.sidebar-content') || document.body;
-                    const scrollOffset = inputBottom - viewportHeight + 100;
-                    
-                    if (scrollContainer === document.body) {
-                        window.scrollTo({
-                            top: window.scrollY + scrollOffset,
-                            behavior: 'smooth'
-                        });
-                    } else {
-                        scrollContainer.scrollTo({
-                            top: scrollContainer.scrollTop + scrollOffset,
-                            behavior: 'smooth'
-                        });
+                    const submitBtn = form.querySelector('button[type="submit"]');
+                    if (submitBtn && !submitBtn.disabled) {
+                        submitBtn.click();
                     }
                 }
             }
         });
-    }
+    });
 }
 
 /* Gestion du changement d'orientation */
-let orientationChangeTimeout = null;
 function handleOrientationChange() {
     const isMobile = window.matchMedia('(max-width: 1024px)').matches;
     if (!isMobile) return;
 
-    // Debounce pour éviter les appels multiples
-    if (orientationChangeTimeout) {
-        clearTimeout(orientationChangeTimeout);
-    }
-    
-    orientationChangeTimeout = setTimeout(() => {
-        const isLandscape = window.innerWidth > window.innerHeight;
-        const viewportHeight = window.visualViewport ? window.visualViewport.height : window.innerHeight;
-        
-        // Ajuster la hauteur de la sidebar selon l'orientation
-        const sidebar = document.getElementById('sidebar');
-        if (sidebar && sidebar.classList.contains('visible')) {
+    // Ajuster la hauteur de la sidebar selon l'orientation
+    const sidebar = document.getElementById('sidebar');
+    if (sidebar && sidebar.classList.contains('visible')) {
+        // Forcer un recalcul de la hauteur
+        setTimeout(() => {
             const sidebarContent = sidebar.querySelector('.sidebar-content');
             if (sidebarContent) {
-                // En paysage, réduire la hauteur pour laisser plus d'espace à la carte
-                const maxHeight = isLandscape ? viewportHeight * 0.6 : viewportHeight * 0.85;
-                sidebarContent.style.maxHeight = maxHeight + 'px';
+                sidebarContent.style.maxHeight = window.innerHeight * 0.8 + 'px';
             }
-        }
+        }, 100);
+    }
 
-        // Ajuster la carte avec plusieurs tentatives pour s'assurer que ça fonctionne
-        if (map) {
-            // Première tentative immédiate
+    // Ajuster la carte
+    if (map) {
+        setTimeout(() => {
             map.invalidateSize();
-            
-            // Deuxième tentative après un court délai
-            setTimeout(() => {
-                map.invalidateSize();
-            }, 100);
-            
-            // Troisième tentative après un délai plus long (pour les navigateurs lents)
-            setTimeout(() => {
-                map.invalidateSize();
-            }, 500);
-        }
-        
-        // Ajuster le FAB selon l'orientation
-        const fab = document.querySelector('.fab-button');
-        if (fab) {
-            if (isLandscape) {
-                fab.style.bottom = 'calc(15px + var(--safe-area-inset-bottom))';
-            } else {
-                fab.style.bottom = 'calc(25px + var(--safe-area-inset-bottom))';
-            }
-        }
-        
-        // Ajuster les contrôles de carte
-        const mapControls = document.querySelector('.map-controls');
-        if (mapControls) {
-            if (isLandscape) {
-                mapControls.style.top = '10px';
-            } else {
-                mapControls.style.top = '15px';
-            }
-        }
-    }, 150);
+        }, 200);
+    }
 }
-
-// Écouter aussi les changements de taille de fenêtre (pour les navigateurs desktop en mode responsive)
-window.addEventListener('resize', handleOrientationChange);
 
 </script>
 <script>
