@@ -4287,7 +4287,12 @@ async function handleSubmit(){
 
     // 5. Appel au serveur (en arrière-plan)
     try {
-        const response = await fetch("http://localhost:3000/api/contributions", {
+        // Choix automatique du serveur : local ou Render
+        const API_BASE_URL = window.location.hostname === "localhost"
+            ? "http://localhost:3000"
+            : "https://greenalgeria.onrender.com";
+
+        const response = await fetch(`${API_BASE_URL}/api/contributions`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(dataToSend)
@@ -4299,11 +4304,10 @@ async function handleSubmit(){
 
         // Recharger depuis le serveur pour synchroniser (optionnel)
         await loadFromStorage();
-        
+
     } catch (err) {
         console.error("Échec de l'enregistrement au serveur:", err);
         // Le marqueur reste visible même si l'envoi au serveur échoue
-        // L'utilisateur peut réessayer plus tard
     }
 
     // 6. Messages de succès et nettoyage
