@@ -288,6 +288,8 @@ function showDetailPanel(id){
     document.getElementById('detail-quantite').textContent = `${entry.quantite} شجرة`;
     document.getElementById('detail-nom').textContent = escapeHtml(entry.nom);
     document.getElementById('detail-adresse').textContent = escapeHtml(entry.adresse || 'غير محدد');
+    document.getElementById('detail-city').textContent = escapeHtml(entry.city || 'غير محدد');
+    document.getElementById('detail-district').textContent = escapeHtml(entry.district || 'غير محدد');
     document.getElementById('detail-date').textContent = entry.date ? entry.date.replace(/-/g, '/') : 'غير محدد';
     document.getElementById('detail-createdAt').textContent = formatDate(entry.createdAt);
     document.getElementById('detail-coords').textContent = `${entry.lat.toFixed(6)}, ${entry.lng.toFixed(6)}`;
@@ -1068,11 +1070,13 @@ function updateList(filteredEntries){
     const typeIcon = getTreeIconClass(e.type);
 
     const meta = document.createElement('div'); meta.className='meta';
+    const locationInfo = [e.city, e.district].filter(Boolean).join(' — ') || 'غير متوفر';
     meta.innerHTML = `
       <h4>
         <i class="${typeIcon} type-icon"></i> ${escapeHtml(e.type)} (${e.quantite} شجرة)
       </h4>
       <p>${escapeHtml(e.nom)} — ${escapeHtml(e.adresse||'غير محدد')}</p>
+      <small class="muted">الموقع: ${escapeHtml(locationInfo)}</small>
       <small class="muted">أُضيف في: ${formatDate(e.createdAt)}</small>
     `;
 
@@ -1683,7 +1687,9 @@ async function loadRemoteSample(){
             const contributor = latest.nom || 'مشارك مجهول';
             const treeType = latest.type || 'نوع غير محدد';
             const createdAt = latest.createdAt ? new Date(latest.createdAt).toLocaleString('ar-EG') : '';
-            sampleInfo.textContent = `${contributor} — ${treeType}${createdAt ? ` (${createdAt})` : ''}`;
+            const locality = [latest.city, latest.district].filter(Boolean).join(' — ');
+            const locationTag = locality ? ` | ${locality}` : '';
+            sampleInfo.textContent = `${contributor} — ${treeType}${locationTag}${createdAt ? ` (${createdAt})` : ''}`;
             sampleInfo.style.display = 'block';
         } else {
             sampleImg.style.display = 'none';
