@@ -1169,6 +1169,21 @@ input[type="file"] { padding: 8px 12px; } /* Ajustement pour le type file */
   text-align: center;
 }
 
+.remote-sample {
+  margin-top: 24px;
+  padding: 20px;
+  border-radius: var(--radius-large);
+  border: 1px solid var(--glass-border);
+  background: var(--color-bg-panel);
+  box-shadow: var(--shadow-sm);
+}
+
+.remote-sample img {
+  width: 100%;
+  border-radius: var(--radius-small);
+  margin-top: 12px;
+}
+
 .stat-item::before {
   content: '';
   position: absolute;

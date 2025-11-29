@@ -1455,6 +1455,9 @@ document.addEventListener('DOMContentLoaded', function(){
   setTimeout(function() {
     attachGeolocationButton();
   }, 300);
+
+  // Exemple : charger une contribution depuis MongoDB (photo Base64 affichée dans la section dédiée)
+  loadRemoteSample();
 });
 
 /* Pull-to-refresh functionality */
@@ -1619,7 +1622,7 @@ async function handleSubmit(){
     }
 
     const id = 'e_'+Date.now()+'_'+Math.random().toString(36).slice(2,8);
-    const entry = { id, nom, adresse, type, quantite, lat, lng, date: datePlanted, photo: photoBase64, createdAt:Date.now() };
+    const entry = { id, nom, adresse, type, quantite, lat, lng, date: submissionDate, photo: photoBase64, createdAt:Date.now() };
     entries.unshift(entry);
     addEntryToMap(entry);
     if (tempMarker) { map.removeLayer(tempMarker); tempMarker = null; }
@@ -1628,8 +1631,8 @@ async function handleSubmit(){
     applyFiltersAndSort();
     showDetailPanel(id);
 
-    const date = new Date().toISOString();
-    const dataToSend = { nom, adresse, type, quantite, lat, lng, date, photo: photoBase64 };
+    const submissionDate = datePlanted || new Date().toISOString();
+    const dataToSend = { nom, adresse, type, quantite, lat, lng, date: submissionDate, photo: photoBase64 };
     console.log("📤 Envoi vers le serveur :", dataToSend);
 
     try {
@@ -1655,5 +1658,42 @@ async function handleSubmit(){
         console.error("❌ Erreur fetch :", err);
         alert("Impossible de contacter le serveur !");
         showFormMessage('تعذر الاتصال بالخادم. حاول لاحقاً.', 'error');
+    }
+}
+
+async function loadRemoteSample(){
+    const sampleImg = document.getElementById('remoteSamplePhoto');
+    const sampleInfo = document.getElementById('remoteSampleInfo');
+    if (!sampleImg || !sampleInfo) return;
+
+    try {
+        const response = await fetch('https://greenalgeria-backend.onrender.com/api/contributions?limit=1');
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}`);
+        }
+        const data = await response.json();
+        if (Array.isArray(data) && data.length > 0) {
+            const latest = data[0];
+            if (latest.photo) {
+                sampleImg.src = latest.photo;
+                sampleImg.style.display = 'block';
+            } else {
+                sampleImg.style.display = 'none';
+            }
+            const contributor = latest.nom || 'مشارك مجهول';
+            const treeType = latest.type || 'نوع غير محدد';
+            const createdAt = latest.createdAt ? new Date(latest.createdAt).toLocaleString('ar-EG') : '';
+            sampleInfo.textContent = `${contributor} — ${treeType}${createdAt ? ` (${createdAt})` : ''}`;
+            sampleInfo.style.display = 'block';
+        } else {
+            sampleImg.style.display = 'none';
+            sampleInfo.textContent = 'لا توجد بيانات لعرضها حالياً.';
+            sampleInfo.style.display = 'block';
+        }
+    } catch (error) {
+        console.warn('تعذر تحميل مثال الصورة من الخادم:', error);
+        sampleImg.style.display = 'none';
+        sampleInfo.textContent = 'تعذر تحميل مثال الصورة من الخادم.';
+        sampleInfo.style.display = 'block';
     }
 }

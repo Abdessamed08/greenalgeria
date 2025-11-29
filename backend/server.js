@@ -5,7 +5,7 @@ const cors = require('cors');
 
 const app = express();
 app.use(cors());
-app.use(express.json());
+app.use(express.json({ limit: '10mb' })); // accepter les images encodées en Base64
 
 // 🔹 URI MongoDB depuis variable d'environnement
 const uri = process.env.MONGO_URI; // configure MONGO_URI dans Render
@@ -41,6 +41,9 @@ startServer();
 // 🔹 Endpoint pour ajouter une contribution
 app.post('/api/contributions', async (req, res) => {
     try {
+        if (!collection) {
+            return res.status(503).json({ success: false, error: "Base de données non initialisée" });
+        }
         console.log("📥 Données reçues :", req.body);
 
         const data = req.body;
@@ -54,6 +57,25 @@ app.post('/api/contributions', async (req, res) => {
         res.json({ success: true, insertedId: result.insertedId });
     } catch (error) {
         console.error("❌ Erreur MongoDB :", error.message);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+// 🔹 Endpoint pour récupérer les contributions (utile pour recharger les photos Base64)
+app.get('/api/contributions', async (req, res) => {
+    try {
+        if (!collection) {
+            return res.status(503).json({ success: false, error: "Base de données non initialisée" });
+        }
+        const limit = Math.min(parseInt(req.query.limit, 10) || 100, 500);
+        const docs = await collection
+            .find({})
+            .sort({ createdAt: -1 })
+            .limit(limit)
+            .toArray();
+        res.json(docs);
+    } catch (error) {
+        console.error("❌ Erreur lors de la récupération des contributions :", error.message);
         res.status(500).json({ success: false, error: error.message });
     }
 });

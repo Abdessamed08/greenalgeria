@@ -172,6 +172,16 @@
             </div>
             <small class="muted" style="margin-top:8px; display:block;">تصدير/استيراد يحفظ بيانات الخريطة محليًا.</small>
           </div>
+
+          <div class="remote-sample" aria-live="polite">
+            <h4>معاينة صورة من MongoDB</h4>
+            <p class="muted">نقوم بجلب آخر مساهمة من الخادم للتأكد من أن الصور محفوظة وتظهر بشكل صحيح.</p>
+            <img id="remoteSamplePhoto" class="detail-img" alt="صورة مساهمة محملة من MongoDB" style="display:none;" />
+            <small id="remoteSampleInfo" class="muted" style="display:none;"></small>
+            <button type="button" class="btn ghost" onclick="loadRemoteSample()" style="margin-top:12px;">
+              <i class="fas fa-sync-alt"></i> تحديث المعاينة
+            </button>
+          </div>
         </div>
 
         <div class="panel panel-list mobile-panel" id="list-panel" style="display:none;">
