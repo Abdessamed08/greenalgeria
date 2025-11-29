@@ -4204,18 +4204,16 @@ function handleOrientationChange() {
 </script>
 <script>
 async function handleSubmit(){
-    // 1. Collecte des données du formulaire
     const nom = document.getElementById('nom').value.trim();
     const adresse = document.getElementById('adresse').value.trim();
-    const type = document.getElementById('type_arbre').value;
-    const quantite = parseInt(document.getElementById('quantite').value);
+    const type = document.getElementById('type_arbre').value.trim();
+    const quantite = parseInt(document.getElementById('quantite').value, 10);
     const lat = parseFloat(document.getElementById('latitude').value);
     const lng = parseFloat(document.getElementById('longitude').value);
-    const date = document.getElementById('date_planted').value || null;
+    const datePlanted = document.getElementById('date_planted').value || null;
     const photoInput = document.getElementById('photo');
     const photoFile = photoInput.files[0];
 
-    // 2. Validation des données
     if(!nom || !type){ 
         showFormMessage('الاسم ونوع الشجرة مطلوبان', 'error'); 
         hapticFeedback('error');
@@ -4239,10 +4237,8 @@ async function handleSubmit(){
         return; 
     }
 
-    // Haptic feedback de succès
     hapticFeedback('success');
 
-    // 3. Convertir la photo en base64 pour sauvegarde permanente
     let photoBase64 = null;
     if(photoFile) {
         try {
@@ -4253,66 +4249,44 @@ async function handleSubmit(){
         }
     }
 
-    // 4. Création de l'entrée et ajout immédiat sur la carte
     const id = 'e_'+Date.now()+'_'+Math.random().toString(36).slice(2,8);
-    const entry = { id, nom, adresse, type, quantite, lat, lng, date, photo: photoBase64, createdAt:Date.now() };
-    entries.unshift(entry); // Ajout au début pour le "Plus récent"
-    
-    // Ajout immédiat du marqueur avec icône d'arbre sur la carte
+    const entry = { id, nom, adresse, type, quantite, lat, lng, date: datePlanted, photo: photoBase64, createdAt:Date.now() };
+    entries.unshift(entry);
     addEntryToMap(entry);
-    
-    // Retirer le marqueur temporaire
     if (tempMarker) { map.removeLayer(tempMarker); tempMarker = null; }
-    
-    // Centrer la carte sur le nouvel emplacement
     map.setView([lat, lng], 13);
-
-    // Sauvegarder localement
     saveToStorage();
-    
-    // Mettre à jour la liste et les stats
     applyFiltersAndSort();
+    showDetailPanel(id);
 
-    // 4. Préparation du corps JSON pour l'envoi au serveur
-    const dataToSend = {
-        nom: nom,
-        adresse: adresse,
-        type: type,
-        quantite: quantite,
-        lat: lat,
-        lng: lng,
-        date: date,
-        // La photo est plus complexe, nous allons l'omettre pour le moment
-    };
+    const date = new Date().toISOString();
+    const dataToSend = { nom, adresse, type, quantite, lat, lng, date, photo: photoBase64 };
+    console.log("📤 Envoi vers le serveur :", dataToSend);
 
-    // 5. Appel au serveur (en arrière-plan)
     try {
-        const response = await fetch("http://localhost:3000/api/contributions", {
+        const response = await fetch("https://greenalgeria-backend.onrender.com/api/contributions", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(dataToSend)
         });
 
-        if (!response.ok) {
-            throw new Error(`Erreur HTTP: ${response.status}`);
+        const result = await response.json().catch(() => ({}));
+        if (response.ok && result.success) {
+            console.log("✅ Arbre enregistré avec ID :", result.insertedId);
+            alert("Arbre ajouté avec succès !");
+            showFormMessage('✅ تم إضافة الشجرة بنجاح!', 'success');
+            resetForm();
+            validateForm();
+        } else {
+            console.error("❌ Erreur serveur :", result.error || 'Réponse invalide');
+            alert("Erreur lors de l\'ajout de l\'arbre !");
+            showFormMessage('حدث خطأ عند الاتصال بالخادم', 'error');
         }
-
-        // Recharger depuis le serveur pour synchroniser (optionnel)
-        await loadFromStorage();
-        
     } catch (err) {
-        console.error("Échec de l'enregistrement au serveur:", err);
-        // Le marqueur reste visible même si l'envoi au serveur échoue
-        // L'utilisateur peut réessayer plus tard
+        console.error("❌ Erreur fetch :", err);
+        alert("Impossible de contacter le serveur !");
+        showFormMessage('تعذر الاتصال بالخادم. حاول لاحقاً.', 'error');
     }
-
-    // 6. Messages de succès et nettoyage
-    showFormMessage('✅ تم إضافة الشجرة بنجاح!', 'success');
-    resetForm();
-    validateForm();
-    
-    // Afficher le détail de la nouvelle entrée
-    showDetailPanel(id);
 }
 </script>
 
