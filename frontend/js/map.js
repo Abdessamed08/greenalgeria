@@ -66,6 +66,39 @@ function toast(msg, type='success', timeout=4000){
 /* Helper escape */
 function escapeHtml(s){ if(!s) return ''; return s.replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 
+/**
+ * Convertit une URL d'image en URL optimisée Gumlet
+ * @param {string} photoUrl - URL de l'image (relative ou absolue)
+ * @returns {string} - URL Gumlet optimisée
+ */
+function getGumletUrl(photoUrl) {
+    // Si vide ou null, retourner le placeholder
+    if (!photoUrl) return 'https://via.placeholder.com/400x200?text=No+Image';
+    
+    // Si c'est déjà une URL Gumlet, la retourner telle quelle
+    if (photoUrl.includes('cdn.gumlet.')) return photoUrl;
+    
+    // 🔹 NOUVEAU FORMAT MIGRÉ : /static/images/
+    if (photoUrl.startsWith('/static/images/')) {
+        return `https://cdn.gumlet.io/greenalgeria${photoUrl}?w=800&format=auto`;
+    }
+    
+    // 🔹 ANCIEN FORMAT UPLOAD : /uploads/ (relatif)
+    if (photoUrl.startsWith('/uploads/')) {
+        return `https://cdn.gumlet.io/greenalgeria${photoUrl}?w=800&format=auto`;
+    }
+    
+    // 🔹 ANCIEN FORMAT UPLOAD : URL absolue avec le domaine backend
+    if (photoUrl.includes('greenalgeria-backend.onrender.com/uploads/')) {
+        // Extraire juste le chemin relatif après le domaine
+        const urlObj = new URL(photoUrl);
+        return `https://cdn.gumlet.io/greenalgeria${urlObj.pathname}?w=800&format=auto`;
+    }
+    
+    // Si c'est une image Base64 ou autre format non reconnu, retourner tel quel
+    return photoUrl;
+}
+
 /* Récupère l'icône Font Awesome basée sur le type */
 function getTreeIconClass(type) {
     type = type.toLowerCase();
@@ -281,7 +314,7 @@ function showDetailPanel(id){
 
     // Mise à jour du contenu
     document.getElementById('detail-title').innerHTML = `<i class="${typeIcon}" style="margin-left:5px; color:var(--color-secondary);"></i> ${escapeHtml(entry.type)}`;
-    document.getElementById('detail-photo').src = entry.photo || 'https://via.placeholder.com/400x200?text=No+Image';
+    document.getElementById('detail-photo').src = getGumletUrl(entry.photo);
     document.getElementById('detail-photo').onerror = function(){ this.src='https://via.placeholder.com/400x200?text=No+Image'; };
 
     document.getElementById('detail-type').textContent = `${escapeHtml(entry.type)} ${entry.updatedAt ? '(معدّل)' : ''}`;
@@ -1074,7 +1107,7 @@ function updateList(filteredEntries){
 
 
     const img = document.createElement('img');
-    img.src = e.photo || 'https://via.placeholder.com/400x240?text=No+Image';
+    img.src = getGumletUrl(e.photo);
 
     const typeIcon = getTreeIconClass(e.type);
 
@@ -1689,7 +1722,7 @@ async function loadRemoteSample(){
         if (Array.isArray(data) && data.length > 0) {
             const latest = data[0];
             if (latest.photo) {
-                sampleImg.src = latest.photo;
+                sampleImg.src = getGumletUrl(latest.photo);
                 sampleImg.style.display = 'block';
             } else {
                 sampleImg.style.display = 'none';
