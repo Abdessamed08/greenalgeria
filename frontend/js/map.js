@@ -345,6 +345,7 @@ function centerAndOpenPopup(id) {
 
 /**
  * Convertit un fichier image en base64 pour sauvegarde permanente
+ * NOTE: Cette fonction est gardée pour compatibilité, mais nous préférons maintenant l'upload serveur.
  */
 function convertImageToBase64(file) {
   return new Promise((resolve, reject) => {
@@ -352,25 +353,33 @@ function convertImageToBase64(file) {
       resolve(null);
       return;
     }
-    
-    // Limiter la taille à 2MB pour éviter les problèmes de localStorage
-    const maxSize = 2 * 1024 * 1024; // 2MB
-    if (file.size > maxSize) {
-      showFormMessage('حجم الصورة كبير جداً. الحد الأقصى 2MB', 'error');
-      resolve(null);
-      return;
-    }
-    
     const reader = new FileReader();
-    reader.onload = function(e) {
-      resolve(e.target.result); // Retourne le base64
-    };
-    reader.onerror = function(error) {
-      console.error('Erreur de lecture de l\'image:', error);
-      reject(error);
-    };
+    reader.onload = function(e) { resolve(e.target.result); };
+    reader.onerror = function(error) { reject(error); };
     reader.readAsDataURL(file);
   });
+}
+
+/**
+ * Upload l'image vers le backend et retourne l'URL optimisée Gumlet
+ */
+async function uploadAndGetGumletUrl(file) {
+    const gumletSourceName = 'greenalgeria'; // remplace par ton vrai Source Name Gumlet
+
+    const formData = new FormData();
+    formData.append('image', file);
+
+    // Upload sur le backend
+    const res = await fetch('https://greenalgeria-backend.onrender.com/api/upload', {
+        method: 'POST',
+        body: formData
+    });
+
+    const data = await res.json();
+    const backendUrl = data.url;
+
+    // Générer l'URL Gumlet optimisée
+    return `https://cdn.gumlet.com/${gumletSourceName}/${backendUrl}?w=800&format=auto`;
 }
 
 /**
@@ -396,12 +405,12 @@ async function handleEditSubmit(e){
     const editPhotoInput = document.getElementById('editPhoto');
     if(editPhotoInput && editPhotoInput.files && editPhotoInput.files[0]) {
         try {
-            const photoBase64 = await convertImageToBase64(editPhotoInput.files[0]);
-            if(photoBase64) {
-                entry.photo = photoBase64;
+            const photoUrl = await uploadAndGetGumletUrl(editPhotoInput.files[0]);
+            if(photoUrl) {
+                entry.photo = photoUrl;
             }
         } catch(error) {
-            console.error('Erreur lors de la conversion de la photo:', error);
+            console.error('Erreur lors de la mise à jour de la photo:', error);
         }
     }
 
@@ -1615,18 +1624,20 @@ async function handleSubmit(){
 
     hapticFeedback('success');
 
-    let photoBase64 = null;
+    let photoUrl = null;
     if(photoFile) {
         try {
-            photoBase64 = await convertImageToBase64(photoFile);
+            photoUrl = await uploadAndGetGumletUrl(photoFile);
         } catch(error) {
             console.error('Erreur lors de la conversion de la photo:', error);
             showFormMessage('خطأ في تحميل الصورة', 'error');
         }
     }
 
+    const submissionDate = datePlanted || new Date().toISOString();
+
     const id = 'e_'+Date.now()+'_'+Math.random().toString(36).slice(2,8);
-    const entry = { id, nom, adresse, type, quantite, lat, lng, date: submissionDate, photo: photoBase64, createdAt:Date.now() };
+    const entry = { id, nom, adresse, type, quantite, lat, lng, date: submissionDate, photo: photoUrl, createdAt:Date.now() };
     entries.unshift(entry);
     addEntryToMap(entry);
     if (tempMarker) { map.removeLayer(tempMarker); tempMarker = null; }
@@ -1635,8 +1646,7 @@ async function handleSubmit(){
     applyFiltersAndSort();
     showDetailPanel(id);
 
-    const submissionDate = datePlanted || new Date().toISOString();
-    const dataToSend = { nom, adresse, type, quantite, lat, lng, date: submissionDate, photo: photoBase64 };
+    const dataToSend = { nom, adresse, type, quantite, lat, lng, date: submissionDate, photo: photoUrl };
     console.log("📤 Envoi vers le serveur :", dataToSend);
 
     try {
