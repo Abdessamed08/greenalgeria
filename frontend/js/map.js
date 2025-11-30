@@ -397,22 +397,35 @@ function convertImageToBase64(file) {
  * Upload l'image vers le backend et retourne l'URL optimisée Gumlet
  */
 async function uploadAndGetGumletUrl(file) {
-    const gumletSourceName = 'greenalgeria'; // remplace par ton vrai Source Name Gumlet
+    if (!file) return null;
 
     const formData = new FormData();
     formData.append('image', file);
 
-    // Upload sur le backend
-    const res = await fetch('https://greenalgeria-backend.onrender.com/api/upload', {
-        method: 'POST',
-        body: formData
-    });
+    try {
+        // Upload sur le backend
+        const res = await fetch('https://greenalgeria-backend.onrender.com/api/upload', {
+            method: 'POST',
+            body: formData
+        });
 
-    const data = await res.json();
-    const backendUrl = data.url;
+        if (!res.ok) {
+            throw new Error(`Erreur HTTP ${res.status}`);
+        }
 
-    // Générer l'URL Gumlet optimisée
-    return `https://cdn.gumlet.com/${gumletSourceName}/${backendUrl}?w=800&format=auto`;
+        const data = await res.json();
+        
+        // Le backend renvoie une URL complète comme:
+        // "https://greenalgeria-backend.onrender.com/uploads/123456.jpg"
+        const backendUrl = data.url;
+        
+        // Utiliser getGumletUrl pour transformer cette URL en URL Gumlet optimisée
+        return getGumletUrl(backendUrl);
+        
+    } catch (error) {
+        console.error('Erreur lors de l\'upload de l\'image:', error);
+        throw error;
+    }
 }
 
 /**
