@@ -19,25 +19,27 @@ if (!fs.existsSync(STATIC_IMAGES_DIR)) {
 
 /**
  * Convertit une image Base64 en fichier binaire
- * @param {string} base64String - L'image en format Base64 (ex: "data:image/jpeg;base64,/9j/4AAQ...")
+ * @param {string} base64String - L'image en format Base64 (ex: "data:image/jpeg;base64,..." ou "data:application/octet-stream;base64,...")
  * @param {string} outputPath - Le chemin complet du fichier de sortie
  */
 function saveBase64ToFile(base64String, outputPath) {
-    // Extraire les données Base64 pures (sans le préfixe "data:image/...;base64,")
-    const matches = base64String.match(/^data:image\/([a-zA-Z+]+);base64,(.+)$/);
+    // Extraire les données Base64 pures (gère data:image/*, data:application/*, etc.)
+    // Format attendu: data:<type>/<subtype>;base64,<données>
+    const matches = base64String.match(/^data:([^\/]+)\/([^;]+);base64,(.+)$/);
     
-    if (!matches || matches.length !== 3) {
-        throw new Error('Format Base64 invalide');
+    if (!matches || matches.length !== 4) {
+        throw new Error('Format Base64 invalide - format attendu: data:<type>/<subtype>;base64,<données>');
     }
     
-    const imageType = matches[1]; // jpeg, png, etc.
-    const base64Data = matches[2];
+    const mimeType = matches[1]; // image, application, etc.
+    const subType = matches[2]; // jpeg, png, octet-stream, etc.
+    const base64Data = matches[3];
     
     // Convertir en buffer binaire et sauvegarder
     const buffer = Buffer.from(base64Data, 'base64');
     fs.writeFileSync(outputPath, buffer);
     
-    return imageType;
+    return `${mimeType}/${subType}`; // Retourne le type MIME complet
 }
 
 /**
@@ -57,7 +59,7 @@ async function migrateImages() {
         // Trouver tous les documents avec des images Base64
         console.log('🔍 Recherche des images Base64...');
         const documentsWithBase64 = await collection.find({
-            photo: { $regex: '^data:image/' }
+            photo: { $regex: '^data:' }
         }).toArray();
         
         console.log(`📊 ${documentsWithBase64.length} images Base64 trouvées`);
@@ -93,7 +95,7 @@ async function migrateImages() {
                 
                 if (updateResult.modifiedCount === 1) {
                     console.log(`✅ Document ${docId} migré avec succès`);
-                    console.log(`   Ancienne URL : data:image/${imageType};base64,...`);
+                    console.log(`   Ancienne URL : data:${imageType};base64,...`);
                     console.log(`   Nouvelle URL : ${newPhotoUrl}`);
                     migratedCount++;
                 } else {
