@@ -281,7 +281,7 @@ function showDetailPanel(id){
 
     // Mise à jour du contenu
     document.getElementById('detail-title').innerHTML = `<i class="${typeIcon}" style="margin-left:5px; color:var(--color-secondary);"></i> ${escapeHtml(entry.type)}`;
-    document.getElementById('detail-photo').src = entry.photo || 'https://via.placeholder.com/400x200?text=No+Image';
+    document.getElementById('detail-photo').src = entry.photo ? entry.photo + '?w=800' : 'https://via.placeholder.com/400x200?text=No+Image';
     document.getElementById('detail-photo').onerror = function(){ this.src='https://via.placeholder.com/400x200?text=No+Image'; };
 
     document.getElementById('detail-type').textContent = `${escapeHtml(entry.type)} ${entry.updatedAt ? '(معدّل)' : ''}`;
@@ -344,7 +344,7 @@ function centerAndOpenPopup(id) {
 /* --------------------------------- */
 
 /**
- * Convertit un fichier image en base64 pour sauvegarde permanente
+ * Convertit un fichier image en base64 pour sauvegarde locale (localStorage)
  */
 function convertImageToBase64(file) {
   return new Promise((resolve, reject) => {
@@ -371,6 +371,50 @@ function convertImageToBase64(file) {
     };
     reader.readAsDataURL(file);
   });
+}
+
+/**
+ * Upload une image vers le serveur et retourne l'URL
+ * Stocke le fichier sur le serveur au lieu de base64 dans MongoDB
+ */
+async function uploadImageToServer(file) {
+  if (!file) return null;
+  
+  // Limiter la taille à 5MB pour l'upload serveur
+  const maxSize = 5 * 1024 * 1024; // 5MB
+  if (file.size > maxSize) {
+    showFormMessage('حجم الصورة كبير جداً. الحد الأقصى 5MB', 'error');
+    return null;
+  }
+  
+  const formData = new FormData();
+  formData.append('image', file);
+  
+  try {
+    const response = await fetch('https://greenalgeria-backend.onrender.com/api/upload', {
+      method: 'POST',
+      body: formData
+    });
+    
+    if (!response.ok) {
+      throw new Error(`Erreur upload: ${response.status}`);
+    }
+    
+    const result = await response.json();
+    
+    // Transformer l'URL Render en URL Gumlet pour optimisation des images
+    const renderUrl = result.url;
+    const GUMLET_NAMESPACE = 'https://greenalgeria.gumlet.io';
+    const relativePath = renderUrl.replace('https://greenalgeria-backend.onrender.com', '');
+    const gumletUrl = GUMLET_NAMESPACE + relativePath;
+    
+    console.log('✅ Image uploadée:', gumletUrl);
+    return gumletUrl; // Retourne l'URL Gumlet optimisée
+  } catch (error) {
+    console.error('❌ Erreur upload image:', error);
+    showFormMessage('خطأ في رفع الصورة إلى الخادم', 'error');
+    return null;
+  }
 }
 
 /**
@@ -471,7 +515,7 @@ function openEditModal(id){
     const editPhotoPreview = document.getElementById('editPhotoPreview');
     const editPhotoPreviewImg = document.getElementById('editPhotoPreviewImg');
     if(entry.photo) {
-        editPhotoPreviewImg.src = entry.photo;
+        editPhotoPreviewImg.src = entry.photo + '?w=600';
         editPhotoPreview.style.display = 'block';
     } else {
         editPhotoPreview.style.display = 'none';
@@ -1065,7 +1109,7 @@ function updateList(filteredEntries){
 
 
     const img = document.createElement('img');
-    img.src = e.photo || 'https://via.placeholder.com/400x240?text=No+Image';
+    img.src = e.photo ? e.photo + '?w=300' : 'https://via.placeholder.com/400x240?text=No+Image';
 
     const typeIcon = getTreeIconClass(e.type);
 
@@ -1615,18 +1659,33 @@ async function handleSubmit(){
 
     hapticFeedback('success');
 
+    // 1. Convertir en base64 pour localStorage (affichage local)
     let photoBase64 = null;
     if(photoFile) {
         try {
             photoBase64 = await convertImageToBase64(photoFile);
         } catch(error) {
             console.error('Erreur lors de la conversion de la photo:', error);
-            showFormMessage('خطأ في تحميل الصورة', 'error');
         }
     }
 
+    // 2. Upload l'image vers le serveur pour obtenir une URL (pas de base64 en DB)
+    let photoUrl = null;
+    if(photoFile) {
+        showFormMessage('جاري رفع الصورة...', 'alert');
+        photoUrl = await uploadImageToServer(photoFile);
+        if (!photoUrl && photoBase64) {
+            // Fallback: si l'upload échoue, on utilisera le base64 localement seulement
+            console.warn('Upload échoué, utilisation du base64 pour affichage local uniquement');
+        }
+    }
+
+    const submissionDate = datePlanted || new Date().toISOString();
     const id = 'e_'+Date.now()+'_'+Math.random().toString(36).slice(2,8);
-    const entry = { id, nom, adresse, type, quantite, lat, lng, date: submissionDate, photo: photoBase64, createdAt:Date.now() };
+    
+    // Pour l'affichage local, on utilise photoUrl si disponible, sinon photoBase64
+    const photoForDisplay = photoUrl || photoBase64;
+    const entry = { id, nom, adresse, type, quantite, lat, lng, date: submissionDate, photo: photoForDisplay, createdAt:Date.now() };
     entries.unshift(entry);
     addEntryToMap(entry);
     if (tempMarker) { map.removeLayer(tempMarker); tempMarker = null; }
@@ -1635,8 +1694,8 @@ async function handleSubmit(){
     applyFiltersAndSort();
     showDetailPanel(id);
 
-    const submissionDate = datePlanted || new Date().toISOString();
-    const dataToSend = { nom, adresse, type, quantite, lat, lng, date: submissionDate, photo: photoBase64 };
+    // Pour le serveur, on envoie l'URL (pas le base64 !)
+    const dataToSend = { nom, adresse, type, quantite, lat, lng, date: submissionDate, photo: photoUrl };
     console.log("📤 Envoi vers le serveur :", dataToSend);
 
     try {
