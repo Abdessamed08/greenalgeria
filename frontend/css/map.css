@@ -549,6 +549,11 @@ h1, h2, h3, h4, h5, h6 {
   cursor: pointer;
 }
 
+.brand .logo i{
+  font-size: 28px;
+  line-height: 1;
+}
+
 .brand .logo::before {
   content: '';
   position: absolute;
@@ -2312,5 +2317,121 @@ input[type="file"] { padding: 8px 12px; } /* Ajustement pour le type file */
   }
   .panel h3 {
     font-size: 1rem;
+  }
+}
+
+/* --------------------------------- */
+/* 12. Polish "Pro" + Mobile Comfort */
+/*      (Design only - no JS change) */
+/* --------------------------------- */
+
+/* Safe-area helpers (iOS notch/home bar) */
+:root {
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-right: env(safe-area-inset-right, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-left: env(safe-area-inset-left, 0px);
+}
+
+/* Reduce visual noise: calmer background, better reading contrast */
+html, body {
+  background: var(--color-bg-secondary);
+}
+
+/* Map controls: more "native", less chunky */
+.map-controls {
+  border-radius: 999px;
+  padding: 10px 10px;
+  gap: 6px;
+  box-shadow: 0 12px 30px rgba(15, 23, 42, 0.12);
+  border: 1px solid rgba(148, 163, 184, 0.25);
+}
+
+.toggle {
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow: 0 6px 14px rgba(15, 23, 42, 0.10);
+}
+
+.toggle:hover {
+  transform: translateY(-1px);
+}
+
+/* Toast: avoid iPhone home-bar overlap */
+.toast {
+  bottom: calc(var(--spacing-unit) + var(--safe-bottom));
+}
+
+/* FAB: avoid home-bar overlap + calmer interactions */
+.fab-button {
+  bottom: calc(16px + var(--safe-bottom));
+  right: calc(16px + var(--safe-right));
+}
+
+/* Prefer comfort over showy hover effects on touch devices */
+@media (hover: none) and (pointer: coarse) {
+  body::before,
+  body::after {
+    opacity: 0.25;
+    animation: none !important;
+  }
+
+  .sidebar:hover,
+  .brand .logo:hover,
+  .toggle:hover,
+  .fab-button:hover {
+    transform: none !important;
+    box-shadow: inherit;
+  }
+
+  .fab-button {
+    animation: none !important;
+  }
+}
+
+/* Mobile layout: safe areas + cleaner, more professional spacing */
+@media (max-width: 1024px) {
+  .map-controls {
+    top: calc(12px + var(--safe-top));
+  }
+
+  .fab-button {
+    bottom: calc(16px + var(--safe-bottom));
+    right: calc(16px + var(--safe-right));
+  }
+
+  /* Sidebar close button: better contrast on glass */
+  .sidebar-close {
+    background: rgba(255, 255, 255, 0.92);
+    border: 1px solid rgba(148, 163, 184, 0.25);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+  }
+
+  /* Sidebar content padding respects home indicator */
+  .sidebar-content {
+    padding-bottom: calc(110px + var(--safe-bottom));
+  }
+
+  /* Mobile nav: slightly more compact + cleaner active state */
+  .mobile-nav {
+    padding-top: calc(10px + var(--safe-top));
+    background: rgba(255, 255, 255, 0.92);
+    border-bottom: 1px solid rgba(148, 163, 184, 0.2);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+  }
+
+  .mobile-nav-item.active {
+    background: rgba(37, 99, 235, 0.08);
+    transform: none;
+  }
+}
+
+/* Accessibility / comfort: respect reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation: none !important;
+    transition: none !important;
+    scroll-behavior: auto !important;
   }
 }
