@@ -425,14 +425,12 @@ async function uploadImageToServer(file) {
     
     const result = await response.json();
     
-    // Transformer l'URL Render en URL Gumlet pour optimisation des images
-    const renderUrl = result.url;
-    const GUMLET_NAMESPACE = 'https://greenalgeria.gumlet.io';
-    const relativePath = renderUrl.replace('https://greenalgeria-backend.onrender.com', '');
-    const gumletUrl = GUMLET_NAMESPACE + relativePath;
+    // L'URL retournée est maintenant soit Cloudinary (permanent), soit locale (fallback)
+    // On ne passe plus par Gumlet car Cloudinary gère déjà l'optimisation
+    const finalUrl = result.url;
     
-    console.log('✅ Image uploadée:', gumletUrl);
-    return gumletUrl; // Retourne l'URL Gumlet optimisée
+    console.log('✅ Image uploadée:', finalUrl);
+    return finalUrl;
   } catch (error) {
     console.error('❌ Erreur upload image:', error);
     showFormMessage('خطأ في رفع الصورة إلى الخادم', 'error');
