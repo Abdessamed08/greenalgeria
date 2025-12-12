@@ -2,6 +2,10 @@
 /* Configuration Globale & Helpers   */
 /* --------------------------------- */
 const STORAGE_KEY = 'algerie_verte_v3';
+// 🔹 URL de l'API déployée sur Render
+const API_URL = 'https://greenalgeria-backend.onrender.com/api/contributions';
+const UPLOAD_URL = 'https://greenalgeria-backend.onrender.com/api/upload';
+
 let map, markerCluster, heatLayer;
 let entries = [];
 let tileDefault, tileToner;
@@ -42,6 +46,10 @@ function hapticFeedback(type = 'light') {
 /* Helper: toast avancé */
 function toast(msg, type='success', timeout=4000){
   const t = document.getElementById('toast');
+  if(!t) {
+      console.warn('Toast element missing:', msg);
+      return;
+  }
   t.textContent = msg;
   t.className = `toast ${type}`;
   t.setAttribute('role', 'alert');
@@ -1039,13 +1047,24 @@ function loadFromStorage(){
 
 function updateStats(filteredCount = entries.length){
   const totalTrees = entries.reduce((sum, entry) => sum + (parseInt(entry.quantite) || 0), 0);
-  document.getElementById('stat-count').textContent = entries.length;
-  document.getElementById('stat-total-trees').textContent = totalTrees.toLocaleString();
+  const countEl = document.getElementById('stat-count');
+  if(countEl) countEl.textContent = entries.length;
+  
+  const totalEl = document.getElementById('stat-total-trees');
+  if(totalEl) totalEl.textContent = totalTrees.toLocaleString();
+  
   const types = new Set(entries.map(e=>e.type));
-  document.getElementById('stat-types').textContent = types.size;
-  document.getElementById('lastUpdate').textContent = new Date().toLocaleString('ar-EG', {timeZone: 'Africa/Algiers'});
-  document.getElementById('filterInfo').textContent = (filteredCount < entries.length) ? `(${filteredCount} نتيجة من ${entries.length})` : `الكل (${entries.length})`;
-  document.getElementById('resultsCount').textContent = filteredCount;
+  const typesEl = document.getElementById('stat-types');
+  if(typesEl) typesEl.textContent = types.size;
+  
+  const updateEl = document.getElementById('lastUpdate');
+  if(updateEl) updateEl.textContent = new Date().toLocaleString('ar-EG', {timeZone: 'Africa/Algiers'});
+  
+  const filterEl = document.getElementById('filterInfo');
+  if(filterEl) filterEl.textContent = (filteredCount < entries.length) ? `(${filteredCount} نتيجة من ${entries.length})` : `الكل (${entries.length})`;
+  
+  const resultsEl = document.getElementById('resultsCount');
+  if(resultsEl) resultsEl.textContent = filteredCount;
 }
 
 /* --------------------------------- */
@@ -1121,7 +1140,7 @@ function updateList(filteredEntries){
       </h4>
       <p>${escapeHtml(e.nom)} — ${escapeHtml(e.adresse||'غير محدد')}</p>
       <small class="muted">الموقع: ${escapeHtml(locationInfo)}</small>
-      <small class="muted">أُضيف في: ${formatDate(e.createdAt)}</small>
+      <small class="muted">أُضيف في: ${formatDate(e.createdAt || e.timestamp)}</small>
     `;
 
     const actions = document.createElement('div'); actions.className='location-actions';
@@ -1132,9 +1151,7 @@ function updateList(filteredEntries){
       <button class="btn icon-only primary" title="عرض التفاصيل" onclick="centerAndOpenPanel('${e.id}')" aria-label="عرض تفاصيل ${escapeHtml(e.type)}">
           <i class="fas fa-eye"></i>
       </button>
-      <button class="btn icon-only danger" title="حذف" onclick="removeEntry('${e.id}')" aria-label="حذف ${escapeHtml(e.type)}">
-          <i class="fas fa-trash-alt"></i>
-      </button>
+      <!-- Suppression désactivée sur la vue publique -->
     `;
 
     div.appendChild(img);
