@@ -245,8 +245,8 @@ function addEntryToMap(entry){
   // Le clic sur le marqueur Ouvre la popup par défaut. 
   // Sur mobile, on ferme la sidebar pour ne pas masquer la popup.
   marker.on('click', function(){
-      const isMobile = window.matchMedia('(max-width: 1024px)').matches;
-      if (isMobile) { toggleSidebar(false); }
+    const isMobile = window.matchMedia('(max-width: 1024px)').matches;
+    if (isMobile) { toggleSidebar(false); }
   });
 
   marker._entryId = entry.id;
@@ -289,7 +289,22 @@ function showDetailPanel(id){
 
     // Mise à jour du contenu
     document.getElementById('detail-title').innerHTML = `<i class="${typeIcon}" style="margin-left:5px; color:var(--color-secondary);"></i> ${escapeHtml(entry.type)}`;
-    document.getElementById('detail-photo').src = entry.photo ? entry.photo + '?w=800' : 'https://via.placeholder.com/400x200?text=No+Image';
+    
+    // Correction URL image avec nettoyage et placeholder
+    let photoUrl = entry.photo;
+    if (photoUrl) {
+        // Cas image locale mal formée (gumlet + localhost)
+        if (photoUrl.includes('gumlet.io') || (photoUrl.includes('localhost') && window.location.hostname !== 'localhost')) {
+             const filename = photoUrl.split('/').pop();
+             if (filename && !filename.includes('http')) {
+                 photoUrl = `${API_URL.replace('/api/contributions', '')}/uploads/${filename}`;
+             } else {
+                 photoUrl = null;
+             }
+        }
+    }
+    
+    document.getElementById('detail-photo').src = photoUrl ? photoUrl + '?w=800' : 'https://via.placeholder.com/400x200?text=No+Image';
     document.getElementById('detail-photo').onerror = function(){ this.src='https://via.placeholder.com/400x200?text=No+Image'; };
 
     document.getElementById('detail-type').textContent = `${escapeHtml(entry.type)} ${entry.updatedAt ? '(معدّل)' : ''}`;
@@ -1127,8 +1142,26 @@ function updateList(filteredEntries){
     };
 
 
+    // Nettoyage de l'URL photo si nécessaire (cas gumlet + localhost)
+    let photoUrl = e.photo;
+    if (photoUrl && photoUrl.includes('http://localhost') && photoUrl.includes('https://')) {
+        // Garder seulement la partie localhost pour dev ou corriger si c'était une erreur
+        // Ici on suppose que l'image est cassée si elle pointe vers localhost depuis la prod
+        // On tente de la récupérer si elle est accessible, sinon placeholder
+        if (window.location.hostname !== 'localhost') {
+             // Essayer de corriger l'URL si elle vient de notre backend actuel
+             const filename = photoUrl.split('/').pop();
+             if (filename && !filename.includes('http')) {
+                 photoUrl = `${API_URL.replace('/api/contributions', '')}/uploads/${filename}`;
+             } else {
+                 photoUrl = null; // Image irrécupérable
+             }
+        }
+    }
+    
     const img = document.createElement('img');
-    img.src = e.photo ? e.photo + '?w=300' : 'https://via.placeholder.com/400x240?text=No+Image';
+    img.src = photoUrl ? photoUrl + '?w=300' : 'https://via.placeholder.com/400x240?text=No+Image';
+    img.onerror = () => { img.src = 'https://via.placeholder.com/400x240?text=Image+Error'; };
 
     const typeIcon = getTreeIconClass(e.type);
 
