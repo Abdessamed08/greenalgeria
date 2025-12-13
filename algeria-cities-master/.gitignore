@@ -1,0 +1,6 @@
+/.idea
+/.dart_tool
+/.vscode
+.packages
+pubspec.lock
+pubspec.yaml
