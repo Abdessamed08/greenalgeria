@@ -862,13 +862,49 @@ function handleGeolocation(){
     }
     
     // Placer le marqueur temporaire ET centrer la carte avec le bon zoom
-    // setTempMarker va maintenant gérer le centrage avec animation
     setTempMarker(latlng, true, zoomLevel);
+    
+    // Mettre à jour le statut visuel
+    const statusEl = document.getElementById('locationStatus');
+    if(statusEl) {
+        statusEl.innerHTML = `
+            <div class="status-success">
+                <i class="fas fa-check-circle"></i>
+                <span>تم تحديد الموقع بدقة (${Math.round(accuracy)}m)</span>
+            </div>
+        `;
+    }
+
+    // Tenter de récupérer l'adresse automatiquement (Reverse Geocoding Client)
+    // C'est juste pour aider l'utilisateur, le serveur fera le vrai geocoding
+    fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${latlng.lat}&lon=${latlng.lng}&accept-language=ar`)
+        .then(res => res.json())
+        .then(data => {
+            const address = data.address || {};
+            const city = address.city || address.town || address.village || address.municipality;
+            const district = address.suburb || address.neighbourhood || address.city_district;
+            
+            let displayAddress = '';
+            if (city) displayAddress += city;
+            if (district) displayAddress += (displayAddress ? '، ' : '') + district;
+            
+            if (displayAddress) {
+                const addrInput = document.getElementById('adresse');
+                if (addrInput && !addrInput.value) {
+                    addrInput.value = displayAddress;
+                    // Petit effet visuel pour montrer que ça a été rempli
+                    addrInput.style.backgroundColor = '#ecfdf5';
+                    setTimeout(() => addrInput.style.backgroundColor = '', 1500);
+                    toast(`تم تحديد العنوان: ${displayAddress}`);
+                }
+            }
+        })
+        .catch(err => console.warn('Geocoding client failed:', err));
     
     // Feedback de succès avec info sur la précision
     const accuracyMsg = pos.coords.accuracy < 50 
-      ? '✅ تم تحديد الموقع بدقة عالية! يمكنك سحب العلامة لضبط الموقع.'
-      : '✅ تم تحديد الموقع بنجاح! يمكنك سحب العلامة لضبط الموقع.';
+      ? '✅ تم تحديد الموقع بدقة عالية!'
+      : '✅ تم تحديد الموقع بنجاح!';
     showFormMessage(accuracyMsg, 'success');
     hapticFeedback('success');
     

@@ -59,12 +59,28 @@
               </div>
             </div>
             <div class="field">
-              <label for="adresse">المنطقة / العنوان (اختياري)</label>
-              <input id="adresse" name="adresse" type="text" placeholder="ولاية، بلدية، أو وصف دقيق" />
-              <div class="help-text">
-                <i class="fas fa-map-marker-alt"></i>
-                <span>يساعد هذا الحقل في تحديد الموقع بشكل أفضل</span>
+              <label>الموقع الإداري <span class="required">*</span></label>
+              <div class="row">
+                  <div class="col">
+                      <select id="wilaya_select" required aria-required="true" class="form-select">
+                          <option value="">اختر الولاية</option>
+                      </select>
+                  </div>
+                  <div class="col">
+                      <select id="daira_select" disabled class="form-select">
+                          <option value="">اختر الدائرة</option>
+                      </select>
+                  </div>
               </div>
+              <div class="row" style="margin-top: 10px;">
+                  <div class="col">
+                      <select id="commune_select" disabled class="form-select">
+                          <option value="">اختر البلدية</option>
+                      </select>
+                  </div>
+              </div>
+              <!-- Input caché pour stocker l'adresse complète formatée pour la compatibilité -->
+              <input type="hidden" id="adresse" name="adresse">
             </div>
             <div class="row">
               <div class="col field">
@@ -108,13 +124,20 @@
             </div>
             <div class="field location-group">
               <label>موقع الزرع <span class="required">*</span></label>
-              <div class="row coords-inputs">
-                <input id="latitude" type="text" readonly placeholder="خط العرض" required aria-required="true" />
-                <input id="longitude" type="text" readonly placeholder="خط الطول" required aria-required="true" />
+              <!-- Les coordonnées sont maintenant masquées pour l'utilisateur mais requises pour le système -->
+              <input id="latitude" type="hidden" required aria-required="true" />
+              <input id="longitude" type="hidden" required aria-required="true" />
+              
+              <div class="location-status" id="locationStatus">
+                  <div class="status-placeholder">
+                      <i class="fas fa-map-marker-alt"></i>
+                      <span>لم يتم تحديد الموقع بعد</span>
+                  </div>
               </div>
+
               <div class="help-message">
                 <i class="fas fa-info-circle"></i>
-                <span id="locationHelpText">يجب استخدام زر "تحديد موقعي" لتسجيل الموقع الحالي بدقة عالية.</span>
+                <span id="locationHelpText">اضغط على "تحديد موقعي" ليقوم النظام بتحديد مكانك تلقائياً.</span>
               </div>
             </div>
             <div class="form-button-group">
@@ -295,8 +318,27 @@
                 <input id="editNom" type="text" required aria-required="true" />
             </div>
             <div class="field">
-                <label for="editAdresse">المنطقة / العنوان (اختياري)</label>
-                <input id="editAdresse" type="text" />
+                <label>الموقع الإداري <span class="required">*</span></label>
+                <div class="row">
+                    <div class="col">
+                        <select id="edit_wilaya_select" required class="form-select">
+                            <option value="">اختر الولاية</option>
+                        </select>
+                    </div>
+                    <div class="col">
+                        <select id="edit_daira_select" class="form-select">
+                            <option value="">اختر الدائرة</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="row" style="margin-top: 10px;">
+                    <div class="col">
+                        <select id="edit_commune_select" class="form-select">
+                            <option value="">اختر البلدية</option>
+                        </select>
+                    </div>
+                </div>
+                <input id="editAdresse" type="hidden" />
             </div>
             <div class="row">
                 <div class="col field">
@@ -333,12 +375,14 @@
                 </div>
             </div>
              <div class="field location-group">
-                <label>موقع الزرع <span class="required">*</span></label>
-                <div class="row coords-inputs">
-                    <input id="editLatitude" type="text" readonly placeholder="خط العرض" required aria-required="true" />
-                    <input id="editLongitude" type="text" readonly placeholder="خط الطول" required aria-required="true" />
+                <!-- Coordonnées masquées en édition aussi -->
+                <input id="editLatitude" type="hidden" required aria-required="true" />
+                <input id="editLongitude" type="hidden" required aria-required="true" />
+                
+                <div class="location-status status-success">
+                    <i class="fas fa-check-circle"></i>
+                    <span>الموقع مسجل ومحفوظ</span>
                 </div>
-                <small class="muted">يمكنك سحب العلامة على الخريطة لتغيير الموقع.</small>
             </div>
             <div class="form-button-group">
                 <button type="button" class="btn danger" onclick="removeEntry(document.getElementById('editId').value); closeModal();">
@@ -355,6 +399,7 @@
 
 
 
+    <script src="js/dz-locations.js"></script>
     <script src="js/map.js"></script>
 </body>
 </html>
