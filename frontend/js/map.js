@@ -108,19 +108,10 @@ function initMap(){
   heatLayer = L.heatLayer([], {radius: 25, blur: 18, maxZoom: 11});
   
   // Gérer les clics sur la carte pour définir la position (mode sélection)
-  map.on('click', function(e) {
-    if (mapSelectionMode) {
-      const latlng = e.latlng;
-      document.getElementById('latitude').value = latlng.lat.toFixed(6);
-      document.getElementById('longitude').value = latlng.lng.toFixed(6);
-      setTempMarker(latlng, true);
-      validateForm();
-      showFormMessage('✅ تم تحديد الموقع على الخريطة! يمكنك سحب العلامة لضبط الموقع.', 'success');
-      hapticFeedback('success');
-      // Désactiver le mode sélection
-      toggleMapSelectionMode(false);
-    }
-  });
+  // DÉSACTIVÉ : On force l'utilisation du bouton GPS pour garantir la précision
+  /* map.on('click', function(e) {
+    if (mapSelectionMode) { ... }
+  }); */
 
   // Chargement de la frontière GeoJSON de l'Algérie pour les limites
   fetch('https://raw.githubusercontent.com/johan/world.geo.json/master/countries/DZA.geo.json').then(r=>{
@@ -164,21 +155,11 @@ function setTempMarker(latlng, draggable, zoomLevel = null) {
         iconAnchor: [20, 40]
     });
 
-    tempMarker = L.marker(latlng, { icon: tempIcon, draggable: draggable });
+    // Force draggable = false pour empêcher la modification manuelle de la position GPS
+    tempMarker = L.marker(latlng, { icon: tempIcon, draggable: false });
 
-    tempMarker.on('dragend', function(e) {
-        const newLatlng = tempMarker.getLatLng();
-        const isEditing = document.getElementById('editModalOverlay').classList.contains('open');
-
-        const latEl = document.getElementById(isEditing ? 'editLatitude' : 'latitude');
-        const lngEl = document.getElementById(isEditing ? 'editLongitude' : 'longitude');
-
-        latEl.value = newLatlng.lat.toFixed(6);
-        lngEl.value = newLatlng.lng.toFixed(6);
-
-        if (isEditing) { validateEditForm(); } else { validateForm(); }
-        toast('تم تحديث الإحداثيات عبر السحب', 'alert');
-    });
+    // Événement dragend supprimé car le marqueur n'est plus déplaçable
+    /* tempMarker.on('dragend', function(e) { ... }); */
 
     tempMarker.addTo(map);
     
@@ -1025,6 +1006,8 @@ function handleGeolocation(){
             handleGeolocation(); 
         };
     } else {
+        // En cas d'erreur irrécupérable, on force le message d'erreur strict
+        showFormMessage('❌ عذراً، لا يمكن إضافة شجرة بدون تحديد موقع GPS دقيق. يرجى تفعيل الموقع.', 'error');
         // Restaurer le bouton original
         btn.innerHTML = originalHtml;
         btn.disabled = originalDisabled;
@@ -1037,6 +1020,12 @@ function handleGeolocation(){
     handleError,
     options
   );
+}
+
+/* Fonction toggleMapSelectionMode supprimée car le mode manuel est désactivé */
+function toggleMapSelectionMode(enable) {
+    console.warn('Mode sélection manuelle désactivé par configuration.');
+    // Fonction vide pour éviter les erreurs si appelée ailleurs
 }
 
 
