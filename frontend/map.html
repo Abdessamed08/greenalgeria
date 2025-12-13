@@ -19,6 +19,10 @@
 
 
     <link rel="stylesheet" href="css/map.css">
+    <!-- Flatpickr (Datepicker moderne) -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script src="https://npmcdn.com/flatpickr/dist/l10n/ar.js"></script>
 </head>
 <body>
 
@@ -81,9 +85,16 @@
               </div>
             </div>
             <div class="row">
-              <div class="col field">
+              <div class="col field date-field-wrapper">
                 <label for="date_planted">تاريخ الزرع</label>
-                <input id="date_planted" type="date" />
+                <div class="input-icon-wrapper">
+                    <input id="date_planted" type="text" placeholder="اختر التاريخ..." readonly class="flatpickr-input" />
+                    <i class="fas fa-calendar-alt input-icon"></i>
+                </div>
+                <div class="help-text">
+                  <i class="fas fa-info-circle"></i>
+                  <span>إذا لم تختر تاريخًا، سيتم اعتماد تاريخ اليوم تلقائيًا</span>
+                </div>
               </div>
             </div>
             <div class="field">

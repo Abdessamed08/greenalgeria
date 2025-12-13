@@ -1554,7 +1554,33 @@ document.addEventListener('DOMContentLoaded', function(){
 
   // Exemple : charger une contribution depuis MongoDB (photo Base64 affichée dans la section dédiée)
   loadRemoteSample();
+
+  // Initialisation du calendrier moderne Flatpickr
+  initFlatpickr();
 });
+
+function initFlatpickr() {
+    if (typeof flatpickr !== 'undefined') {
+        const commonConfig = {
+            locale: "ar", // Langue arabe
+            altInput: true, // Afficher une version formatée
+            altFormat: "j F Y", // ex: 15 mars 2025
+            dateFormat: "Y-m-d", // Format envoyé au backend (YYYY-MM-DD)
+            maxDate: "today", // Pas de futur
+            disableMobile: false, // Utiliser le calendrier custom même sur mobile (plus joli)
+            theme: "material_green", // Thème de base (sera surchargé par CSS)
+        };
+
+        // Champ principal
+        flatpickr("#date_planted", commonConfig);
+        
+        // Champ édition (si présent)
+        const editDateInput = document.getElementById("editDatePlanted");
+        if(editDateInput) {
+             flatpickr("#editDatePlanted", commonConfig);
+        }
+    }
+}
 
 /* Pull-to-refresh functionality */
 function initPullToRefresh() {

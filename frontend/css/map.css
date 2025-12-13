@@ -2435,3 +2435,153 @@ html, body {
     scroll-behavior: auto !important;
   }
 }
+
+/* --------------------------------- */
+/* 13. Flatpickr Custom Theme (Green/Eco) */
+/* --------------------------------- */
+
+.flatpickr-calendar {
+    font-family: var(--font-primary) !important;
+    border: none !important;
+    border-radius: var(--radius-large) !important;
+    box-shadow: 0 10px 40px -10px rgba(0,0,0,0.15), 0 0 0 1px rgba(0,0,0,0.05) !important;
+    padding: 10px !important;
+    background: #fff !important;
+    direction: rtl !important;
+}
+
+.flatpickr-calendar.animate.open {
+    animation: fpFadeInDown 300ms cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+.flatpickr-months .flatpickr-month {
+    background: transparent !important;
+    color: var(--color-text-dark) !important;
+    fill: var(--color-text-dark) !important;
+    height: 50px !important;
+}
+
+.flatpickr-months .flatpickr-prev-month, 
+.flatpickr-months .flatpickr-next-month {
+    color: var(--color-secondary) !important;
+    fill: var(--color-secondary) !important;
+    padding-top: 15px !important;
+}
+
+.flatpickr-months .flatpickr-prev-month:hover svg, 
+.flatpickr-months .flatpickr-next-month:hover svg {
+    fill: var(--color-primary) !important;
+}
+
+.flatpickr-current-month span.cur-month {
+    font-weight: 700 !important;
+    color: var(--color-secondary-dark) !important;
+}
+
+.flatpickr-current-month input.cur-year {
+    font-weight: 600 !important;
+}
+
+.flatpickr-weekdays {
+    background: transparent !important;
+    border-bottom: 1px solid var(--color-border-light) !important;
+    margin-bottom: 5px !important;
+}
+
+span.flatpickr-weekday {
+    color: var(--color-text-muted) !important;
+    font-weight: 600 !important;
+}
+
+.flatpickr-day {
+    border-radius: 8px !important;
+    color: var(--color-text-dark) !important;
+    transition: all 0.2s !important;
+    border: 1px solid transparent !important;
+}
+
+.flatpickr-day.today {
+    border-color: var(--color-secondary) !important;
+    background: transparent !important;
+    color: var(--color-secondary-dark) !important;
+}
+
+.flatpickr-day.selected, 
+.flatpickr-day.startRange, 
+.flatpickr-day.endRange, 
+.flatpickr-day.selected.inRange, 
+.flatpickr-day.startRange.inRange, 
+.flatpickr-day.endRange.inRange, 
+.flatpickr-day.selected:focus, 
+.flatpickr-day.startRange:focus, 
+.flatpickr-day.endRange:focus, 
+.flatpickr-day.selected:hover, 
+.flatpickr-day.startRange:hover, 
+.flatpickr-day.endRange:hover, 
+.flatpickr-day.selected.prevMonthDay, 
+.flatpickr-day.startRange.prevMonthDay, 
+.flatpickr-day.endRange.prevMonthDay, 
+.flatpickr-day.selected.nextMonthDay, 
+.flatpickr-day.startRange.nextMonthDay, 
+.flatpickr-day.endRange.nextMonthDay {
+    background: var(--color-secondary) !important;
+    border-color: var(--color-secondary) !important;
+    color: #fff !important;
+    box-shadow: 0 4px 12px rgba(5, 150, 105, 0.3) !important;
+}
+
+.flatpickr-day:hover {
+    background: var(--color-bg-tertiary) !important;
+    border-color: transparent !important;
+}
+
+/* Custom Input Wrapper Style */
+.input-icon-wrapper {
+    position: relative;
+    width: 100%;
+}
+
+.input-icon-wrapper input {
+    width: 100%;
+    padding-left: 40px !important; /* Espace pour l'icône à gauche (LTR) ou droite (RTL) selon le sens */
+    cursor: pointer;
+    background: #fff !important;
+}
+
+/* Ajustement pour RTL */
+html[dir="rtl"] .input-icon-wrapper input {
+    padding-left: 14px !important;
+    padding-right: 40px !important;
+}
+
+.input-icon-wrapper .input-icon {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--color-secondary);
+    pointer-events: none;
+    font-size: 1.1rem;
+    z-index: 2;
+}
+
+html[dir="rtl"] .input-icon-wrapper .input-icon {
+    right: 14px;
+}
+
+html[dir="ltr"] .input-icon-wrapper .input-icon {
+    left: 14px;
+}
+
+/* Helper Text */
+.date-field-wrapper .help-text {
+    margin-top: 6px;
+    font-size: 0.8rem;
+    color: var(--color-text-muted);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.date-field-wrapper .help-text i {
+    color: var(--color-primary);
+}
