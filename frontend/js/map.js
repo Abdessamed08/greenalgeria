@@ -1111,9 +1111,12 @@ function updateStats(filteredCount = entries.length){
 
 function applyFiltersAndSort(){
     let filtered = [...entries];
-    const query = (document.getElementById('quickSearch').value || '').toLowerCase().trim();
-    const typeFilter = document.getElementById('typeFilter').value;
-    const sortOrder = document.getElementById('sortOrder').value;
+    const quickSearchEl = document.getElementById('quickSearch');
+    const typeFilterEl = document.getElementById('typeFilter');
+    const sortOrderEl = document.getElementById('sortOrder');
+    const query = (quickSearchEl ? quickSearchEl.value || '' : '').toLowerCase().trim();
+    const typeFilter = typeFilterEl ? typeFilterEl.value : '';
+    const sortOrder = sortOrderEl ? sortOrderEl.value : 'createdAt';
 
     if (query) {
         filtered = filtered.filter(e => (
@@ -1233,7 +1236,13 @@ function updateMapMarkers(visibleIds) {
 
 function toggleSidebar(visible, initialPanel = 'form-panel') {
     const sidebar = document.getElementById('sidebar');
+    const mobileNav = document.getElementById('mobileNav');
     const isMobile = window.matchMedia('(max-width: 1024px)').matches;
+    
+    // DEBUG: Vérifier quel panneau est demandé
+    if (isMobile && visible) {
+        console.log('toggleSidebar MOBILE - panneau demandé:', initialPanel);
+    }
 
     // Sur desktop, on change juste le panneau sans toggle la visibilité
     if (!isMobile) {
@@ -1245,7 +1254,22 @@ function toggleSidebar(visible, initialPanel = 'form-panel') {
 
     if (visible) {
         sidebar.classList.add('visible');
-        switchPanel(initialPanel);
+        // Mobile UX: ne montrer que l'onglet actif dans la barre mobile
+        if (mobileNav) mobileNav.classList.add('single-only');
+        // Trouver l'onglet correspondant pour garantir le bon "active" - FORCER le changement
+        const clickedNavItem = document.querySelector(`.mobile-nav-item[data-target="${initialPanel}"]`);
+        // S'assurer que tous les onglets sont désactivés d'abord
+        document.querySelectorAll('.mobile-nav-item').forEach(item => {
+            item.classList.remove('active');
+            item.setAttribute('aria-selected', 'false');
+        });
+        // Activer le bon onglet AVANT d'appeler switchPanel
+        if (clickedNavItem) {
+            clickedNavItem.classList.add('active');
+            clickedNavItem.setAttribute('aria-selected', 'true');
+        }
+        // Maintenant changer le panneau
+        switchPanel(initialPanel, clickedNavItem || null);
         // Ne pas bloquer le scroll du body pour permettre l'interaction avec la carte
         // document.body.style.overflow = 'hidden'; // Commenté pour permettre le scroll de la carte
         // Overlay optionnel et transparent pour ne pas bloquer les interactions
@@ -1264,6 +1288,8 @@ function toggleSidebar(visible, initialPanel = 'form-panel') {
     } else {
         sidebar.classList.remove('visible');
         document.body.style.overflow = '';
+        // Rétablir l'affichage de tous les onglets quand on ferme la sidebar
+        if (mobileNav) mobileNav.classList.remove('single-only');
         // Retirer overlay
         const overlay = document.querySelector('.sidebar-overlay');
         if (overlay) {
@@ -1344,6 +1370,9 @@ function switchPanel(targetId, clickedElement = null) {
     const navItems = document.querySelectorAll('.mobile-nav-item');
     const detailNav = document.getElementById('detailNav');
     const isDetailPanel = targetId === 'detail-panel';
+
+    // DEBUG: Vérifier quel panneau est appelé
+    console.log('switchPanel appelé avec:', targetId);
 
     // Haptic feedback sur mobile
     hapticFeedback('light');

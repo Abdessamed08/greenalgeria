@@ -17,10 +17,10 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
 
 
-    <link rel="stylesheet" href="../css/map.css">
+    <link rel="stylesheet" href="../css/map.css?v=20251215-1">
 </head>
 <body>
-
+    
 <div class="app" role="application" aria-label="Algérie Verte">
 
   <aside class="sidebar" id="sidebar" aria-labelledby="title">
@@ -144,6 +144,7 @@
             </div>
           </div>
 
+          <!--
           <div class="filter-group">
             <input id="quickSearch" placeholder="ابحث بالاسم، الموقع، أو النوع..." oninput="debouncedSearch()" aria-label="بحث سريع" />
             <select id="sortOrder" onchange="applyFiltersAndSort()" aria-label="ترتيب حسب">
@@ -182,6 +183,7 @@
               <i class="fas fa-sync-alt"></i> تحديث المعاينة
             </button>
           </div>
+          -->
         </div>
 
         <div class="panel panel-list mobile-panel" id="list-panel" style="display:none;">
@@ -265,14 +267,14 @@
       <button class="toggle" id="toggleStyle" onclick="toggleStyle()" title="سمة الخريطة" aria-pressed="false" aria-label="تبديل سمة الخريطة"><i class="fas fa-adjust"></i></button>
     </div>
 
-    <div class="fab-container" style="bottom: -5cm !important; flex-direction: column-reverse !important;">
-        <div class="fab-button" onclick="toggleSidebar(true, 'form-panel')" role="button" aria-label="إضافة شجرة جديدة">
+    <div class="fab-container" style="bottom: 10px !important; flex-direction: column-reverse !important;">
+        <div class="fab-button" onclick="toggleSidebar(true, 'form-panel')" role="button" aria-label="إضافة شجرة" title="إضافة شجرة" style="background: linear-gradient(135deg, #059669 0%, #047857 50%, #10b981 100%) !important;">
             <i class="fas fa-plus"></i>
         </div>
-        <div class="fab-mini" onclick="toggleSidebar(true, 'list-panel')" role="button" aria-label="قائمة المساهمات">
+        <div class="fab-mini" onclick="toggleSidebar(true, 'list-panel')" role="button" aria-label="المساهمات" title="المساهمات">
             <i class="fas fa-list-ul"></i>
         </div>
-        <div class="fab-mini" onclick="toggleSidebar(true, 'stats-panel')" role="button" aria-label="الإحصائيات">
+        <div class="fab-mini" onclick="toggleSidebar(true, 'stats-panel')" role="button" aria-label="الإحصاءات" title="الإحصاءات">
             <i class="fas fa-chart-bar"></i>
         </div>
     </div>
@@ -353,6 +355,6 @@
 
 
 
-    <script src="../js/map.js"></script>
+    <script src="../js/map.js?v=20251215-4"></script>
 </body>
 </html>
