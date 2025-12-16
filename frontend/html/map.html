@@ -18,7 +18,7 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
 
 
-  <link rel="stylesheet" href="../css/map.css?v=20251215-1">
+  <link rel="stylesheet" href="../css/map.css?v=20251216-FIX-MOBILE-4">
 </head>
 
 <body>
@@ -288,13 +288,14 @@
 
       <div class="fab-container" style="bottom: 10px !important; flex-direction: column-reverse !important;">
         <div id="fab-add" class="fab-button" role="button" aria-label="إضافة شجرة" title="إضافة شجرة"
-          style="background: linear-gradient(135deg, #059669 0%, #047857 50%, #10b981 100%) !important;">
+          style="background: linear-gradient(135deg, #059669 0%, #047857 50%, #10b981 100%) !important; z-index: 10;">
           <i class="fas fa-plus"></i>
         </div>
-        <div id="fab-list" class="fab-mini" role="button" aria-label="المساهمات" title="المساهمات">
+        <div id="fab-list" class="fab-mini" role="button" aria-label="المساهمات" title="المساهمات" style="z-index: 20;">
           <i class="fas fa-list-ul"></i>
         </div>
-        <div id="fab-stats" class="fab-mini" role="button" aria-label="الإحصاءات" title="الإحصاءات">
+        <div id="fab-stats" class="fab-mini" role="button" aria-label="الإحصاءات" title="الإحصاءات"
+          style="z-index: 30;">
           <i class="fas fa-chart-bar"></i>
         </div>
       </div>
@@ -377,7 +378,7 @@
 
 
 
-  <script src="../js/map.js?v=20251215-4"></script>
+  <script src="../js/map.js?v=20251216-FIX-MOBILE-5"></script>
 </body>
 
 </html>
