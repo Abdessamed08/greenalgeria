@@ -19,6 +19,9 @@
 
 
   <link rel="stylesheet" href="../css/map.css?v=20251216-FIX-MOBILE-4">
+  <!-- Tom Select pour les menus déroulants -->
+  <link href="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/css/tom-select.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/js/tom-select.complete.min.js"></script>
 </head>
 
 <body>
@@ -62,13 +65,15 @@
               </div>
             </div>
             <div class="field">
-              <label for="adresse">المنطقة / العنوان (اختياري)</label>
-              <input id="adresse" name="adresse" type="text" placeholder="ولاية، بلدية، أو وصف دقيق" />
-              <div class="help-text">
-                <i class="fas fa-map-marker-alt"></i>
-                <span>يساعد هذا الحقل في تحديد الموقع بشكل أفضل</span>
+              <label>الموقع الإداري <span class="required">*</span></label>
+              <div style="display: flex; gap: 10px; flex-direction: column;">
+                <select id="wilaya_select" placeholder="الولاية" autocomplete="off"></select>
+                <select id="daira_select" placeholder="الدائرة" autocomplete="off"></select>
+                <select id="commune_select" placeholder="البلدية" autocomplete="off"></select>
               </div>
             </div>
+            <!-- Champ adresse calculé automatiquement et caché -->
+            <input id="adresse" name="adresse" type="hidden" />
             <div class="row">
               <div class="col field">
                 <label for="type_arbre">نوع الشجرة <span class="required">*</span></label>
@@ -316,9 +321,14 @@
           <input id="editNom" type="text" required aria-required="true" />
         </div>
         <div class="field">
-          <label for="editAdresse">المنطقة / العنوان (اختياري)</label>
-          <input id="editAdresse" type="text" />
+          <label>الموقع الإداري</label>
+          <div style="display: flex; gap: 10px; flex-direction: column;">
+            <select id="edit_wilaya_select" placeholder="الولاية" autocomplete="off"></select>
+            <select id="edit_daira_select" placeholder="الدائرة" autocomplete="off"></select>
+            <select id="edit_commune_select" placeholder="البلدية" autocomplete="off"></select>
+          </div>
         </div>
+        <input id="editAdresse" type="hidden" />
         <div class="row">
           <div class="col field">
             <label for="editTypeArbre">نوع الشجرة <span class="required">*</span></label>
@@ -378,6 +388,7 @@
 
 
 
+  <script src="../js/dz-locations.js"></script>
   <script src="../js/map.js?v=20251216-FIX-MOBILE-5"></script>
 </body>
 
