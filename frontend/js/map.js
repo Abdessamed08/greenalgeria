@@ -1611,6 +1611,31 @@ document.addEventListener('DOMContentLoaded', function(){
 
   // Initialisation du calendrier moderne Flatpickr
   initFlatpickr();
+
+  // FAB Event Listeners (Refactor: Explicit listeners with unique IDs)
+  const fabAdd = document.getElementById('fab-add');
+  if (fabAdd) {
+      fabAdd.addEventListener('click', function(e) {
+          e.preventDefault();
+          toggleSidebar(true, 'form-panel');
+      });
+  }
+
+  const fabList = document.getElementById('fab-list');
+  if (fabList) {
+      fabList.addEventListener('click', function(e) {
+          e.preventDefault();
+          toggleSidebar(true, 'list-panel');
+      });
+  }
+
+  const fabStats = document.getElementById('fab-stats');
+  if (fabStats) {
+      fabStats.addEventListener('click', function(e) {
+          e.preventDefault();
+          toggleSidebar(true, 'stats-panel');
+      });
+  }
 });
 
 function initFlatpickr() {
