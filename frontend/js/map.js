@@ -80,6 +80,7 @@ function escapeHtml(s) { if (!s) return ''; return s.replace(/[&<>"']/g, c => ({
 
 /* Récupère l'icône Font Awesome basée sur le type */
 function getTreeIconClass(type) {
+  if (!type) return 'fas fa-tree'; // Fallback icon
   type = type.toLowerCase();
   if (type.includes('صنوبر') || type.includes('أرز') || type.includes('conifer')) return 'fas fa-tree';
   if (type.includes('نخيل') || type.includes('palm')) return 'fas fa-leaf';
@@ -1035,14 +1036,18 @@ function loadFromStorage() {
 }
 
 function updateStats(filteredCount = entries.length) {
-  const totalTrees = entries.reduce((sum, entry) => sum + (parseInt(entry.quantite) || 0), 0);
+  if (!entries) entries = [];
+  const safeEntries = Array.isArray(entries) ? entries : [];
+
+  const totalTrees = safeEntries.reduce((sum, entry) => sum + (parseInt(entry.quantite) || 0), 0);
+
   const countEl = document.getElementById('stat-count');
-  if (countEl) countEl.textContent = entries.length;
+  if (countEl) countEl.textContent = safeEntries.length;
 
   const totalEl = document.getElementById('stat-total-trees');
   if (totalEl) totalEl.textContent = totalTrees.toLocaleString();
 
-  const types = new Set(entries.map(e => e.type));
+  const types = new Set(safeEntries.map(e => e.type).filter(t => t));
   const typesEl = document.getElementById('stat-types');
   if (typesEl) typesEl.textContent = types.size;
 
@@ -1050,7 +1055,7 @@ function updateStats(filteredCount = entries.length) {
   if (updateEl) updateEl.textContent = new Date().toLocaleString('ar-EG', { timeZone: 'Africa/Algiers' });
 
   const filterEl = document.getElementById('filterInfo');
-  if (filterEl) filterEl.textContent = (filteredCount < entries.length) ? `(${filteredCount} نتيجة من ${entries.length})` : `الكل (${entries.length})`;
+  if (filterEl) filterEl.textContent = (filteredCount < safeEntries.length) ? `(${filteredCount} نتيجة من ${safeEntries.length})` : `الكل (${safeEntries.length})`;
 
   const resultsEl = document.getElementById('resultsCount');
   if (resultsEl) resultsEl.textContent = filteredCount;
@@ -1071,7 +1076,7 @@ function applyFiltersAndSort() {
 
   if (query) {
     filtered = filtered.filter(e => (
-      e.nom + ' ' + (e.adresse || '') + ' ' + e.type
+      (e.nom || '') + ' ' + (e.adresse || '') + ' ' + (e.type || '')
     ).toLowerCase().includes(query));
   }
   if (typeFilter) {
@@ -1079,9 +1084,12 @@ function applyFiltersAndSort() {
   }
 
   filtered.sort((a, b) => {
-    if (sortOrder === 'nom') return a.nom.localeCompare(b.nom);
-    if (sortOrder === 'type') return a.type.localeCompare(b.type);
-    return b.createdAt - a.createdAt;
+    if (sortOrder === 'nom') return (a.nom || '').localeCompare(b.nom || '');
+    if (sortOrder === 'type') return (a.type || '').localeCompare(b.type || '');
+    // Handle potential missing createdAt with timestamp fallback or 0
+    const timeA = a.createdAt || a.timestamp || 0;
+    const timeB = b.createdAt || b.timestamp || 0;
+    return timeB - timeA;
   });
 
   updateList(filtered);
@@ -1093,7 +1101,15 @@ function applyFiltersAndSort() {
  * Met à jour la liste latérale (Le clic ouvre le panneau de détail)
  */
 function updateList(filteredEntries) {
-  const container = document.getElementById('locationsList'); container.innerHTML = '';
+  const container = document.getElementById('locationsList');
+  if (!container) return;
+  container.innerHTML = '';
+
+  // Safe handling of null/undefined
+  if (!filteredEntries || !Array.isArray(filteredEntries)) {
+    filteredEntries = [];
+  }
+
   const items = filteredEntries.slice(0, 50);
 
   if (items.length === 0) { container.innerHTML = '<div class="muted text-center p-1" style="text-align:center;">لا توجد نتائج مطابقة</div>'; return; }
@@ -1328,22 +1344,16 @@ function switchPanel(targetId, clickedElement = null) {
   // Haptic feedback sur mobile
   hapticFeedback('light');
 
-  // 1. Gérer l'affichage du panneau avec animation
+  // 1. Gérer l'affichage du panneau (Simple et robuste)
   panels.forEach(panel => {
     if (panel.id === targetId) {
       panel.style.display = 'block';
-      // Animation d'entrée
-      panel.style.opacity = '0';
-      panel.style.transform = 'translateX(20px)';
-      setTimeout(() => {
-        panel.style.transition = 'opacity 0.3s, transform 0.3s';
-        panel.style.opacity = '1';
-        panel.style.transform = 'translateX(0)';
-      }, 10);
+      panel.style.opacity = '1';
+      panel.style.transform = 'none';
+      // Force repaint
+      void panel.offsetWidth;
     } else {
       panel.style.display = 'none';
-      panel.style.opacity = '1';
-      panel.style.transform = 'translateX(0)';
     }
   });
 
@@ -1374,7 +1384,12 @@ function switchPanel(targetId, clickedElement = null) {
 
   // 3. Assurer la mise à jour des données lors du changement vers l'onglet List/Stats
   if (targetId === 'list-panel' || targetId === 'stats-panel') {
-    applyFiltersAndSort();
+    try {
+      applyFiltersAndSort();
+    } catch (err) {
+      console.error('Error updating list/stats:', err);
+      toast('حدث خطأ في عرض البيانات', 'error');
+    }
   }
 }
 
