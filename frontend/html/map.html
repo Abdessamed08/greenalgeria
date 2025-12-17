@@ -110,31 +110,20 @@
             </div>
             <div class="field location-group">
               <label>موقع الزرع <span class="required">*</span></label>
-              <div class="row coords-inputs">
-                <input id="latitude" type="text" readonly placeholder="خط العرض" required aria-required="true" />
-                <input id="longitude" type="text" readonly placeholder="خط الطول" required aria-required="true" />
+              <!-- Coordonnées (supprimées du HTML, gérées en JS interne) -->
+              <div class="form-button-group">
+                <button type="button" class="btn primary" id="geolocationBtn" aria-label="تحديد موقعي الحالي">
+                  <i class="fas fa-location-arrow"></i> تحديد موقعي
+                </button>
+
+                <button type="submit" class="btn secondary" title="أضف الشجرة" disabled aria-disabled="true">
+                  <i class="fas fa-plus-circle"></i> إضافة شجرة
+                </button>
+                <button type="button" class="btn ghost small-action" onclick="resetForm();" aria-label="مسح الحقول">
+                  <i class="fas fa-redo"></i> إعادة تعيين
+                </button>
               </div>
-              <div class="help-message">
-                <i class="fas fa-info-circle"></i>
-                <span id="locationHelpText">استخدم زر "تحديد موقعي" لتحديد موقعك تلقائياً، أو "اختر على الخريطة" ثم انقر
-                  على الخريطة لتحديد الموقع.</span>
-              </div>
-            </div>
-            <div class="form-button-group">
-              <button type="button" class="btn primary" id="geolocationBtn" aria-label="تحديد موقعي الحالي">
-                <i class="fas fa-location-arrow"></i> تحديد موقعي
-              </button>
-              <button type="button" class="btn secondary" id="selectOnMapBtn" aria-label="اختر على الخريطة">
-                <i class="fas fa-map-marker-alt"></i> اختر على الخريطة
-              </button>
-              <button type="submit" class="btn secondary" title="أضف الشجرة" disabled aria-disabled="true">
-                <i class="fas fa-plus-circle"></i> إضافة شجرة
-              </button>
-              <button type="button" class="btn ghost small-action" onclick="resetForm();" aria-label="مسح الحقول">
-                <i class="fas fa-redo"></i> إعادة تعيين
-              </button>
-            </div>
-            <div id="formMessage" role="status" aria-live="polite" style="display: none;"></div>
+              <div id="formMessage" role="status" aria-live="polite" style="display: none;"></div>
           </form>
         </div>
 
@@ -258,10 +247,7 @@
             <strong>أُضيف في</strong>
             <span id="detail-createdAt">-</span>
           </div>
-          <div class="detail-meta-item">
-            <strong>إحداثيات</strong>
-            <span id="detail-coords">-</span>
-          </div>
+
           <div class="detail-actions">
             <button class="btn primary"
               onclick="centerOn(parseFloat(document.getElementById('detail-lat').value), parseFloat(document.getElementById('detail-lng').value), 14);">
@@ -366,11 +352,7 @@
         </div>
         <div class="field location-group">
           <label>موقع الزرع <span class="required">*</span></label>
-          <div class="row coords-inputs">
-            <input id="editLatitude" type="text" readonly placeholder="خط العرض" required aria-required="true" />
-            <input id="editLongitude" type="text" readonly placeholder="خط الطول" required aria-required="true" />
-          </div>
-          <small class="muted">يمكنك سحب العلامة على الخريطة لتغيير الموقع.</small>
+
         </div>
         <div class="form-button-group">
           <button type="button" class="btn danger"

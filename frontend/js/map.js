@@ -11,7 +11,11 @@ let entries = [];
 let tileDefault, tileToner;
 let geojsonBounds = null;
 let tempMarker = null;
-let mapSelectionMode = false; // Mode "sélection sur la carte"
+// Map selection mode removed
+let currentFormLat = null;
+let currentFormLng = null;
+let currentEditLat = null;
+let currentEditLng = null;
 let watchPositionId = null; // ID pour watchPosition (géolocalisation mobile)
 const ALGERIA_CENTER = [28.0339, 1.6596];
 const APPROX_BOUNDS = L.latLngBounds([18.9681, -8.6675], [37.0937, 11.9795]);
@@ -108,10 +112,7 @@ function initMap() {
   heatLayer = L.heatLayer([], { radius: 25, blur: 18, maxZoom: 11 });
 
   // Gérer les clics sur la carte pour définir la position (mode sélection)
-  // DÉSACTIVÉ : On force l'utilisation du bouton GPS pour garantir la précision
-  /* map.on('click', function(e) {
-    if (mapSelectionMode) { ... }
-  }); */
+  // Click handling removed as per requirement
 
   // Chargement de la frontière GeoJSON de l'Algérie pour les limites
   fetch('https://raw.githubusercontent.com/johan/world.geo.json/master/countries/DZA.geo.json').then(r => {
@@ -296,7 +297,7 @@ function showDetailPanel(id) {
   document.getElementById('detail-district').textContent = escapeHtml(entry.district || 'غير محدد');
   document.getElementById('detail-date').textContent = entry.date ? entry.date.replace(/-/g, '/') : 'غير محدد';
   document.getElementById('detail-createdAt').textContent = formatDate(entry.createdAt);
-  document.getElementById('detail-coords').textContent = `${entry.lat.toFixed(6)}, ${entry.lng.toFixed(6)}`;
+  // Coords display removed
 
   // Pour l'action "Télécopie"
   document.getElementById('detail-lat').value = entry.lat;
@@ -434,8 +435,8 @@ async function handleEditSubmit(e) {
 
   if (!entry) { toast('خطأ: لم يتم العثور على المساهمة', 'error'); return; }
 
-  const newLat = parseFloat(document.getElementById('editLatitude').value);
-  const newLng = parseFloat(document.getElementById('editLongitude').value);
+  const newLat = currentEditLat !== null ? currentEditLat : entry.lat;
+  const newLng = currentEditLng !== null ? currentEditLng : entry.lng;
   const newQuantite = parseInt(document.getElementById('editQuantite').value);
 
   // Gérer la photo si un nouveau fichier est sélectionné
@@ -509,8 +510,9 @@ function openEditModal(id) {
   document.getElementById('editAdresse').value = entry.adresse || '';
   document.getElementById('editTypeArbre').value = entry.type || '';
   document.getElementById('editDatePlanted').value = entry.date || '';
-  document.getElementById('editLatitude').value = entry.lat.toFixed(6);
-  document.getElementById('editLongitude').value = entry.lng.toFixed(6);
+  // Store current coords in variables for editing purpose (though editing location is restricted)
+  currentEditLat = entry.lat;
+  currentEditLng = entry.lng;
   document.getElementById('editQuantite').value = entry.quantite || 1;
 
   // Afficher la photo actuelle si elle existe
@@ -532,7 +534,7 @@ function openEditModal(id) {
   // Afficher la modale
   document.getElementById('editModalOverlay').classList.add('open');
   validateEditForm();
-  toast('اسحب العلامة على الخريطة لتغيير الموقع.', 'alert');
+  // Help toast removed
 }
 
 function closeModal() {
@@ -545,10 +547,9 @@ function validateForm() {
   const nom = document.getElementById('nom').value.trim();
   const type = document.getElementById('type_arbre').value;
   const quantite = parseInt(document.getElementById('quantite').value);
-  const lat = document.getElementById('latitude').value;
-  const lng = document.getElementById('longitude').value;
   const isQuantiteValid = !isNaN(quantite) && quantite >= 1;
-  const isValid = nom && type && isQuantiteValid && !isNaN(parseFloat(lat)) && !isNaN(parseFloat(lng));
+  // Validate using internal variables
+  const isValid = nom && type && isQuantiteValid && currentFormLat !== null && currentFormLng !== null;
   document.querySelector('#treeForm button[type="submit"]').disabled = !isValid;
 }
 
@@ -556,10 +557,9 @@ function validateEditForm() {
   const nom = document.getElementById('editNom').value.trim();
   const type = document.getElementById('editTypeArbre').value;
   const quantite = parseInt(document.getElementById('editQuantite').value);
-  const lat = document.getElementById('editLatitude').value;
-  const lng = document.getElementById('editLongitude').value;
   const isQuantiteValid = !isNaN(quantite) && quantite >= 1;
-  const isValid = nom && type && isQuantiteValid && !isNaN(parseFloat(lat)) && !isNaN(parseFloat(lng));
+  // Validate using internal variables (or existing entry values if not changed)
+  const isValid = nom && type && isQuantiteValid && currentEditLat !== null && currentEditLng !== null;
   document.getElementById('saveEditBtn').disabled = !isValid;
 }
 
@@ -600,8 +600,8 @@ function resetForm() {
   document.getElementById('treeForm').reset();
   document.getElementById('preview').style.display = 'none';
   document.getElementById('preview').src = '';
-  document.getElementById('latitude').value = '';
-  document.getElementById('longitude').value = '';
+  currentFormLat = null;
+  currentFormLng = null;
   document.getElementById('photo').value = '';
   document.getElementById('quantite').value = '1';
   if (tempMarker) { map.removeLayer(tempMarker); tempMarker = null; }
@@ -616,36 +616,7 @@ function resetForm() {
 /**
  * Active/désactive le mode "sélection sur la carte"
  */
-function toggleMapSelectionMode(enable) {
-  mapSelectionMode = enable;
-  const selectBtn = document.getElementById('selectOnMapBtn');
-  const helpText = document.getElementById('locationHelpText');
-
-  // Arrêter la géolocalisation en cours si on active le mode sélection manuelle
-  if (enable && watchPositionId !== null && navigator.geolocation) {
-    navigator.geolocation.clearWatch(watchPositionId);
-    watchPositionId = null;
-  }
-
-  if (selectBtn) {
-    if (enable) {
-      selectBtn.classList.add('active');
-      selectBtn.innerHTML = '<i class="fas fa-times"></i> إلغاء الاختيار';
-      selectBtn.style.background = 'var(--color-danger)';
-      helpText.innerHTML = '<i class="fas fa-hand-pointer"></i> <strong>انقر على الخريطة لتحديد موقع الزرع</strong>';
-      // Changer le curseur de la carte
-      map.getContainer().style.cursor = 'crosshair';
-      toast('انقر على الخريطة لتحديد الموقع', 'alert');
-    } else {
-      selectBtn.classList.remove('active');
-      selectBtn.innerHTML = '<i class="fas fa-map-marker-alt"></i> اختر على الخريطة';
-      selectBtn.style.background = '';
-      helpText.innerHTML = 'استخدم زر "تحديد موقعي" لتحديد موقعك تلقائياً، أو "اختر على الخريطة" ثم انقر على الخريطة لتحديد الموقع.';
-      // Restaurer le curseur normal
-      map.getContainer().style.cursor = '';
-    }
-  }
-}
+// toggleMapSelectionMode removed entirely
 
 /**
  * Attache les event listeners au bouton de géolocalisation
@@ -702,17 +673,7 @@ function attachGeolocationButton() {
 
   console.log('Bouton de géolocalisation attaché avec succès:', geolocBtn);
 
-  // Attacher aussi le bouton "sélection sur carte"
-  const selectOnMapBtn = document.getElementById('selectOnMapBtn');
-  if (selectOnMapBtn && !selectOnMapBtn.hasAttribute('data-attached')) {
-    selectOnMapBtn.setAttribute('data-attached', 'true');
-    selectOnMapBtn.addEventListener('click', function (e) {
-      e.preventDefault();
-      e.stopPropagation();
-      toggleMapSelectionMode(!mapSelectionMode);
-    }, { passive: false });
-    console.log('Bouton "sélection sur carte" attaché');
-  }
+  // Select on map button handling removed
 }
 
 function handleGeolocation() {
@@ -724,22 +685,14 @@ function handleGeolocation() {
     watchPositionId = null;
   }
 
-  // Désactiver le mode sélection sur carte si actif
-  if (mapSelectionMode) {
-    toggleMapSelectionMode(false);
-  }
+  // Selection mode handling removed
 
   // Vérifier le support de la géolocalisation
   if (!navigator.geolocation) {
-    const errorMsg = 'المتصفح لا يدعم الموقع. يرجى استخدام زر "اختر على الخريطة" لتحديد الموقع يدوياً.';
+    const errorMsg = 'المتصفح لا يدعم الموقع. يجب استخدام جهاز يدعم GPS.';
     console.error('Geolocation non supporté');
     showFormMessage(errorMsg, 'error');
     hapticFeedback('error');
-    // Proposer automatiquement le mode sélection sur carte
-    setTimeout(() => {
-      toggleMapSelectionMode(true);
-      showFormMessage('يمكنك الآن النقر على الخريطة لتحديد الموقع', 'alert');
-    }, 2000);
     return;
   }
 
@@ -750,13 +703,10 @@ function handleGeolocation() {
     window.location.hostname === '0.0.0.0';
 
   if (!isSecure) {
-    const insecureMsg = '⚠️ يتطلب الموقع HTTPS للعمل على الهاتف. يرجى استخدام HTTPS أو "اختر على الخريطة".';
+    const insecureMsg = '⚠️ يتطلب الموقع HTTPS للعمل على الهاتف. يرجى استخدام HTTPS.';
     console.warn('Géolocalisation nécessite HTTPS (sauf localhost)');
     showFormMessage(insecureMsg, 'error');
-    setTimeout(() => {
-      toggleMapSelectionMode(true);
-      showFormMessage('يمكنك الآن النقر على الخريطة لتحديد الموقع', 'alert');
-    }, 3000);
+    return;
     return;
   }
 
@@ -844,8 +794,12 @@ function handleGeolocation() {
     }
 
     // Mettre à jour les champs
-    document.getElementById('latitude').value = latlng.lat.toFixed(6);
-    document.getElementById('longitude').value = latlng.lng.toFixed(6);
+    // Update internal variables
+    currentFormLat = latlng.lat;
+    currentFormLng = latlng.lng;
+
+    // Debug log
+    console.log('Location updated:', currentFormLat, currentFormLng);
 
     // Calculer le niveau de zoom optimal selon la précision GPS
     // Plus la précision est bonne, plus on zoome
@@ -1059,10 +1013,7 @@ function handleGeolocation() {
 }
 
 /* Fonction toggleMapSelectionMode supprimée car le mode manuel est désactivé */
-function toggleMapSelectionMode(enable) {
-  console.warn('Mode sélection manuelle désactivé par configuration.');
-  // Fonction vide pour éviter les erreurs si appelée ailleurs
-}
+// Duplicate function removed
 
 
 /* --------------------------------- */
@@ -1804,8 +1755,8 @@ async function handleSubmit() {
   const adresse = document.getElementById('adresse').value.trim();
   const type = document.getElementById('type_arbre').value.trim();
   const quantite = parseInt(document.getElementById('quantite').value, 10);
-  const lat = parseFloat(document.getElementById('latitude').value);
-  const lng = parseFloat(document.getElementById('longitude').value);
+  const lat = currentFormLat !== null ? currentFormLat : parseFloat('NaN');
+  const lng = currentFormLng !== null ? currentFormLng : parseFloat('NaN');
   const datePlanted = document.getElementById('date_planted').value || null;
   const photoInput = document.getElementById('photo');
   const photoFile = photoInput.files[0];
