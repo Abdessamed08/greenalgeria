@@ -1449,22 +1449,30 @@ function switchPanel(targetId, clickedElement = null) {
 }
 
 // Preview de l'image
-// Prévisualisation de la photo dans le formulaire principal
-document.getElementById('photo').addEventListener('change', function (event) {
-  const preview = document.getElementById('preview');
-  if (event.target.files.length > 0) {
-    const file = event.target.files[0];
-    const reader = new FileReader();
-    reader.onload = function (e) {
-      preview.src = e.target.result;
-      preview.style.display = 'block';
-    };
-    reader.readAsDataURL(file);
-  } else {
-    preview.src = '';
-    preview.style.display = 'none';
-  }
-});
+// Prévisualisation de la photo dans le formulaire principal (robuste)
+const photoInputEl = document.getElementById('photo');
+if (photoInputEl) {
+  photoInputEl.addEventListener('change', function (event) {
+    const preview = document.getElementById('preview');
+    if (!preview) return;
+
+    const input = event.target;
+    if (input && input.files && input.files.length > 0) {
+      const file = input.files[0];
+      const reader = new FileReader();
+      reader.onload = function (e) {
+        preview.src = e.target.result;
+        preview.style.display = 'block';
+      };
+      reader.readAsDataURL(file);
+    } else {
+      preview.src = '';
+      preview.style.display = 'none';
+    }
+  });
+} else {
+  console.warn('Input #photo introuvable: preview désactivée');
+}
 
 // Prévisualisation de la photo dans le modal d'édition
 const editPhotoInput = document.getElementById('editPhoto');
@@ -1656,30 +1664,8 @@ document.addEventListener('DOMContentLoaded', function () {
   // Initialisation du calendrier moderne Flatpickr
   initFlatpickr();
 
-  // FAB Event Listeners (Refactor: Explicit listeners with unique IDs)
-  const fabAdd = document.getElementById('fab-add');
-  if (fabAdd) {
-    fabAdd.addEventListener('click', function (e) {
-      e.preventDefault();
-      toggleSidebar(true, 'form-panel');
-    });
-  }
-
-  const fabList = document.getElementById('fab-list');
-  if (fabList) {
-    fabList.addEventListener('click', function (e) {
-      e.preventDefault();
-      toggleSidebar(true, 'list-panel');
-    });
-  }
-
-  const fabStats = document.getElementById('fab-stats');
-  if (fabStats) {
-    fabStats.addEventListener('click', function (e) {
-      e.preventDefault();
-      toggleSidebar(true, 'stats-panel');
-    });
-  }
+  // NB: Les listeners FAB sont déjà attachés plus haut dans ce même DOMContentLoaded.
+  // On évite les doubles handlers (click + touchend + click) qui peuvent provoquer des comportements bizarres sur mobile.
 });
 
 function initFlatpickr() {
