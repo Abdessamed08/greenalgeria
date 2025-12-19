@@ -115,6 +115,16 @@ function initMap() {
   // Gérer les clics sur la carte pour définir la position (mode sélection)
   // Click handling removed as per requirement
 
+  // Mobile UX: tap/click sur la carte = fermer la sidebar rapidement
+  // (ne gêne pas le drag, Leaflet ne déclenche pas "click" après un pan)
+  map.on('click', function () {
+    const isMobile = window.matchMedia('(max-width: 1024px)').matches;
+    const sidebar = document.getElementById('sidebar');
+    if (isMobile && sidebar && sidebar.classList.contains('visible')) {
+      toggleSidebar(false);
+    }
+  });
+
   // Chargement de la frontière GeoJSON de l'Algérie pour les limites
   fetch('https://raw.githubusercontent.com/johan/world.geo.json/master/countries/DZA.geo.json').then(r => {
     if (!r.ok) throw new Error('GeoJSON load failed');
@@ -1275,7 +1285,13 @@ function toggleSidebar(visible, initialPanel = 'form-panel') {
   }
 
   if (visible) {
+    // Sécurité: si un swipe avait mis des styles inline, on les nettoie
+    sidebar.style.transition = '';
+    sidebar.style.transform = '';
+    sidebar.style.willChange = '';
+
     sidebar.classList.add('visible');
+    document.body.classList.add('sidebar-open');
     // Mobile UX: ne montrer que l'onglet actif dans la barre mobile
     if (mobileNav) mobileNav.classList.add('single-only');
     // Trouver l'onglet correspondant pour garantir le bon "active" - FORCER le changement
@@ -1308,10 +1324,16 @@ function toggleSidebar(visible, initialPanel = 'form-panel') {
       overlay.style.display = 'block';
     }
   } else {
+    // Sécurité: si un swipe avait mis des styles inline, on les nettoie
+    sidebar.style.transition = '';
+    sidebar.style.transform = '';
+    sidebar.style.willChange = '';
+
     sidebar.classList.remove('visible');
+    document.body.classList.remove('sidebar-open');
     document.body.style.overflow = '';
-    // Rétablir l'affichage de tous les onglets quand on ferme la sidebar
-    if (mobileNav) mobileNav.classList.remove('single-only');
+    // Garder "single-only" même après fermeture (comportement demandé)
+    // => l'onglet visible reste celui actif (Statistiques / Contributions / Ajouter).
     // Retirer overlay
     const overlay = document.querySelector('.sidebar-overlay');
     if (overlay) {
@@ -1336,6 +1358,11 @@ document.addEventListener('DOMContentLoaded', function () {
     touchStartY = e.touches[0].clientY;
     touchStartX = e.touches[0].clientX;
     isSwiping = false;
+
+    // IMPORTANT (perf/UX): pendant le drag, on désactive les transitions
+    // sinon chaque update de `transform` est animée et ça donne une fermeture "lente".
+    sidebar.style.willChange = 'transform';
+    sidebar.style.transition = 'none';
   }, { passive: true });
 
   sidebar.addEventListener('touchmove', function (e) {
@@ -1364,10 +1391,20 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // Si swipe vers la gauche de plus de 50px, fermer la sidebar
     if (isSwiping && deltaX > 50) {
+      // Réactiver les transitions AVANT la fermeture animée
+      sidebar.style.transition = '';
+      // D'abord enlever la classe (nouvel état CSS), puis relâcher le transform inline
+      // au frame suivant pour que la transition se fasse depuis la position drag.
       toggleSidebar(false);
+      requestAnimationFrame(() => {
+        sidebar.style.transform = '';
+        sidebar.style.willChange = '';
+      });
     } else {
-      // Réinitialiser la transformation
+      // Réinitialiser la transformation (retour "snap" + animé via CSS)
+      sidebar.style.transition = '';
       sidebar.style.transform = '';
+      sidebar.style.willChange = '';
     }
 
     touchStartX = 0;
@@ -1391,6 +1428,8 @@ function switchPanel(targetId, clickedElement = null) {
   const panels = document.querySelectorAll('.mobile-panel');
   const navItems = document.querySelectorAll('.mobile-nav-item');
   const detailNav = document.getElementById('detailNav');
+  const mobileNav = document.getElementById('mobileNav');
+  const sidebar = document.getElementById('sidebar');
   const isDetailPanel = targetId === 'detail-panel';
 
   // DEBUG: Vérifier quel panneau est appelé
@@ -1434,6 +1473,13 @@ function switchPanel(targetId, clickedElement = null) {
       currentItem.classList.add('active');
       currentItem.setAttribute('aria-selected', 'true');
     }
+  }
+
+  // 2.5. Mobile: afficher uniquement l'onglet actif (persistant, même après fermeture)
+  // (ce que tu veux: Statistiques => فقط Statistiques, Contributions => فقط Contributions, etc.)
+  const isMobile = window.matchMedia('(max-width: 1024px)').matches;
+  if (isMobile && mobileNav) {
+    mobileNav.classList.add('single-only');
   }
 
 
