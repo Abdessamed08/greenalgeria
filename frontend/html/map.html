@@ -148,46 +148,53 @@
             </div>
           </div>
 
-          <!--
           <div class="filter-group">
-            <input id="quickSearch" placeholder="ابحث بالاسم، الموقع، أو النوع..." oninput="debouncedSearch()" aria-label="بحث سريع" />
+            <input id="quickSearch" placeholder="ابحث بالاسم، الموقع، أو النوع..." oninput="debouncedSearch()"
+              aria-label="بحث سريع" />
             <select id="sortOrder" onchange="applyFiltersAndSort()" aria-label="ترتيب حسب">
-                <option value="createdAt">الأحدث أولاً</option>
-                <option value="nom">ترتيب أبجدي (الاسم)</option>
-                <option value="type">ترتيب أبجدي (النوع)</option>
+              <option value="createdAt">الأحدث أولاً</option>
+              <option value="nom">ترتيب أبجدي (الاسم)</option>
+              <option value="type">ترتيب أبجدي (النوع)</option>
             </select>
             <select id="typeFilter" onchange="applyFiltersAndSort()" aria-label="فلتر حسب نوع الشجرة">
-                <option value="">كل الأنواع</option>
-                <option>صنوبر حلبي</option>
-                <option>أرز الأطلس</option>
-                <option>زيتون</option>
-                <option>نخيل</option>
-                <option>بلوط</option>
-                <option>أخرى</option>
+              <option value="">كل الأنواع</option>
+              <option>صنوبر حلبي</option>
+              <option>أرز الأطلس</option>
+              <option>زيتون</option>
+              <option>نخيل</option>
+              <option>بلوط</option>
+              <option>أخرى</option>
             </select>
           </div>
 
           <div class="panel-footer-actions" style="margin-top:20px;">
             <div class="list-title"><strong>إدارة البيانات</strong></div>
             <div class="file-actions" style="display:flex; gap:8px;">
-              <button class="btn ghost" onclick="exportData()" aria-label="تصدير البيانات بصيغة JSON"><i class="fas fa-download"></i> تصدير (JSON)</button>
-              <input id="importFile" type="file" accept="application/json" style="display:none" onchange="importData(event)" aria-label="استيراد ملف JSON">
-              <button class="btn ghost" onclick="document.getElementById('importFile').click()" aria-label="استيراد بيانات JSON"><i class="fas fa-file-import"></i> استيراد</button>
-              <button class="btn danger" onclick="clearAllData()" aria-label="مسح كل البيانات"><i class="fas fa-trash-alt"></i> مسح الكل</button>
+              <button class="btn ghost" onclick="exportData()" aria-label="تصدير البيانات بصيغة JSON"><i
+                  class="fas fa-download"></i> تصدير (JSON)</button>
+              <input id="importFile" type="file" accept="application/json" style="display:none"
+                onchange="importData(event)" aria-label="استيراد ملف JSON">
+              <button class="btn ghost" onclick="document.getElementById('importFile').click()"
+                aria-label="استيراد بيانات JSON"><i class="fas fa-file-import"></i> استيراد</button>
+              <button class="btn danger" onclick="clearAllData()" aria-label="مسح كل البيانات"><i
+                  class="fas fa-trash-alt"></i> مسح الكل</button>
             </div>
-            <small class="muted" style="margin-top:8px; display:block;">تصدير/استيراد يحفظ بيانات الخريطة محليًا.</small>
+            <small class="muted" style="margin-top:8px; display:block;">تصدير/استيراد يحفظ بيانات الخريطة
+              محليًا.</small>
           </div>
 
-          <div class="remote-sample" aria-live="polite">
+          <div class="remote-sample" aria-live="polite"
+            style="margin-top:20px; padding:15px; border:1px solid var(--color-border); border-radius:8px; background:rgba(255,255,255,0.5);">
             <h4>معاينة صورة من MongoDB</h4>
-            <p class="muted">نقوم بجلب آخر مساهمة من الخادم للتأكد من أن الصور محفوظة وتظهر بشكل صحيح.</p>
-            <img id="remoteSamplePhoto" class="detail-img" alt="صورة مساهمة محملة من MongoDB" style="display:none;" />
-            <small id="remoteSampleInfo" class="muted" style="display:none;"></small>
-            <button type="button" class="btn ghost" onclick="loadRemoteSample()" style="margin-top:12px;">
+            <p class="muted" style="font-size:0.85rem;">نقوم بجلب آخر مساهمة من الخادم للتأكد من أن الصور محفوظة وتظهر
+              بشكل صحيح.</p>
+            <img id="remoteSamplePhoto" class="detail-img" alt="صورة مساهمة محملة من MongoDB"
+              style="display:none; width:100%; border-radius:8px; margin-top:10px;" />
+            <small id="remoteSampleInfo" class="muted" style="display:none; display:block; margin-top:5px;"></small>
+            <button type="button" class="btn ghost" onclick="loadRemoteSample()" style="margin-top:12px; width:100%;">
               <i class="fas fa-sync-alt"></i> تحديث المعاينة
             </button>
           </div>
-          -->
         </div>
 
         <div class="panel panel-list mobile-panel" id="list-panel" style="display:none;">

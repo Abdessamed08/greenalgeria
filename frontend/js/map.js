@@ -138,7 +138,62 @@ function initMap() {
   attachGeolocationButton();
 
   loadFromStorage();
+  loadRemoteData(); // Fetch from server
   validateForm();
+}
+
+/**
+ * Charge les données depuis le serveur MongoDB (via Render)
+ */
+async function loadRemoteData() {
+  console.log('🔄 Chargement des données depuis le serveur...');
+  try {
+    const response = await fetch(API_URL);
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+
+    const serverEntries = await response.json();
+    if (Array.isArray(serverEntries)) {
+      console.log(`✅ ${serverEntries.length} مساهمات تم جلبها من الخادم.`);
+
+      // Fusionner avec les données locales sans doublons (priorité serveur)
+      const localIds = new Set(entries.map(e => e.id));
+      serverEntries.forEach(se => {
+        // Le backend utilise _id, on le mappe en id si besoin
+        if (se._id && !se.id) se.id = se._id;
+
+        const existingIdx = entries.findIndex(e => e.id === se.id);
+        if (existingIdx !== -1) {
+          entries[existingIdx] = { ...entries[existingIdx], ...se };
+        } else {
+          entries.push(se);
+        }
+      });
+
+      // Nettoyer les doublons potentiels (clé unique id)
+      const uniqueEntries = [];
+      const seen = new Set();
+      entries.forEach(e => {
+        if (!seen.has(e.id)) {
+          seen.add(e.id);
+          uniqueEntries.push(e);
+        }
+      });
+      entries = uniqueEntries;
+
+      // Mettre à jour la carte et la liste
+      markerCluster.clearLayers();
+      entries.forEach(e => addEntryToMap(e));
+      applyFiltersAndSort();
+
+      // Optionnel: ajuster la vue si des données sont présentes
+      if (entries.length > 0) {
+        // Pas de fitBounds forcé ici pour ne pas désorienter l'utilisateur au démarrage
+      }
+    }
+  } catch (error) {
+    console.warn('⚠️ تعذر جلب البيانات من الخادم، يتم استخدام البيانات المحلية فقط:', error);
+    // On ne montre pas de toast d'erreur ici pour ne pas déranger si on est en offline
+  }
 }
 
 /**
