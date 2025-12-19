@@ -1,8 +1,8 @@
-﻿/* --------------------------------- */
+/* --------------------------------- */
 /* Configuration Globale & Helpers   */
 /* --------------------------------- */
 const STORAGE_KEY = 'algerie_verte_v3';
-// ðŸ”¹ URL de l'API dÃ©ployÃ©e sur Render
+// 🔹 URL de l'API déployée sur Render
 const API_URL = 'https://greenalgeria-backend.onrender.com/api/contributions';
 const UPLOAD_URL = 'https://greenalgeria-backend.onrender.com/api/upload';
 
@@ -16,7 +16,7 @@ let currentFormLat = null;
 let currentFormLng = null;
 let currentEditLat = null;
 let currentEditLng = null;
-let watchPositionId = null; // ID pour watchPosition (gÃ©olocalisation mobile)
+let watchPositionId = null; // ID pour watchPosition (géolocalisation mobile)
 const ALGERIA_CENTER = [28.0339, 1.6596];
 const APPROX_BOUNDS = L.latLngBounds([18.9681, -8.6675], [37.0937, 11.9795]);
 let searchTimeout;
@@ -47,7 +47,7 @@ function hapticFeedback(type = 'light') {
   navigator.vibrate(patterns[type] || patterns.light);
 }
 
-/* Helper: toast avancÃ© */
+/* Helper: toast avancé */
 function toast(msg, type = 'success', timeout = 4000) {
   const t = document.getElementById('toast');
   if (!t) {
@@ -78,20 +78,20 @@ function toast(msg, type = 'success', timeout = 4000) {
 /* Helper escape */
 function escapeHtml(s) { if (!s) return ''; return s.replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
 
-/* RÃ©cupÃ¨re l'icÃ´ne Font Awesome basÃ©e sur le type */
+/* Récupère l'icône Font Awesome basée sur le type */
 function getTreeIconClass(type) {
   if (!type) return 'fas fa-tree'; // Fallback icon
   type = type.toLowerCase();
-  if (type.includes('ØµÙ†ÙˆØ¨Ø±') || type.includes('Ø£Ø±Ø²') || type.includes('conifer')) return 'fas fa-tree';
-  if (type.includes('Ù†Ø®ÙŠÙ„') || type.includes('palm')) return 'fas fa-leaf';
-  if (type.includes('Ø²ÙŠØªÙˆÙ†') || type.includes('olivier')) return 'fas fa-seedling';
-  if (type.includes('Ø¨Ù„ÙˆØ·') || type.includes('chÃªne')) return 'fas fa-tree';
+  if (type.includes('صنوبر') || type.includes('أرز') || type.includes('conifer')) return 'fas fa-tree';
+  if (type.includes('نخيل') || type.includes('palm')) return 'fas fa-leaf';
+  if (type.includes('زيتون') || type.includes('olivier')) return 'fas fa-seedling';
+  if (type.includes('بلوط') || type.includes('chêne')) return 'fas fa-tree';
   return 'fas fa-seedling';
 }
 
 /* Formate la date */
 function formatDate(timestamp) {
-  if (!timestamp) return 'ØºÙŠØ± Ù…Ø­Ø¯Ø¯';
+  if (!timestamp) return 'غير محدد';
   const date = new Date(timestamp);
   const options = { year: 'numeric', month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' };
   return date.toLocaleDateString('ar-EG', options);
@@ -104,7 +104,7 @@ function formatDate(timestamp) {
 function initMap() {
   map = L.map('map', { center: ALGERIA_CENTER, zoom: 5, minZoom: 5, maxZoom: 12, zoomControl: true });
 
-  tileDefault = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: 'Â© OpenStreetMap contributors' }).addTo(map);
+  tileDefault = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '© OpenStreetMap contributors' }).addTo(map);
   tileToner = L.tileLayer('https://stamen-tiles.a.ssl.fastly.net/toner-lite/{z}/{x}/{y}.png', { maxZoom: 20, attribution: 'Tiles: Stamen' });
 
   markerCluster = L.markerClusterGroup({ chunkedLoading: true });
@@ -112,10 +112,10 @@ function initMap() {
 
   heatLayer = L.heatLayer([], { radius: 25, blur: 18, maxZoom: 11 });
 
-  // GÃ©rer les clics sur la carte pour dÃ©finir la position (mode sÃ©lection)
+  // Gérer les clics sur la carte pour définir la position (mode sélection)
   // Click handling removed as per requirement
 
-  // Chargement de la frontiÃ¨re GeoJSON de l'AlgÃ©rie pour les limites
+  // Chargement de la frontière GeoJSON de l'Algérie pour les limites
   fetch('https://raw.githubusercontent.com/johan/world.geo.json/master/countries/DZA.geo.json').then(r => {
     if (!r.ok) throw new Error('GeoJSON load failed');
     return r.json();
@@ -134,7 +134,7 @@ function initMap() {
   document.getElementById('editForm').addEventListener('submit', handleEditSubmit);
   document.getElementById('editForm').addEventListener('input', validateEditForm);
 
-  // Attacher le bouton de gÃ©olocalisation (sera aussi fait dans DOMContentLoaded pour sÃ©curitÃ©)
+  // Attacher le bouton de géolocalisation (sera aussi fait dans DOMContentLoaded pour sécurité)
   attachGeolocationButton();
 
   loadFromStorage();
@@ -142,9 +142,9 @@ function initMap() {
 }
 
 /**
- * GÃ¨re le marqueur temporaire (pour Ajout et Ã‰dition)
- * @param {L.LatLng} latlng - CoordonnÃ©es de la position
- * @param {boolean} draggable - Si le marqueur peut Ãªtre dÃ©placÃ©
+ * Gère le marqueur temporaire (pour Ajout et Édition)
+ * @param {L.LatLng} latlng - Coordonnées de la position
+ * @param {boolean} draggable - Si le marqueur peut être déplacé
  * @param {number} zoomLevel - Niveau de zoom optionnel (si non fourni, conserve le zoom actuel ou utilise 10 minimum)
  */
 function setTempMarker(latlng, draggable, zoomLevel = null) {
@@ -157,10 +157,10 @@ function setTempMarker(latlng, draggable, zoomLevel = null) {
     iconAnchor: [20, 40]
   });
 
-  // Force draggable = false pour empÃªcher la modification manuelle de la position GPS
+  // Force draggable = false pour empêcher la modification manuelle de la position GPS
   tempMarker = L.marker(latlng, { icon: tempIcon, draggable: false });
 
-  // Ã‰vÃ©nement dragend supprimÃ© car le marqueur n'est plus dÃ©plaÃ§able
+  // Événement dragend supprimé car le marqueur n'est plus déplaçable
   /* tempMarker.on('dragend', function(e) { ... }); */
 
   tempMarker.addTo(map);
@@ -190,7 +190,7 @@ function setTempMarker(latlng, draggable, zoomLevel = null) {
 }
 
 /**
- * Ajout du marqueur d'arbre sur la carte (avec Popup Ã©lÃ©gante)
+ * Ajout du marqueur d'arbre sur la carte (avec Popup élégante)
  */
 function addEntryToMap(entry) {
 
@@ -206,13 +206,13 @@ function addEntryToMap(entry) {
 
   const marker = L.marker([entry.lat, entry.lng], { icon: customIcon });
 
-  // --- CONTENU DE LA POPUP Ã‰LÃ‰GANTE ---
+  // --- CONTENU DE LA POPUP ÉLÉGANTE ---
   const popupContent = `
     <div class="elegant-popup" dir="rtl">
         <h4><i class="${treeIconClass}" style="margin-left:5px; color:var(--color-secondary);"></i> ${escapeHtml(entry.type)}</h4>
-        <p>Ø§Ù„Ø¹Ø¯Ø¯: ${entry.quantite} Ø´Ø¬Ø±Ø©</p>
+        <p>العدد: ${entry.quantite} شجرة</p>
         <button class="popup-btn" onclick="centerAndOpenPanel('${entry.id}')">
-            Ø¹Ø±Ø¶ Ø§Ù„ØªÙØ§ØµÙŠÙ„ <i class="fas fa-arrow-left" style="margin-right:5px;"></i>
+            عرض التفاصيل <i class="fas fa-arrow-left" style="margin-right:5px;"></i>
         </button>
     </div>
   `;
@@ -222,10 +222,10 @@ function addEntryToMap(entry) {
     closeButton: false,
     autoClose: true,
     closeOnClick: true,
-    // La taille maximale est ajustÃ©e par le CSS min-width: 200px
+    // La taille maximale est ajustée par le CSS min-width: 200px
   });
 
-  // Le clic sur le marqueur Ouvre la popup par dÃ©faut. 
+  // Le clic sur le marqueur Ouvre la popup par défaut. 
   // Sur mobile, on ferme la sidebar pour ne pas masquer la popup.
   marker.on('click', function () {
     const isMobile = window.matchMedia('(max-width: 1024px)').matches;
@@ -239,15 +239,15 @@ function addEntryToMap(entry) {
 }
 
 /**
- * Centre la carte sur des coordonnÃ©es et ajuste le zoom
+ * Centre la carte sur des coordonnées et ajuste le zoom
  */
 function centerOn(lat, lng, zoomLevel = 12) {
   map.setView([lat, lng], zoomLevel);
 }
 
 /**
- * Fonction combinÃ©e pour centrer et ouvrir le panneau de dÃ©tail
- * UtilisÃ© par le bouton dans la popup et les actions de la liste.
+ * Fonction combinée pour centrer et ouvrir le panneau de détail
+ * Utilisé par le bouton dans la popup et les actions de la liste.
  */
 function centerAndOpenPanel(id) {
   const entry = entries.find(x => x.id === id);
@@ -258,25 +258,25 @@ function centerAndOpenPanel(id) {
 }
 
 /**
- * Trouve l'entrÃ©e et l'affiche dans le panneau de dÃ©tail
+ * Trouve l'entrée et l'affiche dans le panneau de détail
  */
 function showDetailPanel(id) {
   const entry = entries.find(x => x.id === id);
-  if (!entry) { toast('Ø®Ø·Ø£: Ù„Ù… ÙŠØªÙ… Ø§Ù„Ø¹Ø«ÙˆØ± Ø¹Ù„Ù‰ Ø§Ù„Ù…Ø³Ø§Ù‡Ù…Ø©', 'error'); return; }
+  if (!entry) { toast('خطأ: لم يتم العثور على المساهمة', 'error'); return; }
 
   const typeIcon = getTreeIconClass(entry.type);
 
-  // Mise Ã  jour des boutons d'action
+  // Mise à jour des boutons d'action
   document.getElementById('detailEditBtn').dataset.id = entry.id;
   document.getElementById('detailDeleteBtn').dataset.id = entry.id;
 
-  // Mise Ã  jour du contenu
+  // Mise à jour du contenu
   document.getElementById('detail-title').innerHTML = `<i class="${typeIcon}" style="margin-left:5px; color:var(--color-secondary);"></i> ${escapeHtml(entry.type)}`;
 
   // Correction URL image avec nettoyage et placeholder
   let photoUrl = entry.photo;
   if (photoUrl) {
-    // Cas image locale mal formÃ©e (gumlet + localhost)
+    // Cas image locale mal formée (gumlet + localhost)
     if (photoUrl.includes('gumlet.io') || (photoUrl.includes('localhost') && window.location.hostname !== 'localhost')) {
       const filename = photoUrl.split('/').pop();
       if (filename && !filename.includes('http')) {
@@ -290,23 +290,23 @@ function showDetailPanel(id) {
   document.getElementById('detail-photo').src = photoUrl ? photoUrl + '?w=800' : 'https://via.placeholder.com/400x200?text=No+Image';
   document.getElementById('detail-photo').onerror = function () { this.src = 'https://via.placeholder.com/400x200?text=No+Image'; };
 
-  document.getElementById('detail-type').textContent = `${escapeHtml(entry.type)} ${entry.updatedAt ? '(Ù…Ø¹Ø¯Ù‘Ù„)' : ''}`;
-  document.getElementById('detail-quantite').textContent = `${entry.quantite} Ø´Ø¬Ø±Ø©`;
+  document.getElementById('detail-type').textContent = `${escapeHtml(entry.type)} ${entry.updatedAt ? '(معدّل)' : ''}`;
+  document.getElementById('detail-quantite').textContent = `${entry.quantite} شجرة`;
   document.getElementById('detail-nom').textContent = escapeHtml(entry.nom);
-  document.getElementById('detail-adresse').textContent = escapeHtml(entry.adresse || 'ØºÙŠØ± Ù…Ø­Ø¯Ø¯');
-  document.getElementById('detail-city').textContent = escapeHtml(entry.city || 'ØºÙŠØ± Ù…Ø­Ø¯Ø¯');
-  document.getElementById('detail-district').textContent = escapeHtml(entry.district || 'ØºÙŠØ± Ù…Ø­Ø¯Ø¯');
-  document.getElementById('detail-date').textContent = entry.date ? entry.date.replace(/-/g, '/') : 'ØºÙŠØ± Ù…Ø­Ø¯Ø¯';
+  document.getElementById('detail-adresse').textContent = escapeHtml(entry.adresse || 'غير محدد');
+  document.getElementById('detail-city').textContent = escapeHtml(entry.city || 'غير محدد');
+  document.getElementById('detail-district').textContent = escapeHtml(entry.district || 'غير محدد');
+  document.getElementById('detail-date').textContent = entry.date ? entry.date.replace(/-/g, '/') : 'غير محدد';
   document.getElementById('detail-createdAt').textContent = formatDate(entry.createdAt);
   // Coords display removed
 
-  // Pour l'action "TÃ©lÃ©copie"
+  // Pour l'action "Télécopie"
   document.getElementById('detail-lat').value = entry.lat;
   document.getElementById('detail-lng').value = entry.lng;
 
-  // Afficher le panneau de dÃ©tail (et changer l'onglet sur mobile)
+  // Afficher le panneau de détail (et changer l'onglet sur mobile)
   switchPanel('detail-panel');
-  toggleSidebar(true, 'detail-panel'); // Ouvre la barre latÃ©rale sur le dÃ©tail si mobile
+  toggleSidebar(true, 'detail-panel'); // Ouvre la barre latérale sur le détail si mobile
 
   // Fermer toutes les popups
   map.closePopup();
@@ -318,7 +318,7 @@ function showDetailPanel(id) {
 }
 
 /**
- * Fonction combinÃ©e pour centrer et ouvrir la popup (utilisÃ©e par la liste)
+ * Fonction combinée pour centrer et ouvrir la popup (utilisée par la liste)
  */
 function centerAndOpenPopup(id) {
   const entry = entries.find(x => x.id === id);
@@ -346,7 +346,7 @@ function centerAndOpenPopup(id) {
 
 
 /* --------------------------------- */
-/* Gestion des DonnÃ©es (CRUD)        */
+/* Gestion des Données (CRUD)        */
 /* --------------------------------- */
 
 /**
@@ -359,10 +359,10 @@ function convertImageToBase64(file) {
       return;
     }
 
-    // Limiter la taille Ã  2MB pour Ã©viter les problÃ¨mes de localStorage
+    // Limiter la taille à 2MB pour éviter les problèmes de localStorage
     const maxSize = 2 * 1024 * 1024; // 2MB
     if (file.size > maxSize) {
-      showFormMessage('Ø­Ø¬Ù… Ø§Ù„ØµÙˆØ±Ø© ÙƒØ¨ÙŠØ± Ø¬Ø¯Ø§Ù‹. Ø§Ù„Ø­Ø¯ Ø§Ù„Ø£Ù‚ØµÙ‰ 2MB', 'error');
+      showFormMessage('حجم الصورة كبير جداً. الحد الأقصى 2MB', 'error');
       resolve(null);
       return;
     }
@@ -386,10 +386,10 @@ function convertImageToBase64(file) {
 async function uploadImageToServer(file) {
   if (!file) return null;
 
-  // Limiter la taille Ã  5MB pour l'upload serveur
+  // Limiter la taille à 5MB pour l'upload serveur
   const maxSize = 5 * 1024 * 1024; // 5MB
   if (file.size > maxSize) {
-    showFormMessage('Ø­Ø¬Ù… Ø§Ù„ØµÙˆØ±Ø© ÙƒØ¨ÙŠØ± Ø¬Ø¯Ø§Ù‹. Ø§Ù„Ø­Ø¯ Ø§Ù„Ø£Ù‚ØµÙ‰ 5MB', 'error');
+    showFormMessage('حجم الصورة كبير جداً. الحد الأقصى 5MB', 'error');
     return null;
   }
 
@@ -408,23 +408,23 @@ async function uploadImageToServer(file) {
 
     const result = await response.json();
 
-    // L'URL retournÃ©e est maintenant soit Cloudinary (permanent), soit locale (fallback)
-    // On ne passe plus par Gumlet car Cloudinary gÃ¨re dÃ©jÃ  l'optimisation
+    // L'URL retournée est maintenant soit Cloudinary (permanent), soit locale (fallback)
+    // On ne passe plus par Gumlet car Cloudinary gère déjà l'optimisation
     const finalUrl = result.url;
 
-    console.log('âœ… Image uploadÃ©e:', finalUrl);
+    console.log('✅ Image uploadée:', finalUrl);
     return finalUrl;
   } catch (error) {
-    console.error('âŒ Erreur upload image:', error);
-    showFormMessage('Ø®Ø·Ø£ ÙÙŠ Ø±ÙØ¹ Ø§Ù„ØµÙˆØ±Ø© Ø¥Ù„Ù‰ Ø§Ù„Ø®Ø§Ø¯Ù…', 'error');
+    console.error('❌ Erreur upload image:', error);
+    showFormMessage('خطأ في رفع الصورة إلى الخادم', 'error');
     return null;
   }
 }
 
 /**
- * Gestion de l'ajout (CrÃ©ation)
+ * Gestion de l'ajout (Création)
  */
-// handleSubmit() est dÃ©finie plus bas dans le fichier avec l'envoi au serveur
+// handleSubmit() est définie plus bas dans le fichier avec l'envoi au serveur
 
 /**
  * Gestion de la modification (Update)
@@ -434,13 +434,13 @@ async function handleEditSubmit(e) {
   const id = document.getElementById('editId').value;
   let entry = entries.find(x => x.id === id);
 
-  if (!entry) { toast('Ø®Ø·Ø£: Ù„Ù… ÙŠØªÙ… Ø§Ù„Ø¹Ø«ÙˆØ± Ø¹Ù„Ù‰ Ø§Ù„Ù…Ø³Ø§Ù‡Ù…Ø©', 'error'); return; }
+  if (!entry) { toast('خطأ: لم يتم العثور على المساهمة', 'error'); return; }
 
   const newLat = currentEditLat !== null ? currentEditLat : entry.lat;
   const newLng = currentEditLng !== null ? currentEditLng : entry.lng;
   const newQuantite = parseInt(document.getElementById('editQuantite').value);
 
-  // GÃ©rer la photo si un nouveau fichier est sÃ©lectionnÃ©
+  // Gérer la photo si un nouveau fichier est sélectionné
   const editPhotoInput = document.getElementById('editPhoto');
   if (editPhotoInput && editPhotoInput.files && editPhotoInput.files[0]) {
     try {
@@ -453,7 +453,7 @@ async function handleEditSubmit(e) {
     }
   }
 
-  // Mettre Ã  jour les propriÃ©tÃ©s
+  // Mettre à jour les propriétés
   entry.nom = document.getElementById('editNom').value.trim();
   entry.adresse = document.getElementById('editAdresse').value.trim();
   entry.type = document.getElementById('editTypeArbre').value;
@@ -463,20 +463,20 @@ async function handleEditSubmit(e) {
   entry.lng = newLng;
   entry.updatedAt = Date.now(); // Marque la modification
 
-  // Mise Ã  jour de la carte (retirer l'ancien marqueur, ajouter le nouveau)
+  // Mise à jour de la carte (retirer l'ancien marqueur, ajouter le nouveau)
   let markerToRemove = null;
   markerCluster.eachLayer(l => { if (l._entryId === id) markerToRemove = l; });
   if (markerToRemove) markerCluster.removeLayer(markerToRemove);
 
-  // RÃ©injecter le marqueur mis Ã  jour
+  // Réinjecter le marqueur mis à jour
   addEntryToMap(entry);
   centerOn(entry.lat, entry.lng);
 
   saveToStorage();
   applyFiltersAndSort();
   closeModal();
-  showDetailPanel(id); // Afficher la fiche de dÃ©tail mise Ã  jour
-  toast('âœ… ØªÙ… ØªØ­Ø¯ÙŠØ« Ø§Ù„Ù…Ø³Ø§Ù‡Ù…Ø© Ø¨Ù†Ø¬Ø§Ø­.', 'success');
+  showDetailPanel(id); // Afficher la fiche de détail mise à jour
+  toast('✅ تم تحديث المساهمة بنجاح.', 'success');
 }
 
 
@@ -484,26 +484,26 @@ async function handleEditSubmit(e) {
  * Gestion de la suppression (Delete)
  */
 function removeEntry(id) {
-  if (!confirm('Ù‡Ù„ ØªØ±ÙŠØ¯ Ø­Ø°Ù Ù‡Ø°Ù‡ Ø§Ù„Ø¥Ø¶Ø§ÙØ© Ø¨Ø´ÙƒÙ„ Ù†Ù‡Ø§Ø¦ÙŠØŸ')) return;
+  if (!confirm('هل تريد حذف هذه الإضافة بشكل نهائي؟')) return;
   entries = entries.filter(e => e.id !== id);
   saveToStorage();
   let toRemove = null;
   markerCluster.eachLayer(l => { if (l._entryId === id) toRemove = l; });
   if (toRemove) markerCluster.removeLayer(toRemove);
   applyFiltersAndSort();
-  toast('ØªÙ… Ø­Ø°Ù Ø§Ù„Ù…Ø³Ø§Ù‡Ù…Ø©.', 'error');
-  // Revenir Ã  la liste aprÃ¨s suppression
+  toast('تم حذف المساهمة.', 'error');
+  // Revenir à la liste après suppression
   switchPanel('list-panel');
 }
 
 
 
 /* --------------------------------- */
-/* Modal d'Ã©dition et Formulaires    */
+/* Modal d'édition et Formulaires    */
 /* --------------------------------- */
 function openEditModal(id) {
   const entry = entries.find(x => x.id === id);
-  if (!entry) { toast('Ø®Ø·Ø£: Ù„Ù… ÙŠØªÙ… Ø§Ù„Ø¹Ø«ÙˆØ± Ø¹Ù„Ù‰ Ø§Ù„Ø¹Ù†ØµØ±', 'error'); return; }
+  if (!entry) { toast('خطأ: لم يتم العثور على العنصر', 'error'); return; }
 
   // Remplissage de la modale
   document.getElementById('editId').value = entry.id;
@@ -526,7 +526,7 @@ function openEditModal(id) {
     editPhotoPreview.style.display = 'none';
   }
 
-  // RÃ©initialiser le champ de fichier
+  // Réinitialiser le champ de fichier
   document.getElementById('editPhoto').value = '';
 
   // Initialiser le marqueur temporaire sur la carte
@@ -542,7 +542,7 @@ function closeModal() {
   document.getElementById('editModalOverlay').classList.remove('open');
   if (tempMarker) { map.removeLayer(tempMarker); tempMarker = null; }
 }
-// ... (validateForm, validateEditForm, showFormMessage, resetForm, handleGeolocation restent inchangÃ©es)
+// ... (validateForm, validateEditForm, showFormMessage, resetForm, handleGeolocation restent inchangées)
 
 function validateForm() {
   const nom = document.getElementById('nom').value.trim();
@@ -568,11 +568,11 @@ function showFormMessage(text, type = 'success') {
   const el = document.getElementById('formMessage');
   if (!el) return;
 
-  // RÃ©initialiser les classes
+  // Réinitialiser les classes
   el.className = '';
   el.classList.add(type);
 
-  // IcÃ´ne selon le type
+  // Icône selon le type
   const icon = type === 'success' ? '<i class="fas fa-check-circle"></i>' :
     type === 'error' ? '<i class="fas fa-exclamation-circle"></i>' :
       '<i class="fas fa-info-circle"></i>';
@@ -581,12 +581,12 @@ function showFormMessage(text, type = 'success') {
   el.style.display = 'flex';
   el.style.opacity = '1';
 
-  // Scroll vers le message si nÃ©cessaire
+  // Scroll vers le message si nécessaire
   setTimeout(() => {
     el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
   }, 100);
 
-  // Masquer aprÃ¨s 5 secondes avec fade out
+  // Masquer après 5 secondes avec fade out
   setTimeout(() => {
     el.style.opacity = '0';
     setTimeout(() => {
@@ -606,7 +606,7 @@ function resetForm() {
   document.getElementById('photo').value = '';
   document.getElementById('quantite').value = '1';
   if (tempMarker) { map.removeLayer(tempMarker); tempMarker = null; }
-  // ArrÃªter la gÃ©olocalisation en cours si active
+  // Arrêter la géolocalisation en cours si active
   if (watchPositionId !== null && navigator.geolocation) {
     navigator.geolocation.clearWatch(watchPositionId);
     watchPositionId = null;
@@ -615,54 +615,54 @@ function resetForm() {
 }
 
 /**
- * Active/dÃ©sactive le mode "sÃ©lection sur la carte"
+ * Active/désactive le mode "sélection sur la carte"
  */
 // toggleMapSelectionMode removed entirely
 
 /**
- * Attache les event listeners au bouton de gÃ©olocalisation
- * Cette fonction peut Ãªtre appelÃ©e plusieurs fois en sÃ©curitÃ©
+ * Attache les event listeners au bouton de géolocalisation
+ * Cette fonction peut être appelée plusieurs fois en sécurité
  */
 function attachGeolocationButton() {
-  // Utiliser plusieurs sÃ©lecteurs pour Ãªtre sÃ»r de trouver le bouton
+  // Utiliser plusieurs sélecteurs pour être sûr de trouver le bouton
   const geolocBtn = document.getElementById('geolocationBtn') ||
-    document.querySelector('button[aria-label*="ØªØ­Ø¯ÙŠØ¯ Ù…ÙˆÙ‚Ø¹ÙŠ"]') ||
+    document.querySelector('button[aria-label*="تحديد موقعي"]') ||
     document.querySelector('button[onclick*="handleGeolocation"]') ||
     document.querySelector('.form-button-group .btn.primary');
 
   if (!geolocBtn) {
-    console.warn('Bouton de gÃ©olocalisation non trouvÃ© lors de l\'attachement');
+    console.warn('Bouton de géolocalisation non trouvé lors de l\'attachement');
     return;
   }
 
   if (geolocBtn.hasAttribute('data-geoloc-attached')) {
-    console.log('Bouton dÃ©jÃ  attachÃ©');
+    console.log('Bouton déjà attaché');
     return;
   }
 
-  // Marquer comme attachÃ© pour Ã©viter les doubles
+  // Marquer comme attaché pour éviter les doubles
   geolocBtn.setAttribute('data-geoloc-attached', 'true');
 
-  // Retirer l'onclick si prÃ©sent
+  // Retirer l'onclick si présent
   geolocBtn.removeAttribute('onclick');
 
-  // Fonction pour gÃ©rer le clic - IMPORTANT: doit Ãªtre appelÃ©e directement depuis un Ã©vÃ©nement utilisateur
+  // Fonction pour gérer le clic - IMPORTANT: doit être appelée directement depuis un événement utilisateur
   const handleGeolocClick = function (e) {
-    console.log('Clic sur le bouton de gÃ©olocalisation dÃ©tectÃ©');
+    console.log('Clic sur le bouton de géolocalisation détecté');
     e.preventDefault();
     e.stopPropagation();
-    // Appeler directement dans le contexte de l'Ã©vÃ©nement utilisateur
+    // Appeler directement dans le contexte de l'événement utilisateur
     handleGeolocation();
   };
 
-  // Ajouter plusieurs listeners pour meilleure compatibilitÃ© mobile
-  // Utiliser 'click' qui fonctionne aussi pour les Ã©vÃ©nements tactiles
+  // Ajouter plusieurs listeners pour meilleure compatibilité mobile
+  // Utiliser 'click' qui fonctionne aussi pour les événements tactiles
   geolocBtn.addEventListener('click', handleGeolocClick, { passive: false, capture: false });
 
   // Ajouter aussi touchstart pour mobile (mais ne pas preventDefault pour permettre le click)
   geolocBtn.addEventListener('touchstart', function (e) {
-    console.log('Touchstart dÃ©tectÃ© sur le bouton');
-    // Ne pas preventDefault pour permettre le click de se dÃ©clencher aussi
+    console.log('Touchstart détecté sur le bouton');
+    // Ne pas preventDefault pour permettre le click de se déclencher aussi
   }, { passive: true });
 
   // S'assurer que le bouton est cliquable
@@ -672,15 +672,15 @@ function attachGeolocationButton() {
   geolocBtn.style.userSelect = 'none';
   geolocBtn.style.webkitUserSelect = 'none';
 
-  console.log('Bouton de gÃ©olocalisation attachÃ© avec succÃ¨s:', geolocBtn);
+  console.log('Bouton de géolocalisation attaché avec succès:', geolocBtn);
 
   // Select on map button handling removed
 }
 
 function handleGeolocation() {
-  console.log('handleGeolocation appelÃ©');
+  console.log('handleGeolocation appelé');
 
-  // ArrÃªter tout watchPosition en cours
+  // Arrêter tout watchPosition en cours
   if (watchPositionId !== null) {
     navigator.geolocation.clearWatch(watchPositionId);
     watchPositionId = null;
@@ -688,113 +688,113 @@ function handleGeolocation() {
 
   // Selection mode handling removed
 
-  // VÃ©rifier le support de la gÃ©olocalisation
+  // Vérifier le support de la géolocalisation
   if (!navigator.geolocation) {
-    const errorMsg = 'Ø§Ù„Ù…ØªØµÙØ­ Ù„Ø§ ÙŠØ¯Ø¹Ù… Ø§Ù„Ù…ÙˆÙ‚Ø¹. ÙŠØ¬Ø¨ Ø§Ø³ØªØ®Ø¯Ø§Ù… Ø¬Ù‡Ø§Ø² ÙŠØ¯Ø¹Ù… GPS.';
-    console.error('Geolocation non supportÃ©');
+    const errorMsg = 'المتصفح لا يدعم الموقع. يجب استخدام جهاز يدعم GPS.';
+    console.error('Geolocation non supporté');
     showFormMessage(errorMsg, 'error');
     hapticFeedback('error');
     return;
   }
 
-  // VÃ©rifier si on est en HTTPS ou localhost (requis pour la gÃ©olocalisation)
+  // Vérifier si on est en HTTPS ou localhost (requis pour la géolocalisation)
   const isSecure = window.location.protocol === 'https:' ||
     window.location.hostname === 'localhost' ||
     window.location.hostname === '127.0.0.1' ||
     window.location.hostname === '0.0.0.0';
 
   if (!isSecure) {
-    const insecureMsg = 'âš ï¸ ÙŠØªØ·Ù„Ø¨ Ø§Ù„Ù…ÙˆÙ‚Ø¹ HTTPS Ù„Ù„Ø¹Ù…Ù„ Ø¹Ù„Ù‰ Ø§Ù„Ù‡Ø§ØªÙ. ÙŠØ±Ø¬Ù‰ Ø§Ø³ØªØ®Ø¯Ø§Ù… HTTPS.';
-    console.warn('GÃ©olocalisation nÃ©cessite HTTPS (sauf localhost)');
+    const insecureMsg = '⚠️ يتطلب الموقع HTTPS للعمل على الهاتف. يرجى استخدام HTTPS.';
+    console.warn('Géolocalisation nécessite HTTPS (sauf localhost)');
     showFormMessage(insecureMsg, 'error');
     return;
     return;
   }
 
-  // Trouver le bouton de maniÃ¨re plus robuste (plusieurs sÃ©lecteurs pour mobile)
-  const btn = document.querySelector('button[aria-label*="ØªØ­Ø¯ÙŠØ¯ Ù…ÙˆÙ‚Ø¹ÙŠ"]') ||
+  // Trouver le bouton de manière plus robuste (plusieurs sélecteurs pour mobile)
+  const btn = document.querySelector('button[aria-label*="تحديد موقعي"]') ||
     document.querySelector('button[onclick*="handleGeolocation"]') ||
     document.querySelector('.form-button-group .btn.primary') ||
     document.querySelector('.form-button-group button:first-child');
 
   if (!btn) {
-    console.error('Bouton de gÃ©olocalisation non trouvÃ©');
-    showFormMessage('Ø®Ø·Ø£ ÙÙŠ Ø§Ù„Ø¹Ø«ÙˆØ± Ø¹Ù„Ù‰ Ø§Ù„Ø²Ø±', 'error');
+    console.error('Bouton de géolocalisation non trouvé');
+    showFormMessage('خطأ في العثور على الزر', 'error');
     return;
   }
 
-  console.log('Bouton trouvÃ©:', btn);
+  console.log('Bouton trouvé:', btn);
 
   const originalHtml = btn.innerHTML;
   const originalDisabled = btn.disabled;
 
-  // Feedback visuel immÃ©diat
-  btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Ø¬Ø§Ø±ÙŠ Ø§Ù„Ø¨Ø­Ø«...';
+  // Feedback visuel immédiat
+  btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري البحث...';
   btn.disabled = true;
   hapticFeedback('light');
 
-  // DÃ©tection mobile amÃ©liorÃ©e
+  // Détection mobile améliorée
   const isMobile = window.matchMedia('(max-width: 1024px)').matches ||
     /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
     ('ontouchstart' in window);
 
-  console.log('Mobile dÃ©tectÃ©:', isMobile);
+  console.log('Mobile détecté:', isMobile);
   console.log('User Agent:', navigator.userAgent);
   console.log('Protocol:', window.location.protocol);
   console.log('Hostname:', window.location.hostname);
 
   // Message informatif avec instructions pour mobile
   const helpMsg = isMobile
-    ? 'Ø¬Ø§Ø±ÙŠ ØªØ­Ø¯ÙŠØ¯ Ù…ÙˆÙ‚Ø¹Ùƒ... ÙŠØ±Ø¬Ù‰ Ø§Ù„Ø³Ù…Ø§Ø­ Ø¨Ø§Ù„ÙˆØµÙˆÙ„ Ø¥Ù„Ù‰ Ø§Ù„Ù…ÙˆÙ‚Ø¹ ÙÙŠ Ø¥Ø¹Ø¯Ø§Ø¯Ø§Øª Ø§Ù„Ù…ØªØµÙØ­ ÙˆØªØ£ÙƒØ¯ Ù…Ù† ØªÙØ¹ÙŠÙ„ GPS.'
-    : 'Ø¬Ø§Ø±ÙŠ ØªØ­Ø¯ÙŠØ¯ Ù…ÙˆÙ‚Ø¹Ùƒ... ÙŠØ±Ø¬Ù‰ Ø§Ù„Ø³Ù…Ø§Ø­ Ø¨Ø§Ù„ÙˆØµÙˆÙ„ Ø¥Ù„Ù‰ Ø§Ù„Ù…ÙˆÙ‚Ø¹.';
+    ? 'جاري تحديد موقعك... يرجى السماح بالوصول إلى الموقع في إعدادات المتصفح وتأكد من تفعيل GPS.'
+    : 'جاري تحديد موقعك... يرجى السماح بالوصول إلى الموقع.';
   showFormMessage(helpMsg, 'alert');
 
-  // Options optimisÃ©es pour mobile - ACTIVER GPS avec enableHighAccuracy: true
+  // Options optimisées pour mobile - ACTIVER GPS avec enableHighAccuracy: true
   const options = {
-    enableHighAccuracy: true,  // IMPORTANT: Activer pour utiliser le GPS rÃ©el sur mobile
+    enableHighAccuracy: true,  // IMPORTANT: Activer pour utiliser le GPS réel sur mobile
     timeout: isMobile ? 60000 : 25000,  // 60 secondes sur mobile (plus de temps pour GPS), 25 sur desktop
     maximumAge: isMobile ? 0 : 30000  // 0 sur mobile (toujours obtenir une nouvelle position), 30 secondes sur desktop
   };
 
-  console.log('Options de gÃ©olocalisation:', options);
+  console.log('Options de géolocalisation:', options);
 
-  // Fonction pour traiter la position avec succÃ¨s
+  // Fonction pour traiter la position avec succès
   const handleSuccess = function (pos) {
-    console.log('Position obtenue avec succÃ¨s:', pos.coords);
-    console.log('PrÃ©cision:', pos.coords.accuracy, 'mÃ¨tres');
-    console.log('Source:', pos.coords.altitude !== null ? 'GPS' : 'RÃ©seau');
+    console.log('Position obtenue avec succès:', pos.coords);
+    console.log('Précision:', pos.coords.accuracy, 'mètres');
+    console.log('Source:', pos.coords.altitude !== null ? 'GPS' : 'Réseau');
 
     const latlng = L.latLng(pos.coords.latitude, pos.coords.longitude);
 
-    // VÃ©rifier que les coordonnÃ©es sont valides
+    // Vérifier que les coordonnées sont valides
     if (isNaN(latlng.lat) || isNaN(latlng.lng)) {
-      console.error('CoordonnÃ©es invalides:', latlng);
-      showFormMessage('Ø®Ø·Ø£: Ø¥Ø­Ø¯Ø§Ø«ÙŠØ§Øª ØºÙŠØ± ØµØ­ÙŠØ­Ø©', 'error');
+      console.error('Coordonnées invalides:', latlng);
+      showFormMessage('خطأ: إحداثيات غير صحيحة', 'error');
       btn.innerHTML = originalHtml;
       btn.disabled = originalDisabled;
       hapticFeedback('error');
       return;
     }
 
-    // VÃ©rifier que les coordonnÃ©es sont dans les limites de l'AlgÃ©rie
+    // Vérifier que les coordonnées sont dans les limites de l'Algérie
     // Utiliser geojsonBounds si disponible, sinon APPROX_BOUNDS
     const checkBounds = geojsonBounds || APPROX_BOUNDS;
     if (checkBounds && !checkBounds.contains([latlng.lat, latlng.lng])) {
       console.warn('Position hors limites:', latlng);
-      showFormMessage('Ù…ÙˆÙ‚Ø¹Ùƒ Ø®Ø§Ø±Ø¬ Ø­Ø¯ÙˆØ¯ Ø§Ù„Ø¬Ø²Ø§Ø¦Ø±. ÙŠØ±Ø¬Ù‰ Ø§Ù„ØªØ£ÙƒØ¯ Ù…Ù† Ø§Ù„Ù…ÙˆÙ‚Ø¹.', 'error');
+      showFormMessage('موقعك خارج حدود الجزائر. يرجى التأكد من الموقع.', 'error');
       btn.innerHTML = originalHtml;
       btn.disabled = originalDisabled;
       hapticFeedback('error');
       return;
     }
 
-    // ArrÃªter watchPosition si actif
+    // Arrêter watchPosition si actif
     if (watchPositionId !== null) {
       navigator.geolocation.clearWatch(watchPositionId);
       watchPositionId = null;
     }
 
-    // Mettre Ã  jour les champs
+    // Mettre à jour les champs
     // Update internal variables
     currentFormLat = latlng.lat;
     currentFormLng = latlng.lng;
@@ -802,35 +802,35 @@ function handleGeolocation() {
     // Debug log
     console.log('Location updated:', currentFormLat, currentFormLng);
 
-    // Calculer le niveau de zoom optimal selon la prÃ©cision GPS
-    // Plus la prÃ©cision est bonne, plus on zoome
+    // Calculer le niveau de zoom optimal selon la précision GPS
+    // Plus la précision est bonne, plus on zoome
     const accuracy = pos.coords.accuracy;
     let zoomLevel;
     if (accuracy < 50) {
-      zoomLevel = 17; // TrÃ¨s haute prÃ©cision (GPS actif)
+      zoomLevel = 17; // Très haute précision (GPS actif)
     } else if (accuracy < 100) {
-      zoomLevel = 16; // Haute prÃ©cision
+      zoomLevel = 16; // Haute précision
     } else if (accuracy < 500) {
-      zoomLevel = 14; // PrÃ©cision moyenne
+      zoomLevel = 14; // Précision moyenne
     } else {
-      zoomLevel = 12; // PrÃ©cision faible (rÃ©seau)
+      zoomLevel = 12; // Précision faible (réseau)
     }
 
     // Placer le marqueur temporaire ET centrer la carte avec le bon zoom
     setTempMarker(latlng, true, zoomLevel);
 
-    // Mettre Ã  jour le statut visuel
+    // Mettre à jour le statut visuel
     const statusEl = document.getElementById('locationStatus');
     if (statusEl) {
       statusEl.innerHTML = `
             <div class="status-success">
                 <i class="fas fa-check-circle"></i>
-                <span>ØªÙ… ØªØ­Ø¯ÙŠØ¯ Ø§Ù„Ù…ÙˆÙ‚Ø¹ Ø¨Ø¯Ù‚Ø© (${Math.round(accuracy)}m)</span>
+                <span>تم تحديد الموقع بدقة (${Math.round(accuracy)}m)</span>
             </div>
         `;
     }
 
-    // Tenter de rÃ©cupÃ©rer l'adresse automatiquement (Reverse Geocoding Client)
+    // Tenter de récupérer l'adresse automatiquement (Reverse Geocoding Client)
     // C'est juste pour aider l'utilisateur, le serveur fera le vrai geocoding
     fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${latlng.lat}&lon=${latlng.lng}&accept-language=ar`)
       .then(res => res.json())
@@ -841,25 +841,25 @@ function handleGeolocation() {
 
         let displayAddress = '';
         if (city) displayAddress += city;
-        if (district) displayAddress += (displayAddress ? 'ØŒ ' : '') + district;
+        if (district) displayAddress += (displayAddress ? '، ' : '') + district;
 
         if (displayAddress) {
           const addrInput = document.getElementById('adresse');
           if (addrInput && !addrInput.value) {
             addrInput.value = displayAddress;
-            // Petit effet visuel pour montrer que Ã§a a Ã©tÃ© rempli
+            // Petit effet visuel pour montrer que ça a été rempli
             addrInput.style.backgroundColor = '#ecfdf5';
             setTimeout(() => addrInput.style.backgroundColor = '', 1500);
-            toast(`ØªÙ… ØªØ­Ø¯ÙŠØ¯ Ø§Ù„Ø¹Ù†ÙˆØ§Ù†: ${displayAddress}`);
+            toast(`تم تحديد العنوان: ${displayAddress}`);
           }
         }
       })
       .catch(err => console.warn('Geocoding client failed:', err));
 
-    // Feedback de succÃ¨s avec info sur la prÃ©cision
+    // Feedback de succès avec info sur la précision
     const accuracyMsg = pos.coords.accuracy < 50
-      ? 'âœ… ØªÙ… ØªØ­Ø¯ÙŠØ¯ Ø§Ù„Ù…ÙˆÙ‚Ø¹ Ø¨Ø¯Ù‚Ø© Ø¹Ø§Ù„ÙŠØ©!'
-      : 'âœ… ØªÙ… ØªØ­Ø¯ÙŠØ¯ Ø§Ù„Ù…ÙˆÙ‚Ø¹ Ø¨Ù†Ø¬Ø§Ø­!';
+      ? '✅ تم تحديد الموقع بدقة عالية!'
+      : '✅ تم تحديد الموقع بنجاح!';
     showFormMessage(accuracyMsg, 'success');
     hapticFeedback('success');
 
@@ -871,30 +871,30 @@ function handleGeolocation() {
     validateForm();
   };
 
-  // Fonction pour gÃ©rer les erreurs
+  // Fonction pour gérer les erreurs
   const handleError = function (err) {
-    console.error('Erreur de gÃ©olocalisation:', err);
-    let errMsg = 'ÙØ´Ù„ ÙÙŠ Ø§Ù„Ø­ØµÙˆÙ„ Ø¹Ù„Ù‰ Ø§Ù„Ù…ÙˆÙ‚Ø¹.';
+    console.error('Erreur de géolocalisation:', err);
+    let errMsg = 'فشل في الحصول على الموقع.';
     let showRetry = false;
 
     switch (err.code) {
       case 1: // PERMISSION_DENIED
-        errMsg = 'ØªÙ… Ø±ÙØ¶ Ø§Ù„ÙˆØµÙˆÙ„ Ø¥Ù„Ù‰ Ø§Ù„Ù…ÙˆÙ‚Ø¹. ÙŠØ±Ø¬Ù‰ Ø§Ù„Ø³Ù…Ø§Ø­ Ø¨Ø§Ù„ÙˆØµÙˆÙ„ ÙÙŠ Ø¥Ø¹Ø¯Ø§Ø¯Ø§Øª Ø§Ù„Ù…ØªØµÙØ­ Ø«Ù… Ø§Ù„Ù…Ø­Ø§ÙˆÙ„Ø© Ù…Ø±Ø© Ø£Ø®Ø±Ù‰.';
-        console.error('Permission refusÃ©e');
+        errMsg = 'تم رفض الوصول إلى الموقع. يرجى السماح بالوصول في إعدادات المتصفح ثم المحاولة مرة أخرى.';
+        console.error('Permission refusée');
         showRetry = true;
         break;
       case 2: // POSITION_UNAVAILABLE
-        errMsg = 'Ø§Ù„Ù…ÙˆÙ‚Ø¹ ØºÙŠØ± Ù…ØªÙˆÙØ±. ÙŠØ±Ø¬Ù‰ ØªÙØ¹ÙŠÙ„ GPS ÙÙŠ Ø¥Ø¹Ø¯Ø§Ø¯Ø§Øª Ø§Ù„Ù‡Ø§ØªÙ Ø«Ù… Ø§Ù„Ù†Ù‚Ø± Ø¹Ù„Ù‰ "ØªØ­Ø¯ÙŠØ¯ Ù…ÙˆÙ‚Ø¹ÙŠ" Ù…Ø±Ø© Ø£Ø®Ø±Ù‰.';
-        console.error('Position non disponible (GPS probablement Ã©teint)');
+        errMsg = 'الموقع غير متوفر. يرجى تفعيل GPS في إعدادات الهاتف ثم النقر على "تحديد موقعي" مرة أخرى.';
+        console.error('Position non disponible (GPS probablement éteint)');
         showRetry = true;
 
-        // Sur mobile, on rÃ©essaie quand mÃªme une fois avec watchPosition au cas oÃ¹
+        // Sur mobile, on réessaie quand même une fois avec watchPosition au cas où
         if (isMobile) {
           console.log('Tentative avec watchPosition comme fallback...');
 
-          // Si c'est la premiÃ¨re tentative de fallback, on essaie silencieusement
+          // Si c'est la première tentative de fallback, on essaie silencieusement
           if (watchPositionId === null) {
-            showFormMessage('Ø¬Ø§Ø±ÙŠ ØªÙØ¹ÙŠÙ„ GPS... (Ù‚Ø¯ ÙŠØ³ØªØºØ±Ù‚ Ø¯Ù‚ÙŠÙ‚Ø©)', 'alert');
+            showFormMessage('جاري تفعيل GPS... (قد يستغرق دقيقة)', 'alert');
 
             // TENTATIVE DE RECUPERATION AVEC OPTIONS PLUS LARGES
             const fallbackOptions = {
@@ -908,19 +908,19 @@ function handleGeolocation() {
               function (watchErr) {
                 console.error('Erreur watchPosition:', watchErr);
 
-                // Si Ã©chec total du GPS, tenter une derniÃ¨re fois en mode "basse prÃ©cision" (Wifi/RÃ©seau)
+                // Si échec total du GPS, tenter une dernière fois en mode "basse précision" (Wifi/Réseau)
                 if (watchErr.code === 3 || watchErr.code === 2) {
-                  console.log('Echec GPS, tentative basse prÃ©cision...');
+                  console.log('Echec GPS, tentative basse précision...');
                   navigator.geolocation.getCurrentPosition(
                     handleSuccess,
                     function (finalErr) {
                       // Echec final
-                      let finalMsg = 'ÙØ´Ù„ ØªØ­Ø¯ÙŠØ¯ Ø§Ù„Ù…ÙˆÙ‚Ø¹ Ø¨Ø¯Ù‚Ø©. ÙŠØ±Ø¬Ù‰ ØªÙØ¹ÙŠÙ„ GPS ÙˆØ§Ù„Ù…Ø­Ø§ÙˆÙ„Ø© Ù…Ø±Ø© Ø£Ø®Ø±Ù‰.';
-                      if (finalErr.code === 1) finalMsg = 'ØªÙ… Ø±ÙØ¶ Ø§Ù„Ø¥Ø°Ù†. ÙŠØ±Ø¬Ù‰ ØªÙØ¹ÙŠÙ„ Ø§Ù„Ù…ÙˆÙ‚Ø¹ Ù„Ù„Ù…ØªØµÙØ­.';
+                      let finalMsg = 'فشل تحديد الموقع بدقة. يرجى تفعيل GPS والمحاولة مرة أخرى.';
+                      if (finalErr.code === 1) finalMsg = 'تم رفض الإذن. يرجى تفعيل الموقع للمتصفح.';
 
                       showFormMessage(finalMsg, 'error');
 
-                      btn.innerHTML = '<i class="fas fa-redo"></i> Ø¥Ø¹Ø§Ø¯Ø© Ø§Ù„Ù…Ø­Ø§ÙˆÙ„Ø©';
+                      btn.innerHTML = '<i class="fas fa-redo"></i> إعادة المحاولة';
                       btn.onclick = function () { handleGeolocation(); };
                       btn.disabled = false;
                     },
@@ -929,7 +929,7 @@ function handleGeolocation() {
                   return;
                 }
 
-                showFormMessage('ÙØ´Ù„ ØªØ­Ø¯ÙŠØ¯ Ø§Ù„Ù…ÙˆÙ‚Ø¹. ÙŠØ±Ø¬Ù‰ ØªÙØ¹ÙŠÙ„ GPS.', 'error');
+                showFormMessage('فشل تحديد الموقع. يرجى تفعيل GPS.', 'error');
                 btn.innerHTML = originalHtml;
                 btn.disabled = originalDisabled;
 
@@ -945,23 +945,23 @@ function handleGeolocation() {
         }
         break;
       case 3: // TIMEOUT
-        errMsg = 'Ø§Ù†ØªÙ‡Øª Ø§Ù„Ù…Ù‡Ù„Ø©. ØªØ£ÙƒØ¯ Ù…Ù† ØªÙØ¹ÙŠÙ„ GPS ÙˆØ­Ø§ÙˆÙ„ Ù…Ø±Ø© Ø£Ø®Ø±Ù‰.';
+        errMsg = 'انتهت المهلة. تأكد من تفعيل GPS وحاول مرة أخرى.';
         console.error('Timeout');
         showRetry = true;
 
         // Sur mobile, essayer avec watchPosition comme fallback
         if (isMobile) {
           console.log('Timeout - Tentative avec watchPosition...');
-          showFormMessage('ØªØ£ÙƒØ¯ Ù…Ù† ØªÙØ¹ÙŠÙ„ GPS... Ø¬Ø§Ø±ÙŠ Ø§Ù„Ù…Ø­Ø§ÙˆÙ„Ø©...', 'alert');
+          showFormMessage('تأكد من تفعيل GPS... جاري المحاولة...', 'alert');
           watchPositionId = navigator.geolocation.watchPosition(
             handleSuccess,
             function (watchErr) {
-              console.error('Erreur watchPosition aprÃ¨s timeout:', watchErr);
-              showFormMessage('ØªØ¹Ø°Ø± ØªØ­Ø¯ÙŠØ¯ Ø§Ù„Ù…ÙˆÙ‚Ø¹. ÙŠØ±Ø¬Ù‰ Ø§Ù„ØªØ­Ù‚Ù‚ Ù…Ù† GPS ÙˆØ§Ù„Ù…Ø­Ø§ÙˆÙ„Ø© Ù…Ø¬Ø¯Ø¯Ø§Ù‹.', 'error');
+              console.error('Erreur watchPosition après timeout:', watchErr);
+              showFormMessage('تعذر تحديد الموقع. يرجى التحقق من GPS والمحاولة مجدداً.', 'error');
               hapticFeedback('error');
-              btn.innerHTML = '<i class="fas fa-redo"></i> Ù…Ø­Ø§ÙˆÙ„Ø© Ù…Ø¬Ø¯Ø¯Ø§Ù‹';
+              btn.innerHTML = '<i class="fas fa-redo"></i> محاولة مجدداً';
               btn.disabled = false;
-              // RÃ©attacher l'Ã©vÃ©nement click standard si besoin, ou laisser le bouton actif
+              // Réattacher l'événement click standard si besoin, ou laisser le bouton actif
               btn.onclick = function () { handleGeolocation(); };
 
               if (watchPositionId !== null) {
@@ -979,7 +979,7 @@ function handleGeolocation() {
         }
         break;
       default:
-        errMsg = `Ø®Ø·Ø£ ØºÙŠØ± Ù…Ø¹Ø±ÙˆÙ (${err.code}). ÙŠØ±Ø¬Ù‰ Ø§Ù„Ù…Ø­Ø§ÙˆÙ„Ø© Ù…Ø±Ø© Ø£Ø®Ø±Ù‰.`;
+        errMsg = `خطأ غير معروف (${err.code}). يرجى المحاولة مرة أخرى.`;
         console.error('Erreur inconnue:', err);
         showRetry = true;
     }
@@ -988,17 +988,17 @@ function handleGeolocation() {
     hapticFeedback('error');
 
     if (showRetry) {
-      // Proposer de rÃ©essayer au lieu de restaurer simplement
-      btn.innerHTML = '<i class="fas fa-redo"></i> ØªÙØ¹ÙŠÙ„ GPS ÙˆØ§Ù„Ù…Ø­Ø§ÙˆÙ„Ø©';
+      // Proposer de réessayer au lieu de restaurer simplement
+      btn.innerHTML = '<i class="fas fa-redo"></i> تفعيل GPS والمحاولة';
       btn.disabled = false;
-      // On s'assure que le clic relance la gÃ©olocalisation
+      // On s'assure que le clic relance la géolocalisation
       btn.onclick = function (e) {
         e.preventDefault();
         handleGeolocation();
       };
     } else {
-      // En cas d'erreur irrÃ©cupÃ©rable, on force le message d'erreur strict
-      showFormMessage('âŒ Ø¹Ø°Ø±Ø§Ù‹ØŒ Ù„Ø§ ÙŠÙ…ÙƒÙ† Ø¥Ø¶Ø§ÙØ© Ø´Ø¬Ø±Ø© Ø¨Ø¯ÙˆÙ† ØªØ­Ø¯ÙŠØ¯ Ù…ÙˆÙ‚Ø¹ GPS Ø¯Ù‚ÙŠÙ‚. ÙŠØ±Ø¬Ù‰ ØªÙØ¹ÙŠÙ„ Ø§Ù„Ù…ÙˆÙ‚Ø¹.', 'error');
+      // En cas d'erreur irrécupérable, on force le message d'erreur strict
+      showFormMessage('❌ عذراً، لا يمكن إضافة شجرة بدون تحديد موقع GPS دقيق. يرجى تفعيل الموقع.', 'error');
       // Restaurer le bouton original
       btn.innerHTML = originalHtml;
       btn.disabled = originalDisabled;
@@ -1013,7 +1013,7 @@ function handleGeolocation() {
   );
 }
 
-/* Fonction toggleMapSelectionMode supprimÃ©e car le mode manuel est dÃ©sactivÃ© */
+/* Fonction toggleMapSelectionMode supprimée car le mode manuel est désactivé */
 // Duplicate function removed
 
 
@@ -1021,7 +1021,7 @@ function handleGeolocation() {
 /* Gestion du Stockage & Statistiques*/
 /* --------------------------------- */
 function saveToStorage() {
-  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(entries)); } catch (e) { console.error(e); toast('ÙØ´Ù„ ÙÙŠ Ø§Ù„Ø­ÙØ¸ Ø§Ù„Ù…Ø­Ù„ÙŠ', 'error'); }
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(entries)); } catch (e) { console.error(e); toast('فشل في الحفظ المحلي', 'error'); }
 }
 
 function loadFromStorage() {
@@ -1055,7 +1055,7 @@ function updateStats(filteredCount = entries.length) {
   if (updateEl) updateEl.textContent = new Date().toLocaleString('ar-EG', { timeZone: 'Africa/Algiers' });
 
   const filterEl = document.getElementById('filterInfo');
-  if (filterEl) filterEl.textContent = (filteredCount < safeEntries.length) ? `(${filteredCount} Ù†ØªÙŠØ¬Ø© Ù…Ù† ${safeEntries.length})` : `Ø§Ù„ÙƒÙ„ (${safeEntries.length})`;
+  if (filterEl) filterEl.textContent = (filteredCount < safeEntries.length) ? `(${filteredCount} نتيجة من ${safeEntries.length})` : `الكل (${safeEntries.length})`;
 
   const resultsEl = document.getElementById('resultsCount');
   if (resultsEl) resultsEl.textContent = filteredCount;
@@ -1098,7 +1098,7 @@ function applyFiltersAndSort() {
 }
 
 /**
- * Met Ã  jour la liste latÃ©rale (Le clic ouvre le panneau de dÃ©tail)
+ * Met à jour la liste latérale (Le clic ouvre le panneau de détail)
  */
 function updateList(filteredEntries) {
   const container = document.getElementById('locationsList');
@@ -1112,7 +1112,7 @@ function updateList(filteredEntries) {
 
   const items = filteredEntries.slice(0, 50);
 
-  if (items.length === 0) { container.innerHTML = '<div class="muted text-center p-1" style="text-align:center;">Ù„Ø§ ØªÙˆØ¬Ø¯ Ù†ØªØ§Ø¦Ø¬ Ù…Ø·Ø§Ø¨Ù‚Ø©</div>'; return; }
+  if (items.length === 0) { container.innerHTML = '<div class="muted text-center p-1" style="text-align:center;">لا توجد نتائج مطابقة</div>'; return; }
 
   items.forEach(e => {
     const div = document.createElement('div');
@@ -1121,10 +1121,10 @@ function updateList(filteredEntries) {
     div.setAttribute('role', 'listitem');
     div.setAttribute('tabindex', '0');
 
-    // Le clic sur l'Ã©lÃ©ment (pas sur les boutons d'action) ouvre la fiche de dÃ©tail
+    // Le clic sur l'élément (pas sur les boutons d'action) ouvre la fiche de détail
     div.onclick = (event) => {
       if (!event.target.closest('.location-actions button')) {
-        centerAndOpenPanel(e.id); // Centrer sur la contribution et ouvrir le dÃ©tail
+        centerAndOpenPanel(e.id); // Centrer sur la contribution et ouvrir le détail
       }
     };
     div.onkeydown = (event) => {
@@ -1135,19 +1135,19 @@ function updateList(filteredEntries) {
     };
 
 
-    // Nettoyage de l'URL photo si nÃ©cessaire (cas gumlet + localhost)
+    // Nettoyage de l'URL photo si nécessaire (cas gumlet + localhost)
     let photoUrl = e.photo;
     if (photoUrl && photoUrl.includes('http://localhost') && photoUrl.includes('https://')) {
-      // Garder seulement la partie localhost pour dev ou corriger si c'Ã©tait une erreur
-      // Ici on suppose que l'image est cassÃ©e si elle pointe vers localhost depuis la prod
-      // On tente de la rÃ©cupÃ©rer si elle est accessible, sinon placeholder
+      // Garder seulement la partie localhost pour dev ou corriger si c'était une erreur
+      // Ici on suppose que l'image est cassée si elle pointe vers localhost depuis la prod
+      // On tente de la récupérer si elle est accessible, sinon placeholder
       if (window.location.hostname !== 'localhost') {
         // Essayer de corriger l'URL si elle vient de notre backend actuel
         const filename = photoUrl.split('/').pop();
         if (filename && !filename.includes('http')) {
           photoUrl = `${API_URL.replace('/api/contributions', '')}/uploads/${filename}`;
         } else {
-          photoUrl = null; // Image irrÃ©cupÃ©rable
+          photoUrl = null; // Image irrécupérable
         }
       }
     }
@@ -1159,25 +1159,25 @@ function updateList(filteredEntries) {
     const typeIcon = getTreeIconClass(e.type);
 
     const meta = document.createElement('div'); meta.className = 'meta';
-    const locationInfo = [e.city, e.district].filter(Boolean).join(' â€” ') || 'ØºÙŠØ± Ù…ØªÙˆÙØ±';
+    const locationInfo = [e.city, e.district].filter(Boolean).join(' — ') || 'غير متوفر';
     meta.innerHTML = `
       <h4>
-        <i class="${typeIcon} type-icon"></i> ${escapeHtml(e.type)} (${e.quantite} Ø´Ø¬Ø±Ø©)
+        <i class="${typeIcon} type-icon"></i> ${escapeHtml(e.type)} (${e.quantite} شجرة)
       </h4>
-      <p>${escapeHtml(e.nom)} â€” ${escapeHtml(e.adresse || 'ØºÙŠØ± Ù…Ø­Ø¯Ø¯')}</p>
-      <small class="muted">Ø§Ù„Ù…ÙˆÙ‚Ø¹: ${escapeHtml(locationInfo)}</small>
-      <small class="muted">Ø£ÙØ¶ÙŠÙ ÙÙŠ: ${formatDate(e.createdAt || e.timestamp)}</small>
+      <p>${escapeHtml(e.nom)} — ${escapeHtml(e.adresse || 'غير محدد')}</p>
+      <small class="muted">الموقع: ${escapeHtml(locationInfo)}</small>
+      <small class="muted">أُضيف في: ${formatDate(e.createdAt || e.timestamp)}</small>
     `;
 
     const actions = document.createElement('div'); actions.className = 'location-actions';
     actions.innerHTML = `
-      <button class="btn icon-only primary" title="Ø¹Ø±Ø¶ Ø§Ù„Ø¨Ø·Ø§Ù‚Ø©" onclick="centerAndOpenPopup('${e.id}')" aria-label="Ø¹Ø±Ø¶ Ø¨Ø·Ø§Ù‚Ø© ${escapeHtml(e.type)}">
+      <button class="btn icon-only primary" title="عرض البطاقة" onclick="centerAndOpenPopup('${e.id}')" aria-label="عرض بطاقة ${escapeHtml(e.type)}">
           <i class="fas fa-map-marker-alt"></i>
       </button>
-      <button class="btn icon-only primary" title="Ø¹Ø±Ø¶ Ø§Ù„ØªÙØ§ØµÙŠÙ„" onclick="centerAndOpenPanel('${e.id}')" aria-label="Ø¹Ø±Ø¶ ØªÙØ§ØµÙŠÙ„ ${escapeHtml(e.type)}">
+      <button class="btn icon-only primary" title="عرض التفاصيل" onclick="centerAndOpenPanel('${e.id}')" aria-label="عرض تفاصيل ${escapeHtml(e.type)}">
           <i class="fas fa-eye"></i>
       </button>
-      <!-- Suppression dÃ©sactivÃ©e sur la vue publique -->
+      <!-- Suppression désactivée sur la vue publique -->
     `;
 
     div.appendChild(img);
@@ -1206,12 +1206,12 @@ function toggleSidebar(visible, initialPanel = 'form-panel') {
   const mobileNav = document.getElementById('mobileNav');
   const isMobile = window.matchMedia('(max-width: 1024px)').matches;
 
-  // DEBUG: VÃ©rifier quel panneau est demandÃ©
+  // DEBUG: Vérifier quel panneau est demandé
   if (isMobile && visible) {
-    console.log('toggleSidebar MOBILE - panneau demandÃ©:', initialPanel);
+    console.log('toggleSidebar MOBILE - panneau demandé:', initialPanel);
   }
 
-  // Sur desktop, on change juste le panneau sans toggle la visibilitÃ©
+  // Sur desktop, on change juste le panneau sans toggle la visibilité
   if (!isMobile) {
     if (visible && initialPanel) {
       switchPanel(initialPanel);
@@ -1225,7 +1225,7 @@ function toggleSidebar(visible, initialPanel = 'form-panel') {
     if (mobileNav) mobileNav.classList.add('single-only');
     // Trouver l'onglet correspondant pour garantir le bon "active" - FORCER le changement
     const clickedNavItem = document.querySelector(`.mobile-nav-item[data-target="${initialPanel}"]`);
-    // S'assurer que tous les onglets sont dÃ©sactivÃ©s d'abord
+    // S'assurer que tous les onglets sont désactivés d'abord
     document.querySelectorAll('.mobile-nav-item').forEach(item => {
       item.classList.remove('active');
       item.setAttribute('aria-selected', 'false');
@@ -1238,7 +1238,7 @@ function toggleSidebar(visible, initialPanel = 'form-panel') {
     // Maintenant changer le panneau
     switchPanel(initialPanel, clickedNavItem || null);
     // Ne pas bloquer le scroll du body pour permettre l'interaction avec la carte
-    // document.body.style.overflow = 'hidden'; // CommentÃ© pour permettre le scroll de la carte
+    // document.body.style.overflow = 'hidden'; // Commenté pour permettre le scroll de la carte
     // Overlay optionnel et transparent pour ne pas bloquer les interactions
     const mapwrap = document.querySelector('.mapwrap');
     if (mapwrap) {
@@ -1255,7 +1255,7 @@ function toggleSidebar(visible, initialPanel = 'form-panel') {
   } else {
     sidebar.classList.remove('visible');
     document.body.style.overflow = '';
-    // RÃ©tablir l'affichage de tous les onglets quand on ferme la sidebar
+    // Rétablir l'affichage de tous les onglets quand on ferme la sidebar
     if (mobileNav) mobileNav.classList.remove('single-only');
     // Retirer overlay
     const overlay = document.querySelector('.sidebar-overlay');
@@ -1276,7 +1276,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
   if (!isMobile || !sidebar) return;
 
-  // Gestion du swipe vers la gauche pour fermer (panneau latÃ©ral)
+  // Gestion du swipe vers la gauche pour fermer (panneau latéral)
   sidebar.addEventListener('touchstart', function (e) {
     touchStartY = e.touches[0].clientY;
     touchStartX = e.touches[0].clientX;
@@ -1288,10 +1288,10 @@ document.addEventListener('DOMContentLoaded', function () {
 
     const touchY = e.touches[0].clientY;
     const touchX = e.touches[0].clientX;
-    const deltaX = touchStartX - touchX; // NÃ©gatif = swipe vers la gauche
+    const deltaX = touchStartX - touchX; // Négatif = swipe vers la gauche
     const deltaY = Math.abs(touchY - touchStartY);
 
-    // DÃ©tecter un swipe vers la gauche (plus de mouvement horizontal que vertical)
+    // Détecter un swipe vers la gauche (plus de mouvement horizontal que vertical)
     if (deltaX > 10 && deltaX > deltaY) {
       isSwiping = true;
       // Appliquer une transformation visuelle pendant le swipe
@@ -1311,7 +1311,7 @@ document.addEventListener('DOMContentLoaded', function () {
     if (isSwiping && deltaX > 50) {
       toggleSidebar(false);
     } else {
-      // RÃ©initialiser la transformation
+      // Réinitialiser la transformation
       sidebar.style.transform = '';
     }
 
@@ -1323,7 +1323,7 @@ document.addEventListener('DOMContentLoaded', function () {
   // Fermer la sidebar en cliquant sur l'overlay (zone sombre)
   const mapwrap = document.querySelector('.mapwrap');
   if (mapwrap) {
-    // Utiliser la dÃ©lÃ©gation d'Ã©vÃ©nements pour l'overlay
+    // Utiliser la délégation d'événements pour l'overlay
     mapwrap.addEventListener('click', function (e) {
       if (e.target.classList.contains('sidebar-overlay')) {
         toggleSidebar(false);
@@ -1338,13 +1338,13 @@ function switchPanel(targetId, clickedElement = null) {
   const detailNav = document.getElementById('detailNav');
   const isDetailPanel = targetId === 'detail-panel';
 
-  // DEBUG: VÃ©rifier quel panneau est appelÃ©
-  console.log('switchPanel appelÃ© avec:', targetId);
+  // DEBUG: Vérifier quel panneau est appelé
+  console.log('switchPanel appelé avec:', targetId);
 
   // Haptic feedback sur mobile
   hapticFeedback('light');
 
-  // 1. GÃ©rer l'affichage du panneau (Simple et robuste)
+  // 1. Gérer l'affichage du panneau (Simple et robuste)
   panels.forEach(panel => {
     if (panel.id === targetId) {
       panel.style.display = 'block';
@@ -1357,14 +1357,14 @@ function switchPanel(targetId, clickedElement = null) {
     }
   });
 
-  // 2. GÃ©rer la navigation mobile
+  // 2. Gérer la navigation mobile
   navItems.forEach(item => {
     item.classList.remove('active');
     item.setAttribute('aria-selected', 'false');
   });
 
   if (isDetailPanel) {
-    // Le panneau DÃ©tail est un onglet "spÃ©cial" qui apparaÃ®t temporairement
+    // Le panneau Détail est un onglet "spécial" qui apparaît temporairement
     detailNav.style.display = 'flex';
     detailNav.classList.add('active');
     detailNav.setAttribute('aria-selected', 'true');
@@ -1382,19 +1382,19 @@ function switchPanel(targetId, clickedElement = null) {
   }
 
 
-  // 3. Assurer la mise Ã  jour des donnÃ©es lors du changement vers l'onglet List/Stats
+  // 3. Assurer la mise à jour des données lors du changement vers l'onglet List/Stats
   if (targetId === 'list-panel' || targetId === 'stats-panel') {
     try {
       applyFiltersAndSort();
     } catch (err) {
       console.error('Error updating list/stats:', err);
-      toast('Ø­Ø¯Ø« Ø®Ø·Ø£ ÙÙŠ Ø¹Ø±Ø¶ Ø§Ù„Ø¨ÙŠØ§Ù†Ø§Øª', 'error');
+      toast('حدث خطأ في عرض البيانات', 'error');
     }
   }
 }
 
 // Preview de l'image
-// PrÃ©visualisation de la photo dans le formulaire principal
+// Prévisualisation de la photo dans le formulaire principal
 document.getElementById('photo').addEventListener('change', function (event) {
   const preview = document.getElementById('preview');
   if (event.target.files.length > 0) {
@@ -1411,7 +1411,7 @@ document.getElementById('photo').addEventListener('change', function (event) {
   }
 });
 
-// PrÃ©visualisation de la photo dans le modal d'Ã©dition
+// Prévisualisation de la photo dans le modal d'édition
 const editPhotoInput = document.getElementById('editPhoto');
 if (editPhotoInput) {
   editPhotoInput.addEventListener('change', function (event) {
@@ -1437,7 +1437,7 @@ if (editPhotoInput) {
 /* --------------------------------- */
 function fitAllMarkers() {
   const layers = markerCluster.getLayers();
-  if (layers.length === 0) { toast('Ù„Ø§ ØªÙˆØ¬Ø¯ Ù…Ø³Ø§Ù‡Ù…Ø§Øª Ù„Ø¹Ø±Ø¶Ù‡Ø§ Ø¹Ù„Ù‰ Ø§Ù„Ø®Ø±ÙŠØ·Ø©.', 'alert'); return; }
+  if (layers.length === 0) { toast('لا توجد مساهمات لعرضها على الخريطة.', 'alert'); return; }
   const bounds = L.latLngBounds(layers.map(m => m.getLatLng()));
   map.fitBounds(bounds.pad(0.25));
 }
@@ -1455,12 +1455,12 @@ function toggleHeatmap() {
     heatLayer.addTo(map);
     toggleBtn.classList.add('active');
     toggleBtn.setAttribute('aria-pressed', 'true');
-    toast('Ø®Ø±ÙŠØ·Ø© Ø§Ù„Ø­Ø±Ø§Ø±Ø© Ù…ÙØ¹Ù„Ø©');
+    toast('خريطة الحرارة مفعلة');
   } else {
     map.removeLayer(heatLayer);
     toggleBtn.classList.remove('active');
     toggleBtn.setAttribute('aria-pressed', 'false');
-    toast('Ø®Ø±ÙŠØ·Ø© Ø§Ù„Ø­Ø±Ø§Ø±Ø© Ù…Ø¹Ø·Ù„Ø©');
+    toast('خريطة الحرارة معطلة');
   }
 }
 let dark = false;
@@ -1470,14 +1470,14 @@ function toggleStyle() {
   if (dark) {
     map.removeLayer(tileDefault);
     tileToner.addTo(map);
-    toast('Ø³Ù…Ø© Ø¯Ø§ÙƒÙ†Ø©', 'alert');
+    toast('سمة داكنة', 'alert');
     toggleBtn.classList.add('active');
     toggleBtn.setAttribute('aria-pressed', 'true');
   }
   else {
     map.removeLayer(tileToner);
     tileDefault.addTo(map);
-    toast('Ø³Ù…Ø© Ø§ÙØªØ±Ø§Ø¶ÙŠØ©');
+    toast('سمة افتراضية');
     toggleBtn.classList.remove('active');
     toggleBtn.setAttribute('aria-pressed', 'false');
   }
@@ -1491,7 +1491,7 @@ function exportData() {
   const blob = new Blob([JSON.stringify(entries, null, 2)], { type: 'application/json' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a'); a.href = url; a.download = 'algerie_verte_export.json'; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
-  toast('ØªÙ… ØªØµØ¯ÙŠØ± Ø§Ù„Ø¨ÙŠØ§Ù†Ø§Øª Ø¨Ù†Ø¬Ø§Ø­.', 'success');
+  toast('تم تصدير البيانات بنجاح.', 'success');
 }
 function importData(evt) {
   const f = evt.target.files[0]; if (!f) return;
@@ -1499,7 +1499,7 @@ function importData(evt) {
   r.onload = e => {
     try {
       const parsed = JSON.parse(e.target.result);
-      if (!Array.isArray(parsed)) throw new Error('ØªÙ†Ø³ÙŠÙ‚ Ø§Ù„Ù…Ù„Ù ØºÙŠØ± ØµØ­ÙŠØ­.');
+      if (!Array.isArray(parsed)) throw new Error('تنسيق الملف غير صحيح.');
 
       let importedCount = 0;
       parsed.forEach(p => {
@@ -1514,18 +1514,18 @@ function importData(evt) {
       });
       saveToStorage();
       applyFiltersAndSort();
-      toast(`âœ… ØªÙ… Ø§Ø³ØªÙŠØ±Ø§Ø¯ ${importedCount} Ù…Ø³Ø§Ù‡Ù…Ø©.`, 'success');
+      toast(`✅ تم استيراد ${importedCount} مساهمة.`, 'success');
       document.getElementById('importFile').value = '';
     } catch (err) {
-      toast('Ø®Ø·Ø£ ÙÙŠ Ù…Ù„Ù Ø§Ù„Ø§Ø³ØªÙŠØ±Ø§Ø¯: ' + err.message, 'error');
+      toast('خطأ في ملف الاستيراد: ' + err.message, 'error');
       document.getElementById('importFile').value = '';
     }
   };
   r.readAsText(f);
 }
 function clearAllData() {
-  if (!confirm('Ù‡Ù„ ØªØ±ÙŠØ¯ Ù…Ø³Ø­ ÙƒÙ„ Ø§Ù„Ø¨ÙŠØ§Ù†Ø§Øª Ø§Ù„Ù…Ø­ÙÙˆØ¸Ø© Ù…Ø­Ù„ÙŠØ§Ù‹ØŸ Ù‡Ø°Ø§ Ø§Ù„Ø¥Ø¬Ø±Ø§Ø¡ Ù„Ø§ ÙŠÙ…ÙƒÙ† Ø§Ù„ØªØ±Ø§Ø¬Ø¹ Ø¹Ù†Ù‡!')) return;
-  entries = []; saveToStorage(); markerCluster.clearLayers(); applyFiltersAndSort(); toast('ØªÙ… Ù…Ø³Ø­ ÙƒÙ„ Ø§Ù„Ø¨ÙŠØ§Ù†Ø§Øª.', 'error');
+  if (!confirm('هل تريد مسح كل البيانات المحفوظة محلياً؟ هذا الإجراء لا يمكن التراجع عنه!')) return;
+  entries = []; saveToStorage(); markerCluster.clearLayers(); applyFiltersAndSort(); toast('تم مسح كل البيانات.', 'error');
   if (tempMarker) { map.removeLayer(tempMarker); tempMarker = null; }
 }
 
@@ -1539,10 +1539,10 @@ document.addEventListener('DOMContentLoaded', function () {
   ['fab-add', 'fab-list', 'fab-stats'].forEach(id => {
     const el = document.getElementById(id);
     if (el) {
-      // Utiliser Ã  la fois click et touchend pour garantir la rÃ©activitÃ© sur mobile
+      // Utiliser à la fois click et touchend pour garantir la réactivité sur mobile
       const handler = function (e) {
         e.preventDefault();
-        e.stopPropagation(); // Ã‰viter la propagation qui pourrait fermer la sidebar
+        e.stopPropagation(); // Éviter la propagation qui pourrait fermer la sidebar
 
         if (id === 'fab-add') toggleSidebar(true, 'form-panel');
         else if (id === 'fab-list') toggleSidebar(true, 'list-panel');
@@ -1559,7 +1559,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
   initMap();
 
-  // PrÃ©-remplir la liste des options de filtre de type
+  // Pré-remplir la liste des options de filtre de type
   const typeFilterSelect = document.getElementById('typeFilter');
   const existingTypes = new Set(Array.from(typeFilterSelect.options).map(o => o.value).filter(v => v));
 
@@ -1571,7 +1571,7 @@ document.addEventListener('DOMContentLoaded', function () {
     }
   });
 
-  // GÃ©rer l'ouverture initiale du sidebar sur desktop (pour l'affichage du formulaire)
+  // Gérer l'ouverture initiale du sidebar sur desktop (pour l'affichage du formulaire)
   const isMobile = window.matchMedia('(max-width: 1024px)').matches;
   if (!isMobile) {
     switchPanel('form-panel');
@@ -1589,13 +1589,13 @@ document.addEventListener('DOMContentLoaded', function () {
   window.addEventListener('orientationchange', handleOrientationChange);
   handleOrientationChange();
 
-  // Attacher le bouton de gÃ©olocalisation aprÃ¨s l'initialisation complÃ¨te
-  // Attendre un peu pour s'assurer que tous les Ã©lÃ©ments sont chargÃ©s (important pour mobile)
+  // Attacher le bouton de géolocalisation après l'initialisation complète
+  // Attendre un peu pour s'assurer que tous les éléments sont chargés (important pour mobile)
   setTimeout(function () {
     attachGeolocationButton();
   }, 300);
 
-  // Exemple : charger une contribution depuis MongoDB (photo Base64 affichÃ©e dans la section dÃ©diÃ©e)
+  // Exemple : charger une contribution depuis MongoDB (photo Base64 affichée dans la section dédiée)
   loadRemoteSample();
 
   // Initialisation du calendrier moderne Flatpickr
@@ -1631,18 +1631,18 @@ function initFlatpickr() {
   if (typeof flatpickr !== 'undefined') {
     const commonConfig = {
       locale: "ar", // Langue arabe
-      altInput: true, // Afficher une version formatÃ©e
+      altInput: true, // Afficher une version formatée
       altFormat: "j F Y", // ex: 15 mars 2025
-      dateFormat: "Y-m-d", // Format envoyÃ© au backend (YYYY-MM-DD)
+      dateFormat: "Y-m-d", // Format envoyé au backend (YYYY-MM-DD)
       maxDate: "today", // Pas de futur
-      disableMobile: false, // Utiliser le calendrier custom mÃªme sur mobile (plus joli)
-      theme: "material_green", // ThÃ¨me de base (sera surchargÃ© par CSS)
+      disableMobile: false, // Utiliser le calendrier custom même sur mobile (plus joli)
+      theme: "material_green", // Thème de base (sera surchargé par CSS)
     };
 
     // Champ principal
     flatpickr("#date_planted", commonConfig);
 
-    // Champ Ã©dition (si prÃ©sent)
+    // Champ édition (si présent)
     const editDateInput = document.getElementById("editDatePlanted");
     if (editDateInput) {
       flatpickr("#editDatePlanted", commonConfig);
@@ -1660,10 +1660,10 @@ function initPullToRefresh() {
   let isPulling = false;
   let pullRefreshElement = null;
 
-  // CrÃ©er l'Ã©lÃ©ment pull-refresh
+  // Créer l'élément pull-refresh
   pullRefreshElement = document.createElement('div');
   pullRefreshElement.className = 'pull-refresh';
-  pullRefreshElement.innerHTML = '<i class="fas fa-sync-alt"></i> <span>Ø¬Ø§Ø±ÙŠ Ø§Ù„ØªØ­Ø¯ÙŠØ«...</span>';
+  pullRefreshElement.innerHTML = '<i class="fas fa-sync-alt"></i> <span>جاري التحديث...</span>';
   document.body.appendChild(pullRefreshElement);
 
   locationsList.addEventListener('touchstart', function (e) {
@@ -1698,7 +1698,7 @@ function initPullToRefresh() {
       if (navigator.vibrate) {
         navigator.vibrate([10, 20, 10]);
       }
-      // RafraÃ®chir les donnÃ©es
+      // Rafraîchir les données
       applyFiltersAndSort();
       setTimeout(() => {
         pullRefreshElement.classList.remove('active');
@@ -1724,7 +1724,7 @@ function initKeyboardHandling() {
       }, 300);
     });
 
-    // GÃ©rer la soumission du formulaire avec Enter
+    // Gérer la soumission du formulaire avec Enter
     input.addEventListener('keydown', function (e) {
       if (e.key === 'Enter' && e.target.tagName !== 'TEXTAREA') {
         const form = e.target.closest('form');
@@ -1777,24 +1777,24 @@ async function handleSubmit() {
   const photoFile = photoInput.files[0];
 
   if (!nom || !type) {
-    showFormMessage('Ø§Ù„Ø§Ø³Ù… ÙˆÙ†ÙˆØ¹ Ø§Ù„Ø´Ø¬Ø±Ø© Ù…Ø·Ù„ÙˆØ¨Ø§Ù†', 'error');
+    showFormMessage('الاسم ونوع الشجرة مطلوبان', 'error');
     hapticFeedback('error');
     return;
   }
   if (isNaN(quantite) || quantite < 1) {
-    showFormMessage('Ø§Ù„Ø±Ø¬Ø§Ø¡ ØªØ­Ø¯ÙŠØ¯ Ø¹Ø¯Ø¯ Ø§Ù„Ø£Ø´Ø¬Ø§Ø± (1 Ø¹Ù„Ù‰ Ø§Ù„Ø£Ù‚Ù„)', 'error');
+    showFormMessage('الرجاء تحديد عدد الأشجار (1 على الأقل)', 'error');
     hapticFeedback('error');
     return;
   }
   if (isNaN(lat) || isNaN(lng)) {
-    showFormMessage('Ø§Ù„Ù…Ø±Ø¬Ùˆ ÙˆØ¶Ø¹ Ø§Ù„Ø¥Ø­Ø¯Ø§Ø«ÙŠØ§Øª', 'error');
+    showFormMessage('المرجو وضع الإحداثيات', 'error');
     hapticFeedback('error');
     return;
   }
 
   const checkBounds = geojsonBounds || APPROX_BOUNDS;
   if (!checkBounds.contains([lat, lng])) {
-    showFormMessage('Ø§Ù„Ø¥Ø­Ø¯Ø§Ø«ÙŠØ§Øª Ø®Ø§Ø±Ø¬ Ø­Ø¯ÙˆØ¯ Ø§Ù„Ø¬Ø²Ø§Ø¦Ø±', 'error');
+    showFormMessage('الإحداثيات خارج حدود الجزائر', 'error');
     hapticFeedback('error');
     return;
   }
@@ -1814,11 +1814,11 @@ async function handleSubmit() {
   // 2. Upload l'image vers le serveur pour obtenir une URL (pas de base64 en DB)
   let photoUrl = null;
   if (photoFile) {
-    showFormMessage('Ø¬Ø§Ø±ÙŠ Ø±ÙØ¹ Ø§Ù„ØµÙˆØ±Ø©...', 'alert');
+    showFormMessage('جاري رفع الصورة...', 'alert');
     photoUrl = await uploadImageToServer(photoFile);
     if (!photoUrl && photoBase64) {
-      // Fallback: si l'upload Ã©choue, on utilisera le base64 localement seulement
-      console.warn('Upload Ã©chouÃ©, utilisation du base64 pour affichage local uniquement');
+      // Fallback: si l'upload échoue, on utilisera le base64 localement seulement
+      console.warn('Upload échoué, utilisation du base64 pour affichage local uniquement');
     }
   }
 
@@ -1838,7 +1838,7 @@ async function handleSubmit() {
 
   // Pour le serveur, on envoie l'URL (pas le base64 !)
   const dataToSend = { nom, adresse, type, quantite, lat, lng, date: submissionDate, photo: photoUrl };
-  console.log("ðŸ“¤ Envoi vers le serveur :", dataToSend);
+  console.log("📤 Envoi vers le serveur :", dataToSend);
 
   try {
     const response = await fetch("https://greenalgeria-backend.onrender.com/api/contributions", {
@@ -1849,20 +1849,20 @@ async function handleSubmit() {
 
     const result = await response.json().catch(() => ({}));
     if (response.ok && result.success) {
-      console.log("âœ… Arbre enregistrÃ© avec ID :", result.insertedId);
-      alert("Arbre ajoutÃ© avec succÃ¨s !");
-      showFormMessage('âœ… ØªÙ… Ø¥Ø¶Ø§ÙØ© Ø§Ù„Ø´Ø¬Ø±Ø© Ø¨Ù†Ø¬Ø§Ø­!', 'success');
+      console.log("✅ Arbre enregistré avec ID :", result.insertedId);
+      alert("Arbre ajouté avec succès !");
+      showFormMessage('✅ تم إضافة الشجرة بنجاح!', 'success');
       resetForm();
       validateForm();
     } else {
-      console.error("âŒ Erreur serveur :", result.error || 'RÃ©ponse invalide');
+      console.error("❌ Erreur serveur :", result.error || 'Réponse invalide');
       alert("Erreur lors de l\'ajout de l\'arbre !");
-      showFormMessage('Ø­Ø¯Ø« Ø®Ø·Ø£ Ø¹Ù†Ø¯ Ø§Ù„Ø§ØªØµØ§Ù„ Ø¨Ø§Ù„Ø®Ø§Ø¯Ù…', 'error');
+      showFormMessage('حدث خطأ عند الاتصال بالخادم', 'error');
     }
   } catch (err) {
-    console.error("âŒ Erreur fetch :", err);
+    console.error("❌ Erreur fetch :", err);
     alert("Impossible de contacter le serveur !");
-    showFormMessage('ØªØ¹Ø°Ø± Ø§Ù„Ø§ØªØµØ§Ù„ Ø¨Ø§Ù„Ø®Ø§Ø¯Ù…. Ø­Ø§ÙˆÙ„ Ù„Ø§Ø­Ù‚Ø§Ù‹.', 'error');
+    showFormMessage('تعذر الاتصال بالخادم. حاول لاحقاً.', 'error');
   }
 }
 
@@ -1885,22 +1885,22 @@ async function loadRemoteSample() {
       } else {
         sampleImg.style.display = 'none';
       }
-      const contributor = latest.nom || 'Ù…Ø´Ø§Ø±Ùƒ Ù…Ø¬Ù‡ÙˆÙ„';
-      const treeType = latest.type || 'Ù†ÙˆØ¹ ØºÙŠØ± Ù…Ø­Ø¯Ø¯';
+      const contributor = latest.nom || 'مشارك مجهول';
+      const treeType = latest.type || 'نوع غير محدد';
       const createdAt = latest.createdAt ? new Date(latest.createdAt).toLocaleString('ar-EG') : '';
-      const locality = [latest.city, latest.district].filter(Boolean).join(' â€” ');
+      const locality = [latest.city, latest.district].filter(Boolean).join(' — ');
       const locationTag = locality ? ` | ${locality}` : '';
-      sampleInfo.textContent = `${contributor} â€” ${treeType}${locationTag}${createdAt ? ` (${createdAt})` : ''}`;
+      sampleInfo.textContent = `${contributor} — ${treeType}${locationTag}${createdAt ? ` (${createdAt})` : ''}`;
       sampleInfo.style.display = 'block';
     } else {
       sampleImg.style.display = 'none';
-      sampleInfo.textContent = 'Ù„Ø§ ØªÙˆØ¬Ø¯ Ø¨ÙŠØ§Ù†Ø§Øª Ù„Ø¹Ø±Ø¶Ù‡Ø§ Ø­Ø§Ù„ÙŠØ§Ù‹.';
+      sampleInfo.textContent = 'لا توجد بيانات لعرضها حالياً.';
       sampleInfo.style.display = 'block';
     }
   } catch (error) {
-    console.warn('ØªØ¹Ø°Ø± ØªØ­Ù…ÙŠÙ„ Ù…Ø«Ø§Ù„ Ø§Ù„ØµÙˆØ±Ø© Ù…Ù† Ø§Ù„Ø®Ø§Ø¯Ù…:', error);
+    console.warn('تعذر تحميل مثال الصورة من الخادم:', error);
     sampleImg.style.display = 'none';
-    sampleInfo.textContent = 'ØªØ¹Ø°Ø± ØªØ­Ù…ÙŠÙ„ Ù…Ø«Ø§Ù„ Ø§Ù„ØµÙˆØ±Ø© Ù…Ù† Ø§Ù„Ø®Ø§Ø¯Ù….';
+    sampleInfo.textContent = 'تعذر تحميل مثال الصورة من الخادم.';
     sampleInfo.style.display = 'block';
   }
 }
