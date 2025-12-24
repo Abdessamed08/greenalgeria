@@ -9,6 +9,9 @@ const UPLOAD_URL = 'https://greenalgeria-backend.onrender.com/api/upload';
 let map, markerCluster, heatLayer;
 let entries = [];
 let tileDefault, tileToner;
+// Variables globales pour les graphiques
+let typesChartInstance = null;
+let citiesChartInstance = null;
 let geojsonBounds = null;
 let tempMarker = null;
 // Map selection mode removed
@@ -903,10 +906,17 @@ function handleGeolocation() {
         const address = data.address || {};
         const city = address.city || address.town || address.village || address.municipality;
         const district = address.suburb || address.neighbourhood || address.city_district;
+        // On récupère aussi la Wilaya (state)
+        const state = address.state || address.region;
 
+        // Mise à jour des variables globales pour l'envoi
+        // Note: On pourrait stocker state ici si on voulait l'envoyer explicitement, 
+        // mais le serveur le recalcule de toute façon.
+        
         let displayAddress = '';
         if (city) displayAddress += city;
         if (district) displayAddress += (displayAddress ? '، ' : '') + district;
+        if (state) displayAddress += (displayAddress ? ' (' + state + ')' : state);
 
         if (displayAddress) {
           const addrInput = document.getElementById('adresse');
@@ -1124,6 +1134,194 @@ function updateStats(filteredCount = entries.length) {
 
   const resultsEl = document.getElementById('resultsCount');
   if (resultsEl) resultsEl.textContent = filteredCount;
+
+  // Mise à jour des graphiques
+  updateCharts(safeEntries);
+}
+
+/**
+ * Génère et met à jour les graphiques Chart.js
+ */
+function updateCharts(data) {
+  // --- 1. Préparation des données pour les TYPES (Donut) ---
+  const typeCounts = {};
+  data.forEach(e => {
+    // Nettoyer et normaliser le type
+    let t = (e.type || 'غير محدد').trim();
+    typeCounts[t] = (typeCounts[t] || 0) + (parseInt(e.quantite) || 1);
+  });
+
+  // Trier par nombre décroissant
+  const sortedTypes = Object.entries(typeCounts)
+    .sort((a, b) => b[1] - a[1]);
+
+  const typeLabels = sortedTypes.map(item => item[0]);
+  const typeData = sortedTypes.map(item => item[1]);
+
+  // Palette de couleurs variée et naturelle pour le Donut
+  const variedPalette = [
+    '#059669', // Vert émeraude (Principal)
+    '#d97706', // Ambre (Terre/Automne)
+    '#3b82f6', // Bleu (Eau/Ciel)
+    '#8b5cf6', // Violet (Fleurs)
+    '#ec4899', // Rose (Fleurs)
+    '#14b8a6', // Sarcelle
+    '#f59e0b', // Orange clair
+    '#6366f1', // Indigo
+    '#84cc16', // Citron vert
+    '#64748b'  // Gris ardoise (Autre)
+  ];
+
+  // --- 2. Préparation des données pour les WILAYAS (Barres) ---
+  const wilayaCounts = {};
+  data.forEach(e => {
+    // 1. Essayer de trouver une mention de "Wilaya" dans l'adresse complète si disponible
+    // Sinon utiliser le champ city ou district s'il contient "Wilaya"
+    let potentialWilaya = null;
+
+    // Si on a une adresse complète stockée (souvent le cas dans display_name de Nominatim mais ici on a 'adresse')
+    // On va faire une heuristique sur les champs disponibles
+    
+    // Liste des champs à vérifier
+    const candidates = [e.state, e.city, e.district, e.adresse];
+    
+    for (const cand of candidates) {
+      if (cand && typeof cand === 'string' && cand.toLowerCase().includes('wilaya')) {
+        potentialWilaya = cand;
+        break; 
+      }
+    }
+
+    // Si toujours rien, on regarde si 'city' est une wilaya connue (liste simplifiée)
+    // C'est utile pour les anciennes données où on a juste mis "Alger" ou "Oran"
+    if (!potentialWilaya && e.city) {
+        // Ceci est une détection simple, idéalement on aurait une liste complète des 58 wilayas
+        // Mais pour l'instant on accepte le nom de la ville comme proxy de la wilaya 
+        // SI et SEULEMENT SI ce n'est pas un nom de quartier évident
+        potentialWilaya = e.city;
+    }
+
+    if (!potentialWilaya) return; // On ignore si on ne peut pas déterminer la Wilaya
+
+    // Nettoyage: On ne garde que le nom propre
+    // Ex: "Wilaya d'Alger" -> "Alger"
+    // Ex: "Commune de Sétif" -> "Sétif" (si c'était dans city)
+    let cleanName = potentialWilaya
+        .replace(/wilaya de/yi, '')
+        .replace(/wilaya/yi, '')
+        .replace(/commune de/yi, '')
+        .replace(/^d'/yi, '') // d'Alger -> Alger
+        .trim();
+
+    // Correction majuscule/minuscule pour grouper "Alger" et "alger"
+    // En arabe c'est moins un problème, mais pour le français/anglais si.
+    // On capitalise la première lettre
+    cleanName = cleanName.charAt(0).toUpperCase() + cleanName.slice(1);
+
+    wilayaCounts[cleanName] = (wilayaCounts[cleanName] || 0) + (parseInt(e.quantite) || 1);
+  });
+
+  // Top 7 Wilayas seulement
+  const sortedWilayas = Object.entries(wilayaCounts)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 7);
+
+  const wilayaLabels = sortedWilayas.map(item => item[0]);
+  const wilayaData = sortedWilayas.map(item => item[1]);
+
+
+  // --- 3. Rendu / Mise à jour du Graphique TYPES (Donut) ---
+  const ctxTypes = document.getElementById('typesChart');
+  if (ctxTypes) {
+    if (typesChartInstance) {
+      typesChartInstance.destroy(); // Détruire l'ancien pour éviter les bugs
+    }
+    
+    // Configuration police
+    Chart.defaults.font.family = "'Cairo', sans-serif";
+    
+    typesChartInstance = new Chart(ctxTypes, {
+      type: 'doughnut',
+      data: {
+        labels: typeLabels,
+        datasets: [{
+          data: typeData,
+          backgroundColor: variedPalette,
+          borderWidth: 2,
+          borderColor: '#ffffff',
+          hoverOffset: 4
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            position: 'right',
+            labels: { boxWidth: 12, font: { size: 11 }, padding: 15 },
+            rtl: true // Support RTL pour l'arabe
+          },
+          tooltip: {
+             rtl: true,
+             callbacks: {
+                label: function(context) {
+                    let label = context.label || '';
+                    if (label) {
+                        label += ': ';
+                    }
+                    let value = context.raw;
+                    let total = context.chart._metasets[context.datasetIndex].total;
+                    let percentage = Math.round((value / total) * 100) + '%';
+                    return label + value + ' شجرة (' + percentage + ')';
+                }
+             }
+          }
+        },
+        layout: { padding: 0 }
+      }
+    });
+  }
+
+  // --- 4. Rendu / Mise à jour du Graphique WILAYAS (Barres) ---
+  const ctxCities = document.getElementById('citiesChart');
+  if (ctxCities) {
+    if (citiesChartInstance) {
+      citiesChartInstance.destroy();
+    }
+
+    citiesChartInstance = new Chart(ctxCities, {
+      type: 'bar',
+      data: {
+        labels: wilayaLabels,
+        datasets: [{
+          label: 'عدد الأشجار',
+          data: wilayaData,
+          backgroundColor: '#059669', // Vert uni pour les barres
+          borderRadius: 4,
+          barThickness: 'flex',
+          maxBarThickness: 30
+        }]
+      },
+      options: {
+        indexAxis: 'y', // Barres horizontales pour mieux lire les noms longs
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+          x: {
+            grid: { display: false },
+            beginAtZero: true
+          },
+          y: {
+            grid: { display: false },
+            ticks: { autoSkip: false, font: { size: 11 } }
+          }
+        },
+        plugins: {
+          legend: { display: false } // Pas besoin de légende pour une seule série
+        }
+      }
+    });
+  }
 }
 
 /* --------------------------------- */
@@ -1914,7 +2112,21 @@ async function handleSubmit() {
 
   // Pour l'affichage local, on utilise photoUrl si disponible, sinon photoBase64
   const photoForDisplay = photoUrl || photoBase64;
-  const entry = { id, nom, adresse, type, quantite, lat, lng, date: submissionDate, photo: photoForDisplay, createdAt: Date.now() };
+  
+  // On inclut la wilaya sélectionnée dans l'objet local
+  const entry = { 
+      id, 
+      nom, 
+      adresse, 
+      type, 
+      quantite, 
+      lat, 
+      lng, 
+      date: submissionDate, 
+      photo: photoForDisplay, 
+      createdAt: Date.now(),
+      state: selectedWilaya // Ajout pour affichage immédiat dans le graphique
+  };
   entries.unshift(entry);
   addEntryToMap(entry);
   if (tempMarker) { map.removeLayer(tempMarker); tempMarker = null; }
@@ -1923,8 +2135,33 @@ async function handleSubmit() {
   applyFiltersAndSort();
   showDetailPanel(id);
 
-  // Pour le serveur, on envoie l'URL (pas le base64 !)
-  const dataToSend = { nom, adresse, type, quantite, lat, lng, date: submissionDate, photo: photoUrl };
+  // Récupérer la Wilaya sélectionnée manuellement via TomSelect
+  // On accède à l'instance stockée ou on lit le texte si possible
+  let selectedWilaya = '';
+  const wilayaSelect = document.getElementById('wilaya_select');
+  if (wilayaSelect && wilayaSelect.tomselect) {
+      const val = wilayaSelect.tomselect.getValue();
+      const item = wilayaSelect.tomselect.getItem(val);
+      if (item) {
+          // Format "01 - Adrar" -> on garde tout ou juste "Adrar" selon préférence
+          // Ici on garde tout pour avoir "01 Adrar" comme demandé
+          selectedWilaya = item.textContent.trim(); 
+      }
+  }
+
+  // Pour le serveur, on envoie l'URL et on force la city/state avec la sélection manuelle
+  const dataToSend = { 
+      nom, 
+      adresse, 
+      type, 
+      quantite, 
+      lat, 
+      lng, 
+      date: submissionDate, 
+      photo: photoUrl,
+      // On envoie la wilaya sélectionnée comme 'state' prioritaire
+      state: selectedWilaya 
+  };
   console.log("📤 Envoi vers le serveur :", dataToSend);
 
   try {
