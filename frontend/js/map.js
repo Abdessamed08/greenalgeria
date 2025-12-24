@@ -1302,36 +1302,46 @@ function updateCharts(data) {
     '#64748b'  // Gris ardoise (Autre)
   ];
 
-  // --- 2. Préparation des données pour les WILAYAS (Barres) ---
-  // On utilise UNIQUEMENT le champ 'state' qui contient la Wilaya sélectionnée
-  // Format attendu: "01 - أدرار", "16 - الجزائر", etc.
-  const wilayaCounts = {};
+  // --- 2. Préparation des données pour les RÉGIONS (Barres) ---
+  // Priorité: state (Wilaya) > city > district
+  const regionCounts = {};
   
   data.forEach(e => {
-    // On ne prend que le champ state (Wilaya sélectionnée manuellement)
-    const wilaya = e.state;
+    // Chercher la meilleure donnée de localisation disponible
+    let region = null;
     
-    // Vérifier que c'est une vraie Wilaya (commence par un code numérique)
-    // Format: "01 - أدرار" ou "16 - الجزائر"
-    if (!wilaya || typeof wilaya !== 'string') return;
+    // 1. Priorité au champ state (Wilaya sélectionnée manuellement)
+    if (e.state && typeof e.state === 'string' && e.state.trim().length > 0) {
+      region = e.state.trim();
+    }
+    // 2. Fallback sur city (pour les anciennes données)
+    else if (e.city && typeof e.city === 'string' && e.city.trim().length > 0) {
+      region = e.city.trim();
+    }
+    // 3. Fallback sur district
+    else if (e.district && typeof e.district === 'string' && e.district.trim().length > 0) {
+      region = e.district.trim();
+    }
     
-    // Regex pour détecter le format Wilaya: commence par 1-2 chiffres
-    const isValidWilaya = /^\d{1,2}\s*-/.test(wilaya.trim());
-    if (!isValidWilaya) return; // Ignorer les anciennes données sans format Wilaya
+    // Ignorer si aucune région trouvée
+    if (!region) return;
     
-    // Utiliser le nom complet comme clé (ex: "01 - أدرار")
-    const wilayaName = wilaya.trim();
+    // Nettoyer et normaliser
+    region = region.charAt(0).toUpperCase() + region.slice(1);
     
-    wilayaCounts[wilayaName] = (wilayaCounts[wilayaName] || 0) + (parseInt(e.quantite) || 1);
+    regionCounts[region] = (regionCounts[region] || 0) + (parseInt(e.quantite) || 1);
   });
 
-  // Top 7 Wilayas (triées par nombre d'arbres décroissant)
-  const sortedWilayas = Object.entries(wilayaCounts)
+  // Top 7 Régions (triées par nombre d'arbres décroissant)
+  const sortedRegions = Object.entries(regionCounts)
     .sort((a, b) => b[1] - a[1])
     .slice(0, 7);
 
-  const wilayaLabels = sortedWilayas.map(item => item[0]);
-  const wilayaData = sortedWilayas.map(item => item[1]);
+  const regionLabels = sortedRegions.map(item => item[0]);
+  const regionData = sortedRegions.map(item => item[1]);
+  
+  // Debug pour voir les données
+  console.log('📊 Données graphique régions:', { regionCounts, sortedRegions });
 
 
   // --- 3. Rendu / Mise à jour du Graphique TYPES (Donut) ---
@@ -1386,20 +1396,44 @@ function updateCharts(data) {
     });
   }
 
-  // --- 4. Rendu / Mise à jour du Graphique WILAYAS (Barres) ---
+  // --- 4. Rendu / Mise à jour du Graphique RÉGIONS (Barres) ---
   const ctxCities = document.getElementById('citiesChart');
   if (ctxCities) {
     if (citiesChartInstance) {
       citiesChartInstance.destroy();
     }
 
+    // Si pas de données, afficher un message
+    if (regionLabels.length === 0) {
+      citiesChartInstance = new Chart(ctxCities, {
+        type: 'bar',
+        data: {
+          labels: ['لا توجد بيانات'],
+          datasets: [{
+            label: 'عدد الأشجار',
+            data: [0],
+            backgroundColor: '#d1d5db',
+            borderRadius: 4
+          }]
+        },
+        options: {
+          indexAxis: 'y',
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: { x: { display: false }, y: { display: true } }
+        }
+      });
+      return;
+    }
+
     citiesChartInstance = new Chart(ctxCities, {
       type: 'bar',
       data: {
-        labels: wilayaLabels,
+        labels: regionLabels,
         datasets: [{
           label: 'عدد الأشجار',
-          data: wilayaData,
+          data: regionData,
           backgroundColor: '#059669', // Vert uni pour les barres
           borderRadius: 4,
           barThickness: 'flex',
