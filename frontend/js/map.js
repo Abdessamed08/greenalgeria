@@ -150,16 +150,25 @@ function initMap() {
   // Attacher le bouton de géolocalisation (sera aussi fait dans DOMContentLoaded pour sécurité)
   attachGeolocationButton();
 
-  loadFromStorage();
-  loadRemoteData(); // Fetch from server
+  // 🔹 SERVEUR = SOURCE UNIQUE DE VÉRITÉ
+  // On charge d'abord depuis le serveur, localStorage n'est qu'un cache de secours
+  loadRemoteData();
   validateForm();
 }
 
 /**
- * Charge les données depuis le serveur MongoDB (via Render)
+ * 🔹 Charge les données depuis le serveur MongoDB (SOURCE UNIQUE DE VÉRITÉ)
+ * Le serveur est la source principale, localStorage n'est qu'un cache de secours
  */
 async function loadRemoteData() {
   console.log('🔄 Chargement des données depuis le serveur...');
+  
+  // Afficher un indicateur de chargement
+  const listContainer = document.getElementById('locationsList');
+  if (listContainer) {
+    listContainer.innerHTML = '<div class="loading-indicator" style="text-align:center; padding:20px;"><i class="fas fa-spinner fa-spin"></i> جاري التحميل...</div>';
+  }
+  
   try {
     const response = await fetch(API_URL);
     if (!response.ok) throw new Error(`HTTP ${response.status}`);
@@ -168,44 +177,65 @@ async function loadRemoteData() {
     if (Array.isArray(serverEntries)) {
       console.log(`✅ ${serverEntries.length} مساهمات تم جلبها من الخادم.`);
 
-      // Fusionner avec les données locales sans doublons (priorité serveur)
-      const localIds = new Set(entries.map(e => e.id));
-      serverEntries.forEach(se => {
+      // 🔹 Le serveur remplace TOTALEMENT les données locales
+      entries = serverEntries.map(se => {
         // Le backend utilise _id, on le mappe en id si besoin
         if (se._id && !se.id) se.id = se._id;
-
-        const existingIdx = entries.findIndex(e => e.id === se.id);
-        if (existingIdx !== -1) {
-          entries[existingIdx] = { ...entries[existingIdx], ...se };
-        } else {
-          entries.push(se);
-        }
+        return se;
       });
-
-      // Nettoyer les doublons potentiels (clé unique id)
-      const uniqueEntries = [];
-      const seen = new Set();
-      entries.forEach(e => {
-        if (!seen.has(e.id)) {
-          seen.add(e.id);
-          uniqueEntries.push(e);
-        }
-      });
-      entries = uniqueEntries;
 
       // Mettre à jour la carte et la liste
       markerCluster.clearLayers();
       entries.forEach(e => addEntryToMap(e));
       applyFiltersAndSort();
+      
+      // Mettre en cache localement (pour mode hors-ligne)
+      saveToLocalCache();
 
-      // Optionnel: ajuster la vue si des données sont présentes
-      if (entries.length > 0) {
-        // Pas de fitBounds forcé ici pour ne pas désorienter l'utilisateur au démarrage
-      }
+      console.log('✅ Données synchronisées depuis le serveur');
     }
   } catch (error) {
-    console.warn('⚠️ تعذر جلب البيانات من الخادم، يتم استخدام البيانات المحلية فقط:', error);
-    // On ne montre pas de toast d'erreur ici pour ne pas déranger si on est en offline
+    console.warn('⚠️ تعذر جلب البيانات من الخادم:', error);
+    
+    // Fallback: charger depuis le cache local si disponible
+    const cached = loadFromLocalCache();
+    if (cached && cached.length > 0) {
+      console.log('📦 Utilisation du cache local (mode hors-ligne)');
+      entries = cached;
+      markerCluster.clearLayers();
+      entries.forEach(e => addEntryToMap(e));
+      applyFiltersAndSort();
+      toast('تعذر الاتصال بالخادم. يتم عرض البيانات المحفوظة محلياً.', 'alert');
+    } else {
+      entries = [];
+      applyFiltersAndSort();
+      toast('تعذر تحميل البيانات. تحقق من اتصال الإنترنت.', 'error');
+    }
+  }
+}
+
+/**
+ * Rafraîchit les données depuis le serveur (après ajout/modification/suppression)
+ */
+async function refreshFromServer() {
+  try {
+    const response = await fetch(API_URL);
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+
+    const serverEntries = await response.json();
+    if (Array.isArray(serverEntries)) {
+      entries = serverEntries.map(se => {
+        if (se._id && !se.id) se.id = se._id;
+        return se;
+      });
+
+      markerCluster.clearLayers();
+      entries.forEach(e => addEntryToMap(e));
+      applyFiltersAndSort();
+      saveToLocalCache();
+    }
+  } catch (error) {
+    console.error('❌ Erreur lors du rafraîchissement:', error);
   }
 }
 
@@ -495,7 +525,7 @@ async function uploadImageToServer(file) {
 // handleSubmit() est définie plus bas dans le fichier avec l'envoi au serveur
 
 /**
- * Gestion de la modification (Update)
+ * 🔹 Gestion de la modification (Update) - ENVOIE AU SERVEUR
  */
 async function handleEditSubmit(e) {
   e.preventDefault();
@@ -508,60 +538,122 @@ async function handleEditSubmit(e) {
   const newLng = currentEditLng !== null ? currentEditLng : entry.lng;
   const newQuantite = parseInt(document.getElementById('editQuantite').value);
 
+  // Préparer les données de mise à jour
+  const updateData = {
+    nom: document.getElementById('editNom').value.trim(),
+    adresse: document.getElementById('editAdresse').value.trim(),
+    type: document.getElementById('editTypeArbre').value,
+    quantite: newQuantite,
+    date: document.getElementById('editDatePlanted').value || null,
+    lat: newLat,
+    lng: newLng
+  };
+
   // Gérer la photo si un nouveau fichier est sélectionné
   const editPhotoInput = document.getElementById('editPhoto');
   if (editPhotoInput && editPhotoInput.files && editPhotoInput.files[0]) {
     try {
-      const photoBase64 = await convertImageToBase64(editPhotoInput.files[0]);
-      if (photoBase64) {
-        entry.photo = photoBase64;
+      showFormMessage('جاري رفع الصورة...', 'alert');
+      const photoUrl = await uploadImageToServer(editPhotoInput.files[0]);
+      if (photoUrl) {
+        updateData.photo = photoUrl;
       }
     } catch (error) {
-      console.error('Erreur lors de la conversion de la photo:', error);
+      console.error('Erreur lors de l\'upload de la photo:', error);
     }
   }
 
-  // Mettre à jour les propriétés
-  entry.nom = document.getElementById('editNom').value.trim();
-  entry.adresse = document.getElementById('editAdresse').value.trim();
-  entry.type = document.getElementById('editTypeArbre').value;
-  entry.quantite = newQuantite;
-  entry.date = document.getElementById('editDatePlanted').value || null;
-  entry.lat = newLat;
-  entry.lng = newLng;
-  entry.updatedAt = Date.now(); // Marque la modification
+  // 🔹 Envoyer la mise à jour au SERVEUR
+  try {
+    toast('جاري التحديث...', 'alert');
+    
+    // Utiliser l'ID MongoDB (_id) ou l'ID personnalisé
+    const serverId = entry._id || entry.id;
+    
+    const response = await fetch(`${API_URL}/${serverId}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(updateData)
+    });
 
-  // Mise à jour de la carte (retirer l'ancien marqueur, ajouter le nouveau)
-  let markerToRemove = null;
-  markerCluster.eachLayer(l => { if (l._entryId === id) markerToRemove = l; });
-  if (markerToRemove) markerCluster.removeLayer(markerToRemove);
-
-  // Réinjecter le marqueur mis à jour
-  addEntryToMap(entry);
-  centerOn(entry.lat, entry.lng);
-
-  saveToStorage();
-  applyFiltersAndSort();
-  closeModal();
-  showDetailPanel(id); // Afficher la fiche de détail mise à jour
-  toast('✅ تم تحديث المساهمة بنجاح.', 'success');
+    const result = await response.json();
+    
+    if (response.ok && result.success) {
+      console.log('✅ Contribution mise à jour sur le serveur');
+      
+      // Rafraîchir depuis le serveur pour avoir les données à jour
+      await refreshFromServer();
+      
+      closeModal();
+      
+      // Chercher l'entrée mise à jour
+      const updatedEntry = entries.find(x => x.id === id || x._id === serverId);
+      if (updatedEntry) {
+        centerOn(updatedEntry.lat, updatedEntry.lng);
+        showDetailPanel(updatedEntry.id || updatedEntry._id);
+      }
+      
+      toast('✅ تم تحديث المساهمة بنجاح.', 'success');
+    } else {
+      throw new Error(result.error || 'Erreur serveur');
+    }
+  } catch (error) {
+    console.error('❌ Erreur lors de la mise à jour:', error);
+    toast('خطأ في تحديث المساهمة. حاول مرة أخرى.', 'error');
+  }
 }
 
 
 /**
- * Gestion de la suppression (Delete)
+ * 🔹 Gestion de la suppression (Delete) - ENVOIE AU SERVEUR
  */
-function removeEntry(id) {
+async function removeEntry(id) {
   if (!confirm('هل تريد حذف هذه الإضافة بشكل نهائي؟')) return;
-  entries = entries.filter(e => e.id !== id);
-  saveToStorage();
-  let toRemove = null;
-  markerCluster.eachLayer(l => { if (l._entryId === id) toRemove = l; });
-  if (toRemove) markerCluster.removeLayer(toRemove);
-  applyFiltersAndSort();
-  toast('تم حذف المساهمة.', 'error');
-  // Revenir à la liste après suppression
-  switchPanel('list-panel');
+  
+  // Trouver l'entrée pour obtenir l'ID serveur
+  const entry = entries.find(e => e.id === id);
+  if (!entry) {
+    toast('خطأ: لم يتم العثور على المساهمة', 'error');
+    return;
+  }
+  
+  // Utiliser l'ID MongoDB (_id) ou l'ID personnalisé
+  const serverId = entry._id || entry.id;
+  
+  try {
+    toast('جاري الحذف...', 'alert');
+    
+    const response = await fetch(`${API_URL}/${serverId}`, {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' }
+    });
+
+    const result = await response.json();
+    
+    if (response.ok && result.success) {
+      console.log('✅ Contribution supprimée du serveur');
+      
+      // Supprimer localement aussi pour mise à jour immédiate de l'UI
+      entries = entries.filter(e => e.id !== id && e._id !== serverId);
+      
+      let toRemove = null;
+      markerCluster.eachLayer(l => { if (l._entryId === id) toRemove = l; });
+      if (toRemove) markerCluster.removeLayer(toRemove);
+      
+      applyFiltersAndSort();
+      saveToLocalCache(); // Mettre à jour le cache
+      
+      toast('تم حذف المساهمة بنجاح.', 'success');
+      
+      // Revenir à la liste après suppression
+      switchPanel('list-panel');
+    } else {
+      throw new Error(result.error || 'Erreur serveur');
+    }
+  } catch (error) {
+    console.error('❌ Erreur lors de la suppression:', error);
+    toast('خطأ في حذف المساهمة. حاول مرة أخرى.', 'error');
+  }
 }
 
 
@@ -1093,21 +1185,59 @@ function handleGeolocation() {
 
 
 /* --------------------------------- */
-/* Gestion du Stockage & Statistiques*/
+/* Gestion du Cache Local (Fallback) */
 /* --------------------------------- */
-function saveToStorage() {
-  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(entries)); } catch (e) { console.error(e); toast('فشل في الحفظ المحلي', 'error'); }
+
+/**
+ * Sauvegarde les données en cache local (pour mode hors-ligne)
+ * NOTE: Ce n'est PAS la source de vérité, juste un cache
+ */
+function saveToLocalCache() {
+  try { 
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(entries)); 
+  } catch (e) { 
+    console.warn('Cache local non disponible:', e); 
+  }
 }
 
-function loadFromStorage() {
+/**
+ * Charge les données depuis le cache local (fallback si serveur indisponible)
+ * @returns {Array} Les entrées en cache ou un tableau vide
+ */
+function loadFromLocalCache() {
   const raw = localStorage.getItem(STORAGE_KEY);
   if (raw) {
-    try { entries = JSON.parse(raw); } catch (e) { console.warn('parse error', e); entries = []; }
-  } else { entries = []; }
-  entries = entries.map(e => ({ ...e, quantite: parseInt(e.quantite) || 1 }));
-  markerCluster.clearLayers();
-  entries.forEach(e => addEntryToMap(e));
-  applyFiltersAndSort();
+    try { 
+      const cached = JSON.parse(raw);
+      return cached.map(e => ({ ...e, quantite: parseInt(e.quantite) || 1 }));
+    } catch (e) { 
+      console.warn('Erreur parsing cache:', e); 
+      return []; 
+    }
+  }
+  return [];
+}
+
+/**
+ * @deprecated Utilisez saveToLocalCache() à la place
+ * Gardé pour compatibilité avec le code existant
+ */
+function saveToStorage() {
+  saveToLocalCache();
+}
+
+/**
+ * @deprecated Utilisez loadFromLocalCache() à la place
+ * Gardé pour compatibilité avec le code existant
+ */
+function loadFromStorage() {
+  const cached = loadFromLocalCache();
+  if (cached.length > 0) {
+    entries = cached;
+    markerCluster.clearLayers();
+    entries.forEach(e => addEntryToMap(e));
+    applyFiltersAndSort();
+  }
 }
 
 function updateStats(filteredCount = entries.length) {
@@ -2024,6 +2154,9 @@ function handleOrientationChange() {
   }
 }
 
+/**
+ * 🔹 Gestion de l'ajout (Création) - ENVOIE AU SERVEUR D'ABORD
+ */
 async function handleSubmit() {
   const nom = document.getElementById('nom').value.trim();
   const adresse = document.getElementById('adresse').value.trim();
@@ -2035,6 +2168,7 @@ async function handleSubmit() {
   const photoInput = document.getElementById('photo');
   const photoFile = photoInput.files[0];
 
+  // Validation
   if (!nom || !type) {
     showFormMessage('الاسم ونوع الشجرة مطلوبان', 'error');
     hapticFeedback('error');
@@ -2058,70 +2192,31 @@ async function handleSubmit() {
     return;
   }
 
-  hapticFeedback('success');
-
-  // 1. Convertir en base64 pour localStorage (affichage local)
-  let photoBase64 = null;
-  if (photoFile) {
-    try {
-      photoBase64 = await convertImageToBase64(photoFile);
-    } catch (error) {
-      console.error('Erreur lors de la conversion de la photo:', error);
-    }
-  }
-
-  // 2. Upload l'image vers le serveur pour obtenir une URL (pas de base64 en DB)
-  let photoUrl = null;
-  if (photoFile) {
-    showFormMessage('جاري رفع الصورة...', 'alert');
-    photoUrl = await uploadImageToServer(photoFile);
-    if (!photoUrl && photoBase64) {
-      // Fallback: si l'upload échoue, on utilisera le base64 localement seulement
-      console.warn('Upload échoué, utilisation du base64 pour affichage local uniquement');
-    }
-  }
-
-  const submissionDate = datePlanted || new Date().toISOString();
-  const id = 'e_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8);
-
-  // Pour l'affichage local, on utilise photoUrl si disponible, sinon photoBase64
-  const photoForDisplay = photoUrl || photoBase64;
-  
-  // Récupérer la Wilaya sélectionnée manuellement via TomSelect (AVANT de créer entry)
+  // Récupérer la Wilaya sélectionnée manuellement via TomSelect
   let selectedWilaya = '';
   const wilayaSelect = document.getElementById('wilaya_select');
   if (wilayaSelect && wilayaSelect.tomselect) {
       const val = wilayaSelect.tomselect.getValue();
       const item = wilayaSelect.tomselect.getItem(val);
       if (item) {
-          // Format "01 - أدرار" -> on garde tout pour avoir "01 - أدرار" comme demandé
           selectedWilaya = item.textContent.trim(); 
       }
   }
 
-  // On inclut la wilaya sélectionnée dans l'objet local
-  const entry = { 
-      id, 
-      nom, 
-      adresse, 
-      type, 
-      quantite, 
-      lat, 
-      lng, 
-      date: submissionDate, 
-      photo: photoForDisplay, 
-      createdAt: Date.now(),
-      state: selectedWilaya // Wilaya pour le graphique
-  };
-  entries.unshift(entry);
-  addEntryToMap(entry);
-  if (tempMarker) { map.removeLayer(tempMarker); tempMarker = null; }
-  map.setView([lat, lng], 13);
-  saveToStorage();
-  applyFiltersAndSort();
-  showDetailPanel(id);
+  // Upload l'image vers le serveur pour obtenir une URL
+  let photoUrl = null;
+  if (photoFile) {
+    showFormMessage('جاري رفع الصورة...', 'alert');
+    photoUrl = await uploadImageToServer(photoFile);
+    if (!photoUrl) {
+      showFormMessage('فشل رفع الصورة. حاول مرة أخرى.', 'error');
+      return;
+    }
+  }
 
-  // Pour le serveur, on envoie l'URL et on force la city/state avec la sélection manuelle
+  const submissionDate = datePlanted || new Date().toISOString();
+
+  // 🔹 Préparer les données pour le SERVEUR
   const dataToSend = { 
       nom, 
       adresse, 
@@ -2131,34 +2226,52 @@ async function handleSubmit() {
       lng, 
       date: submissionDate, 
       photo: photoUrl,
-      // On envoie la wilaya sélectionnée comme 'state' prioritaire
-      state: selectedWilaya 
+      state: selectedWilaya,
+      createdAt: new Date().toISOString()
   };
+
   console.log("📤 Envoi vers le serveur :", dataToSend);
+  showFormMessage('جاري الإرسال...', 'alert');
 
   try {
-    const response = await fetch("https://greenalgeria-backend.onrender.com/api/contributions", {
+    const response = await fetch(API_URL, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(dataToSend)
     });
 
     const result = await response.json().catch(() => ({}));
+    
     if (response.ok && result.success) {
       console.log("✅ Arbre enregistré avec ID :", result.insertedId);
-      alert("Arbre ajouté avec succès !");
+      hapticFeedback('success');
       showFormMessage('✅ تم إضافة الشجرة بنجاح!', 'success');
+      
+      // Retirer le marqueur temporaire
+      if (tempMarker) { map.removeLayer(tempMarker); tempMarker = null; }
+      
+      // Centrer la carte sur la nouvelle position
+      map.setView([lat, lng], 13);
+      
+      // 🔹 Rafraîchir les données depuis le serveur pour avoir l'entrée avec son vrai ID
+      await refreshFromServer();
+      
+      // Réinitialiser le formulaire
       resetForm();
       validateForm();
+      
+      // Afficher la liste des contributions
+      switchPanel('list-panel');
+      
     } else {
       console.error("❌ Erreur serveur :", result.error || 'Réponse invalide');
-      alert("Erreur lors de l\'ajout de l\'arbre !");
-      showFormMessage('حدث خطأ عند الاتصال بالخادم', 'error');
+      showFormMessage('حدث خطأ عند الاتصال بالخادم: ' + (result.error || ''), 'error');
+      hapticFeedback('error');
     }
   } catch (err) {
     console.error("❌ Erreur fetch :", err);
-    alert("Impossible de contacter le serveur !");
-    showFormMessage('تعذر الاتصال بالخادم. حاول لاحقاً.', 'error');
+    showFormMessage('تعذر الاتصال بالخادم. تحقق من اتصال الإنترنت.', 'error');
+    hapticFeedback('error');
   }
 }
 
