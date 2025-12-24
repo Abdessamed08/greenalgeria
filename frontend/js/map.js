@@ -1173,55 +1173,29 @@ function updateCharts(data) {
   ];
 
   // --- 2. Préparation des données pour les WILAYAS (Barres) ---
+  // On utilise UNIQUEMENT le champ 'state' qui contient la Wilaya sélectionnée
+  // Format attendu: "01 - أدرار", "16 - الجزائر", etc.
   const wilayaCounts = {};
+  
   data.forEach(e => {
-    // 1. Essayer de trouver une mention de "Wilaya" dans l'adresse complète si disponible
-    // Sinon utiliser le champ city ou district s'il contient "Wilaya"
-    let potentialWilaya = null;
-
-    // Si on a une adresse complète stockée (souvent le cas dans display_name de Nominatim mais ici on a 'adresse')
-    // On va faire une heuristique sur les champs disponibles
+    // On ne prend que le champ state (Wilaya sélectionnée manuellement)
+    const wilaya = e.state;
     
-    // Liste des champs à vérifier
-    const candidates = [e.state, e.city, e.district, e.adresse];
+    // Vérifier que c'est une vraie Wilaya (commence par un code numérique)
+    // Format: "01 - أدرار" ou "16 - الجزائر"
+    if (!wilaya || typeof wilaya !== 'string') return;
     
-    for (const cand of candidates) {
-      if (cand && typeof cand === 'string' && cand.toLowerCase().includes('wilaya')) {
-        potentialWilaya = cand;
-        break; 
-      }
-    }
-
-    // Si toujours rien, on regarde si 'city' est une wilaya connue (liste simplifiée)
-    // C'est utile pour les anciennes données où on a juste mis "Alger" ou "Oran"
-    if (!potentialWilaya && e.city) {
-        // Ceci est une détection simple, idéalement on aurait une liste complète des 58 wilayas
-        // Mais pour l'instant on accepte le nom de la ville comme proxy de la wilaya 
-        // SI et SEULEMENT SI ce n'est pas un nom de quartier évident
-        potentialWilaya = e.city;
-    }
-
-    if (!potentialWilaya) return; // On ignore si on ne peut pas déterminer la Wilaya
-
-    // Nettoyage: On ne garde que le nom propre
-    // Ex: "Wilaya d'Alger" -> "Alger"
-    // Ex: "Commune de Sétif" -> "Sétif" (si c'était dans city)
-    let cleanName = potentialWilaya
-        .replace(/wilaya de/yi, '')
-        .replace(/wilaya/yi, '')
-        .replace(/commune de/yi, '')
-        .replace(/^d'/yi, '') // d'Alger -> Alger
-        .trim();
-
-    // Correction majuscule/minuscule pour grouper "Alger" et "alger"
-    // En arabe c'est moins un problème, mais pour le français/anglais si.
-    // On capitalise la première lettre
-    cleanName = cleanName.charAt(0).toUpperCase() + cleanName.slice(1);
-
-    wilayaCounts[cleanName] = (wilayaCounts[cleanName] || 0) + (parseInt(e.quantite) || 1);
+    // Regex pour détecter le format Wilaya: commence par 1-2 chiffres
+    const isValidWilaya = /^\d{1,2}\s*-/.test(wilaya.trim());
+    if (!isValidWilaya) return; // Ignorer les anciennes données sans format Wilaya
+    
+    // Utiliser le nom complet comme clé (ex: "01 - أدرار")
+    const wilayaName = wilaya.trim();
+    
+    wilayaCounts[wilayaName] = (wilayaCounts[wilayaName] || 0) + (parseInt(e.quantite) || 1);
   });
 
-  // Top 7 Wilayas seulement
+  // Top 7 Wilayas (triées par nombre d'arbres décroissant)
   const sortedWilayas = Object.entries(wilayaCounts)
     .sort((a, b) => b[1] - a[1])
     .slice(0, 7);
