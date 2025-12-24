@@ -233,6 +233,10 @@ async function refreshFromServer() {
       entries.forEach(e => addEntryToMap(e));
       applyFiltersAndSort();
       saveToLocalCache();
+      
+      // 🔹 Forcer la mise à jour des graphiques après rafraîchissement
+      console.log('📊 Mise à jour des graphiques avec', entries.length, 'entrées');
+      updateCharts(entries);
     }
   } catch (error) {
     console.error('❌ Erreur lors du rafraîchissement:', error);
@@ -1823,6 +1827,14 @@ function switchPanel(targetId, clickedElement = null) {
   if (targetId === 'list-panel' || targetId === 'stats-panel') {
     try {
       applyFiltersAndSort();
+      
+      // 🔹 Forcer la mise à jour des graphiques quand on ouvre les Stats
+      if (targetId === 'stats-panel') {
+        setTimeout(() => {
+          console.log('📊 Actualisation graphiques (stats-panel ouvert)');
+          updateCharts(entries);
+        }, 100); // Petit délai pour que le panneau soit visible
+      }
     } catch (err) {
       console.error('Error updating list/stats:', err);
       toast('حدث خطأ في عرض البيانات', 'error');
