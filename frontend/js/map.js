@@ -2113,6 +2113,18 @@ async function handleSubmit() {
   // Pour l'affichage local, on utilise photoUrl si disponible, sinon photoBase64
   const photoForDisplay = photoUrl || photoBase64;
   
+  // Récupérer la Wilaya sélectionnée manuellement via TomSelect (AVANT de créer entry)
+  let selectedWilaya = '';
+  const wilayaSelect = document.getElementById('wilaya_select');
+  if (wilayaSelect && wilayaSelect.tomselect) {
+      const val = wilayaSelect.tomselect.getValue();
+      const item = wilayaSelect.tomselect.getItem(val);
+      if (item) {
+          // Format "01 - أدرار" -> on garde tout pour avoir "01 - أدرار" comme demandé
+          selectedWilaya = item.textContent.trim(); 
+      }
+  }
+
   // On inclut la wilaya sélectionnée dans l'objet local
   const entry = { 
       id, 
@@ -2125,7 +2137,7 @@ async function handleSubmit() {
       date: submissionDate, 
       photo: photoForDisplay, 
       createdAt: Date.now(),
-      state: selectedWilaya // Ajout pour affichage immédiat dans le graphique
+      state: selectedWilaya // Wilaya pour le graphique
   };
   entries.unshift(entry);
   addEntryToMap(entry);
@@ -2134,20 +2146,6 @@ async function handleSubmit() {
   saveToStorage();
   applyFiltersAndSort();
   showDetailPanel(id);
-
-  // Récupérer la Wilaya sélectionnée manuellement via TomSelect
-  // On accède à l'instance stockée ou on lit le texte si possible
-  let selectedWilaya = '';
-  const wilayaSelect = document.getElementById('wilaya_select');
-  if (wilayaSelect && wilayaSelect.tomselect) {
-      const val = wilayaSelect.tomselect.getValue();
-      const item = wilayaSelect.tomselect.getItem(val);
-      if (item) {
-          // Format "01 - Adrar" -> on garde tout ou juste "Adrar" selon préférence
-          // Ici on garde tout pour avoir "01 Adrar" comme demandé
-          selectedWilaya = item.textContent.trim(); 
-      }
-  }
 
   // Pour le serveur, on envoie l'URL et on force la city/state avec la sélection manuelle
   const dataToSend = { 
