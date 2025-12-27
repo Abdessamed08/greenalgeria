@@ -11,7 +11,6 @@ let entries = [];
 let tileDefault, tileToner;
 // Variables globales pour les graphiques
 let typesChartInstance = null;
-let citiesChartInstance = null;
 let geojsonBounds = null;
 let tempMarker = null;
 // Map selection mode removed
@@ -1306,46 +1305,6 @@ function updateCharts(data) {
     '#64748b'  // Gris ardoise (Autre)
   ];
 
-  // --- 2. Préparation des données pour les RÉGIONS (Barres) ---
-  // Priorité: state (Wilaya) > city > district
-  const regionCounts = {};
-  
-  data.forEach(e => {
-    // Chercher la meilleure donnée de localisation disponible
-    let region = null;
-    
-    // 1. Priorité au champ state (Wilaya sélectionnée manuellement)
-    if (e.state && typeof e.state === 'string' && e.state.trim().length > 0) {
-      region = e.state.trim();
-    }
-    // 2. Fallback sur city (pour les anciennes données)
-    else if (e.city && typeof e.city === 'string' && e.city.trim().length > 0) {
-      region = e.city.trim();
-    }
-    // 3. Fallback sur district
-    else if (e.district && typeof e.district === 'string' && e.district.trim().length > 0) {
-      region = e.district.trim();
-    }
-    
-    // Ignorer si aucune région trouvée
-    if (!region) return;
-    
-    // Nettoyer et normaliser
-    region = region.charAt(0).toUpperCase() + region.slice(1);
-    
-    regionCounts[region] = (regionCounts[region] || 0) + (parseInt(e.quantite) || 1);
-  });
-
-  // Top 7 Régions (triées par nombre d'arbres décroissant)
-  const sortedRegions = Object.entries(regionCounts)
-    .sort((a, b) => b[1] - a[1])
-    .slice(0, 7);
-
-  const regionLabels = sortedRegions.map(item => item[0]);
-  const regionData = sortedRegions.map(item => item[1]);
-  
-  // Debug pour voir les données
-  console.log('📊 Données graphique régions:', { regionCounts, sortedRegions });
 
 
   // --- 3. Rendu / Mise à jour du Graphique TYPES (Donut) ---
@@ -1400,70 +1359,6 @@ function updateCharts(data) {
     });
   }
 
-  // --- 4. Rendu / Mise à jour du Graphique RÉGIONS (Barres) ---
-  const ctxCities = document.getElementById('citiesChart');
-  if (ctxCities) {
-    if (citiesChartInstance) {
-      citiesChartInstance.destroy();
-    }
-
-    // Si pas de données, afficher un message
-    if (regionLabels.length === 0) {
-      citiesChartInstance = new Chart(ctxCities, {
-        type: 'bar',
-        data: {
-          labels: ['لا توجد بيانات'],
-          datasets: [{
-            label: 'عدد الأشجار',
-            data: [0],
-            backgroundColor: '#d1d5db',
-            borderRadius: 4
-          }]
-        },
-        options: {
-          indexAxis: 'y',
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: { legend: { display: false } },
-          scales: { x: { display: false }, y: { display: true } }
-        }
-      });
-      return;
-    }
-
-    citiesChartInstance = new Chart(ctxCities, {
-      type: 'bar',
-      data: {
-        labels: regionLabels,
-        datasets: [{
-          label: 'عدد الأشجار',
-          data: regionData,
-          backgroundColor: '#059669', // Vert uni pour les barres
-          borderRadius: 4,
-          barThickness: 'flex',
-          maxBarThickness: 30
-        }]
-      },
-      options: {
-        indexAxis: 'y', // Barres horizontales pour mieux lire les noms longs
-        responsive: true,
-        maintainAspectRatio: false,
-        scales: {
-          x: {
-            grid: { display: false },
-            beginAtZero: true
-          },
-          y: {
-            grid: { display: false },
-            ticks: { autoSkip: false, font: { size: 11 } }
-          }
-        },
-        plugins: {
-          legend: { display: false } // Pas besoin de légende pour une seule série
-        }
-      }
-    });
-  }
 }
 
 /* --------------------------------- */
