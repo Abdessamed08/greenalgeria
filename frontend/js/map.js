@@ -1503,15 +1503,8 @@ function updateMapMarkers(visibleIds) {
 
 function toggleSidebar(visible, initialPanel = 'form-panel') {
   const sidebar = document.getElementById('sidebar');
-  const mobileNav = document.getElementById('mobileNav');
   const isMobile = window.matchMedia('(max-width: 1024px)').matches;
 
-  // DEBUG: Vérifier quel panneau est demandé
-  if (isMobile && visible) {
-    console.log('toggleSidebar MOBILE - panneau demandé:', initialPanel);
-  }
-
-  // Sur desktop, on change juste le panneau sans toggle la visibilité
   if (!isMobile) {
     if (visible && initialPanel) {
       switchPanel(initialPanel);
@@ -1520,59 +1513,27 @@ function toggleSidebar(visible, initialPanel = 'form-panel') {
   }
 
   if (visible) {
-    // Sécurité: si un swipe avait mis des styles inline, on les nettoie
-    sidebar.style.transition = '';
-    sidebar.style.transform = '';
-    sidebar.style.willChange = '';
-
     sidebar.classList.add('visible');
     document.body.classList.add('sidebar-open');
-    // Mobile UX: ne montrer que l'onglet actif dans la barre mobile
-    if (mobileNav) mobileNav.classList.add('single-only');
-    // Trouver l'onglet correspondant pour garantir le bon "active" - FORCER le changement
-    const clickedNavItem = document.querySelector(`.mobile-nav-item[data-target="${initialPanel}"]`);
-    // S'assurer que tous les onglets sont désactivés d'abord
-    document.querySelectorAll('.mobile-nav-item').forEach(item => {
-      item.classList.remove('active');
-      item.setAttribute('aria-selected', 'false');
-    });
-    // Activer le bon onglet AVANT d'appeler switchPanel
-    if (clickedNavItem) {
-      clickedNavItem.classList.add('active');
-      clickedNavItem.setAttribute('aria-selected', 'true');
+    switchPanel(initialPanel);
+    
+    let overlay = document.querySelector('.sidebar-overlay');
+    if (!overlay) {
+      overlay = document.createElement('div');
+      overlay.className = 'sidebar-overlay';
+      overlay.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:1400;display:none;backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px);opacity:0;transition:opacity 0.3s ease;';
+      document.body.appendChild(overlay);
+      overlay.onclick = () => toggleSidebar(false);
     }
-    // Maintenant changer le panneau
-    switchPanel(initialPanel, clickedNavItem || null);
-    // Ne pas bloquer le scroll du body pour permettre l'interaction avec la carte
-    // document.body.style.overflow = 'hidden'; // Commenté pour permettre le scroll de la carte
-    // Overlay optionnel et transparent pour ne pas bloquer les interactions
-    const mapwrap = document.querySelector('.mapwrap');
-    if (mapwrap) {
-      let overlay = mapwrap.querySelector('.sidebar-overlay');
-      if (!overlay) {
-        overlay = document.createElement('div');
-        overlay.className = 'sidebar-overlay';
-        // Overlay transparent avec pointer-events: none pour ne pas bloquer la carte
-        overlay.style.cssText = 'position: absolute; inset: 0; background: rgba(0, 0, 0, 0.1); z-index: 1400; pointer-events: none; animation: fadeIn 0.3s ease-out;';
-        mapwrap.appendChild(overlay);
-      }
-      overlay.style.display = 'block';
-    }
+    overlay.style.display = 'block';
+    setTimeout(() => overlay.style.opacity = '1', 10);
   } else {
-    // Sécurité: si un swipe avait mis des styles inline, on les nettoie
-    sidebar.style.transition = '';
-    sidebar.style.transform = '';
-    sidebar.style.willChange = '';
-
     sidebar.classList.remove('visible');
     document.body.classList.remove('sidebar-open');
-    document.body.style.overflow = '';
-    // Garder "single-only" même après fermeture (comportement demandé)
-    // => l'onglet visible reste celui actif (Statistiques / Contributions / Ajouter).
-    // Retirer overlay
     const overlay = document.querySelector('.sidebar-overlay');
     if (overlay) {
-      overlay.style.display = 'none';
+      overlay.style.opacity = '0';
+      setTimeout(() => overlay.style.display = 'none', 300);
     }
   }
 }
@@ -1663,76 +1624,33 @@ function switchPanel(targetId, clickedElement = null) {
   const panels = document.querySelectorAll('.mobile-panel');
   const navItems = document.querySelectorAll('.mobile-nav-item');
   const detailNav = document.getElementById('detailNav');
-  const mobileNav = document.getElementById('mobileNav');
-  const sidebar = document.getElementById('sidebar');
-  const isDetailPanel = targetId === 'detail-panel';
 
-  // DEBUG: Vérifier quel panneau est appelé
-  console.log('switchPanel appelé avec:', targetId);
-
-  // Haptic feedback sur mobile
   hapticFeedback('light');
 
-  // 1. Gérer l'affichage du panneau (Simple et robuste)
   panels.forEach(panel => {
-    if (panel.id === targetId) {
-      panel.style.display = 'block';
-      panel.style.opacity = '1';
-      panel.style.transform = 'none';
-      // Force repaint
-      void panel.offsetWidth;
-    } else {
-      panel.style.display = 'none';
-    }
+    panel.style.display = (panel.id === targetId) ? 'block' : 'none';
   });
 
-  // 2. Gérer la navigation mobile
   navItems.forEach(item => {
     item.classList.remove('active');
-    item.setAttribute('aria-selected', 'false');
+    if (item.dataset.target === targetId) {
+      item.classList.add('active');
+    }
   });
 
-  if (isDetailPanel) {
-    // Le panneau Détail est un onglet "spécial" qui apparaît temporairement
-    detailNav.style.display = 'flex';
-    detailNav.classList.add('active');
-    detailNav.setAttribute('aria-selected', 'true');
-  } else {
-    // Les onglets normaux
+  if (targetId === 'detail-panel') {
+    if (detailNav) {
+      detailNav.style.display = 'flex';
+      detailNav.classList.add('active');
+    }
+  } else if (detailNav) {
     detailNav.style.display = 'none';
-    let currentItem = clickedElement;
-    if (!currentItem) {
-      currentItem = document.querySelector(`.mobile-nav-item[data-target="${targetId}"]`);
-    }
-    if (currentItem) {
-      currentItem.classList.add('active');
-      currentItem.setAttribute('aria-selected', 'true');
-    }
   }
 
-  // 2.5. Mobile: afficher uniquement l'onglet actif (persistant, même après fermeture)
-  // (ce que tu veux: Statistiques => فقط Statistiques, Contributions => فقط Contributions, etc.)
-  const isMobile = window.matchMedia('(max-width: 1024px)').matches;
-  if (isMobile && mobileNav) {
-    mobileNav.classList.add('single-only');
-  }
-
-
-  // 3. Assurer la mise à jour des données lors du changement vers l'onglet List/Stats
   if (targetId === 'list-panel' || targetId === 'stats-panel') {
-    try {
-      applyFiltersAndSort();
-      
-      // 🔹 Forcer la mise à jour des graphiques quand on ouvre les Stats
-      if (targetId === 'stats-panel') {
-        setTimeout(() => {
-          console.log('📊 Actualisation graphiques (stats-panel ouvert)');
-          updateCharts(entries);
-        }, 100); // Petit délai pour que le panneau soit visible
-      }
-    } catch (err) {
-      console.error('Error updating list/stats:', err);
-      toast('حدث خطأ في عرض البيانات', 'error');
+    applyFiltersAndSort();
+    if (targetId === 'stats-panel') {
+      setTimeout(() => updateCharts(entries), 150);
     }
   }
 }
