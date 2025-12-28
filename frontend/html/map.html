@@ -106,79 +106,72 @@
         <div class="panel mobile-panel" id="form-panel">
           <h3 id="form-title">سجل شجرتك الجديدة</h3>
           <form id="treeForm" onsubmit="event.preventDefault(); handleSubmit();" aria-live="polite">
-            
-            <div class="form-group-card">
-              <div class="field">
-                <label for="nom"><i class="fas fa-user-circle" style="margin-left:8px; color:var(--color-primary);"></i> الاسم الكامل / الجهة <span class="required">*</span></label>
-                <input id="nom" name="nom" type="text" placeholder="مثال: محمد بن — جمعية زراعة" required
-                  aria-required="true" />
-                <div class="help-text">
-                  <i class="fas fa-lightbulb"></i>
-                  <span>يمكنك إدخال اسمك الشخصي أو اسم الجمعية/المؤسسة</span>
-                </div>
+            <div class="field">
+              <label for="nom"><i class="fas fa-user-circle" style="margin-left:6px; color:var(--color-primary);"></i> الاسم الكامل / الجهة <span class="required">*</span></label>
+              <input id="nom" name="nom" type="text" placeholder="مثال: محمد بن — جمعية زراعة" required
+                aria-required="true" />
+              <div class="help-text">
+                <i class="fas fa-lightbulb"></i>
+                <span>يمكنك إدخال اسمك الشخصي أو اسم الجمعية/المؤسسة</span>
               </div>
             </div>
-
-            <div class="form-group-card">
-              <div class="field">
-                <label><i class="fas fa-map-marker-alt" style="margin-left:8px; color:var(--color-primary);"></i> الموقع الإداري <span class="required">*</span></label>
-                <div class="selection-group">
-                  <select id="wilaya_select" placeholder="الولاية" autocomplete="off"></select>
-                  <select id="daira_select" placeholder="الدائرة" autocomplete="off"></select>
-                  <select id="commune_select" placeholder="البلدية" autocomplete="off"></select>
-                </div>
+            <div class="field">
+              <label><i class="fas fa-map-marker-alt" style="margin-left:6px; color:var(--color-primary);"></i> الموقع الإداري <span class="required">*</span></label>
+              <div style="display: flex; gap: 10px; flex-direction: column;">
+                <select id="wilaya_select" placeholder="الولاية" autocomplete="off"></select>
+                <select id="daira_select" placeholder="الدائرة" autocomplete="off"></select>
+                <select id="commune_select" placeholder="البلدية" autocomplete="off"></select>
               </div>
             </div>
-
-            <div class="form-group-card">
-              <div class="row">
-                <div class="col field">
-                  <label for="type_arbre"><i class="fas fa-leaf" style="margin-left:8px; color:var(--color-primary);"></i> نوع الشجرة <span class="required">*</span></label>
-                  <select id="type_arbre" required aria-required="true">
-                    <option value="">اختر نوع</option>
-                    <option>صنوبر حلبي</option>
-                    <option>أرز الأطلس</option>
-                    <option>زيتون</option>
-                    <option>نخيل</option>
-                    <option>بلوط</option>
-                    <option>أخرى</option>
-                  </select>
-                </div>
-                <div class="col field">
-                  <label for="quantite">عدد الأشجار <span class="required">*</span></label>
-                  <input id="quantite" type="number" min="1" placeholder="العدد" required aria-required="true"
-                    value="1" />
-                </div>
-              </div>
-              
-              <div class="field">
-                <label for="date_planted"><i class="fas fa-calendar-alt" style="margin-left:8px; color:var(--color-primary);"></i> تاريخ الزرع</label>
-                <input id="date_planted" type="date" />
-              </div>
-
-              <div class="field">
-                <label for="photo"><i class="fas fa-camera" style="margin-left:8px; color:var(--color-primary);"></i> صورة بعد الزرع (اختياري)</label>
-                <input id="photo" type="file" accept="image/*" />
-                <img id="preview" class="preview" alt="معاينة الصورة" style="display:none;" />
-              </div>
-            </div>
-
             <!-- Champ adresse calculé automatiquement et caché -->
             <input id="adresse" name="adresse" type="hidden" />
-
+            <div class="row">
+              <div class="col field">
+                <label for="type_arbre"><i class="fas fa-seedling" style="margin-left:6px; color:var(--color-secondary);"></i> نوع الشجرة <span class="required">*</span></label>
+                <select id="type_arbre" required aria-required="true">
+                  <option value="">اختر نوع</option>
+                  <option>صنوبر حلبي</option>
+                  <option>أرز الأطلس</option>
+                  <option>زيتون</option>
+                  <option>نخيل</option>
+                  <option>بلوط</option>
+                  <option>أخرى</option>
+                </select>
+              </div>
+              <div class="col field">
+                <label for="quantite"><i class="fas fa-hashtag" style="margin-left:6px; color:var(--color-secondary);"></i> عدد الأشجار المزروعة <span class="required">*</span></label>
+                <input id="quantite" type="number" min="1" placeholder="العدد" required aria-required="true"
+                  value="1" />
+              </div>
+            </div>
+            <div class="row">
+              <div class="col field">
+                <label for="date_planted"><i class="fas fa-calendar-alt" style="margin-left:6px; color:var(--color-secondary);"></i> تاريخ الزرع</label>
+                <input id="date_planted" type="date" />
+              </div>
+            </div>
+            <div class="field">
+              <label for="photo"><i class="fas fa-camera" style="margin-left:6px; color:var(--color-secondary);"></i> صورة بعد الزرع (اختياري)</label>
+              <input id="photo" type="file" accept="image/*" />
+              <img id="preview" class="preview" alt="معاينة الصورة" style="display:none;" />
+              <div class="help-text">
+                <i class="fas fa-camera"></i>
+                <span>أضف صورة للشجرة المزروعة لتوثيق أفضل. الصيغ المدعومة: JPG, PNG, WebP</span>
+              </div>
+            </div>
             <div class="field location-group">
-              <label><i class="fas fa-crosshairs" style="margin-left:8px; color:var(--color-primary);"></i> تحديد الموقع بدقة <span class="required">*</span></label>
+              <label><i class="fas fa-map-pin" style="margin-left:6px; color:var(--color-secondary);"></i> موقع الزرع <span class="required">*</span></label>
+              <!-- Coordonnées (supprimées du HTML, gérées en JS interne) -->
               <div class="form-button-group">
                 <button type="button" class="btn primary" id="geolocationBtn" aria-label="تحديد موقعي الحالي">
-                  <i class="fas fa-location-arrow"></i> تحديد موقعي الحالي عبر GPS
+                  <i class="fas fa-location-arrow"></i> تحديد موقعي الحالي
                 </button>
 
                 <button type="submit" class="btn secondary" title="أضف الشجرة" disabled aria-disabled="true">
-                  <i class="fas fa-plus-circle"></i> تأكيد وإضافة الشجرة
+                  <i class="fas fa-check-circle"></i> تأكيد وإضافة الشجرة
                 </button>
-                
                 <button type="button" class="btn ghost small-action" onclick="resetForm();" aria-label="مسح الحقول">
-                  <i class="fas fa-redo"></i> إعادة تعيين جميع الحقول
+                  <i class="fas fa-redo"></i> إعادة تعيين
                 </button>
               </div>
               <div id="locationStatus" class="muted" aria-live="polite" style="margin-top:8px;"></div>
