@@ -1810,13 +1810,13 @@ input[type="file"] { padding: 8px 12px; } /* Ajustement pour le type file */
     pointer-events: auto !important;
   }
   
-  /* Sidebar mobile am├®lior├®e avec swipe */
+  /* Sidebar mobile améliorée avec swipe */
   .sidebar {
     position: fixed; 
     left: 0; 
     top: 0;
     bottom: 0;
-    width: 80%;
+    width: 85%;
     max-width: 380px;
     height: 100vh;
     border-top-left-radius: 0;
@@ -1828,15 +1828,16 @@ input[type="file"] { padding: 8px 12px; } /* Ajustement pour le type file */
     z-index: 1500;
     transform: translateX(-100%); 
     visibility: hidden;
-    overflow: hidden;
+    overflow: hidden; /* Important pour que sidebar-content gère le scroll */
+    display: flex;
+    flex-direction: column;
     /* Plus rapide sur mobile (fermeture plus "snappy") */
     transition: transform 0.16s cubic-bezier(0.4, 0, 0.2, 1),
                 visibility 0s linear 0.16s;
-    /* Permettre les interactions avec la carte derri├¿re */
+    /* Permettre les interactions avec la carte derrière */
     pointer-events: auto;
 
-    /* Mobile comfort: cleaner surface + better scroll behavior */
-    background: rgba(255, 255, 255, 0.96);
+    background: rgba(255, 255, 255, 0.98);
     border: 1px solid rgba(148, 163, 184, 0.22);
     backdrop-filter: blur(18px);
     -webkit-backdrop-filter: blur(18px);
@@ -2187,20 +2188,6 @@ input[type="file"] { padding: 8px 12px; } /* Ajustement pour le type file */
   .form-button-group {
     flex-wrap: wrap;
     gap: 10px;
-  }
-
-  /* Sticky primary actions (comfortable one-hand) */
-  #treeForm .form-button-group {
-    position: sticky;
-    bottom: calc(10px + var(--safe-bottom));
-    z-index: 5;
-    padding: 10px;
-    border-radius: 16px;
-    background: rgba(255, 255, 255, 0.92);
-    border: 1px solid rgba(148, 163, 184, 0.22);
-    box-shadow: 0 14px 34px rgba(15, 23, 42, 0.12);
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
   }
 
   .btn {
@@ -2731,21 +2718,22 @@ input[type="file"] { padding: 8px 12px; } /* Ajustement pour le type file */
 
   /* Boutons d'action Ultra Sticky */
   .form-actions-sticky {
-    position: sticky;
-    bottom: -24px;
-    background: white;
-    margin: 30px -24px -24px;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: #ffffff;
+    padding: 15px 20px calc(20px + var(--safe-bottom));
     display: flex;
     flex-direction: row-reverse;
     gap: 12px;
-    box-shadow: 0 -10px 30px rgba(0, 0, 0, 0.08);
-    border-radius: 24px 24px 0 0;
-    padding: 20px 24px 35px;
-    z-index: 100;
+    box-shadow: 0 -15px 35px rgba(0, 0, 0, 0.12);
+    z-index: 1000;
+    border-top: 1px solid rgba(0, 0, 0, 0.05);
   }
 
   .btn-submit {
-    flex: 1.6;
+    flex: 1.8;
     background: var(--color-secondary-gradient);
     border: none;
     border-radius: 16px;
@@ -2758,7 +2746,7 @@ input[type="file"] { padding: 8px 12px; } /* Ajustement pour le type file */
     justify-content: center;
     gap: 8px;
     box-shadow: 
-      0 12px 25px rgba(16, 185, 129, 0.3),
+      0 10px 20px rgba(16, 185, 129, 0.3),
       inset 0 2px 0 rgba(255, 255, 255, 0.2);
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     cursor: pointer;
@@ -2791,7 +2779,7 @@ input[type="file"] { padding: 8px 12px; } /* Ajustement pour le type file */
   .btn-submit:not(:disabled):active {
     transform: scale(0.97);
     box-shadow: 
-      0 8px 20px rgba(16, 185, 129, 0.3);
+      0 8px 15px rgba(16, 185, 129, 0.3);
   }
 
   .btn-submit:disabled {
@@ -2800,12 +2788,12 @@ input[type="file"] { padding: 8px 12px; } /* Ajustement pour le type file */
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
     cursor: not-allowed;
     text-shadow: none;
-    flex: 1.6;
+    flex: 1.8;
   }
 
   .btn-reset {
     flex: 1;
-    background: #f8fafc;
+    background: #f1f5f9;
     border: 2px solid #e2e8f0;
     border-radius: 16px;
     padding: 16px 10px;
@@ -2823,7 +2811,7 @@ input[type="file"] { padding: 8px 12px; } /* Ajustement pour le type file */
   }
 
   .btn-reset:active {
-    background: #f1f5f9;
+    background: #e2e8f0;
     transform: scale(0.97);
   }
 
