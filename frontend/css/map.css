@@ -1828,7 +1828,7 @@ input[type="file"] { padding: 8px 12px; } /* Ajustement pour le type file */
     z-index: 1500;
     transform: translateX(-100%); 
     visibility: hidden;
-    overflow-y: auto;
+    overflow: hidden;
     /* Plus rapide sur mobile (fermeture plus "snappy") */
     transition: transform 0.16s cubic-bezier(0.4, 0, 0.2, 1),
                 visibility 0s linear 0.16s;
@@ -2732,42 +2732,41 @@ input[type="file"] { padding: 8px 12px; } /* Ajustement pour le type file */
   /* Boutons d'action Ultra Sticky */
   .form-actions-sticky {
     position: sticky;
-    bottom: 0;
-    background: linear-gradient(to top, white 0%, white 90%, transparent 100%);
-    padding: 20px 0 0;
+    bottom: -24px;
+    background: white;
     margin: 30px -24px -24px;
     display: flex;
-    flex-direction: column;
-    gap: 14px;
-    box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.08);
+    flex-direction: row-reverse;
+    gap: 12px;
+    box-shadow: 0 -10px 30px rgba(0, 0, 0, 0.08);
     border-radius: 24px 24px 0 0;
-    padding: 24px 24px 32px;
-    z-index: 10;
+    padding: 20px 24px 35px;
+    z-index: 100;
   }
 
   .btn-submit {
-    width: 100%;
+    flex: 1.6;
     background: var(--color-secondary-gradient);
     border: none;
-    border-radius: 18px;
-    padding: 22px 24px;
+    border-radius: 16px;
+    padding: 16px 12px;
     color: white;
-    font-size: 1.2rem;
+    font-size: 1rem;
     font-weight: 900;
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 12px;
+    gap: 8px;
     box-shadow: 
-      0 16px 40px rgba(16, 185, 129, 0.4),
-      0 4px 12px rgba(16, 185, 129, 0.2),
+      0 12px 25px rgba(16, 185, 129, 0.3),
       inset 0 2px 0 rgba(255, 255, 255, 0.2);
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     cursor: pointer;
     letter-spacing: -0.3px;
-    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
     position: relative;
     overflow: hidden;
+    white-space: nowrap;
   }
 
   .btn-submit::before {
@@ -2786,14 +2785,13 @@ input[type="file"] { padding: 8px 12px; } /* Ajustement pour le type file */
   }
 
   .btn-submit i {
-    font-size: 1.3rem;
+    font-size: 1.1rem;
   }
 
   .btn-submit:not(:disabled):active {
     transform: scale(0.97);
     box-shadow: 
-      0 12px 30px rgba(16, 185, 129, 0.35),
-      0 2px 8px rgba(16, 185, 129, 0.15);
+      0 8px 20px rgba(16, 185, 129, 0.3);
   }
 
   .btn-submit:disabled {
@@ -2802,31 +2800,31 @@ input[type="file"] { padding: 8px 12px; } /* Ajustement pour le type file */
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
     cursor: not-allowed;
     text-shadow: none;
+    flex: 1.6;
   }
 
   .btn-reset {
-    width: 100%;
-    background: white;
-    border: 2.5px solid #e5e7eb;
+    flex: 1;
+    background: #f8fafc;
+    border: 2px solid #e2e8f0;
     border-radius: 16px;
-    padding: 16px 20px;
+    padding: 16px 10px;
     color: #64748b;
-    font-size: 1rem;
+    font-size: 0.9rem;
     font-weight: 800;
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 10px;
+    gap: 6px;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     cursor: pointer;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+    white-space: nowrap;
   }
 
   .btn-reset:active {
-    background: #f8fafc;
-    border-color: #cbd5e1;
+    background: #f1f5f9;
     transform: scale(0.97);
-    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
   }
 
   /* Preview d'image professionnel */
