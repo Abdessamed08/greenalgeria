@@ -1405,14 +1405,22 @@ function updateList(filteredEntries) {
   if (!container) return;
   container.innerHTML = '';
 
-  // Safe handling of null/undefined
   if (!filteredEntries || !Array.isArray(filteredEntries)) {
     filteredEntries = [];
   }
 
   const items = filteredEntries.slice(0, 50);
 
-  if (items.length === 0) { container.innerHTML = '<div class="muted text-center p-1" style="text-align:center;">لا توجد نتائج مطابقة</div>'; return; }
+  if (items.length === 0) {
+    container.innerHTML = `
+      <div class="no-results" style="text-align:center; padding: 40px 20px; color: var(--color-text-muted);">
+        <i class="fas fa-search" style="font-size: 3rem; opacity: 0.1; margin-bottom: 15px; display: block;"></i>
+        <p style="font-weight: 700;">لا توجد نتائج مطابقة لبحثك</p>
+        <p style="font-size: 0.85rem;">حاول تغيير معايير البحث أو الفلاتر</p>
+      </div>
+    `;
+    return;
+  }
 
   items.forEach(e => {
     const div = document.createElement('div');
@@ -1421,68 +1429,57 @@ function updateList(filteredEntries) {
     div.setAttribute('role', 'listitem');
     div.setAttribute('tabindex', '0');
 
-    // Le clic sur l'élément (pas sur les boutons d'action) ouvre la fiche de détail
     div.onclick = (event) => {
-      if (!event.target.closest('.location-actions button')) {
-        centerAndOpenPanel(e.id); // Centrer sur la contribution et ouvrir le détail
-      }
-    };
-    div.onkeydown = (event) => {
-      if (event.key === 'Enter' || event.key === ' ') {
-        event.preventDefault();
+      if (!event.target.closest('.actions-mini button')) {
         centerAndOpenPanel(e.id);
       }
     };
 
-
-    // Nettoyage de l'URL photo si nécessaire (cas gumlet + localhost)
     let photoUrl = e.photo;
-    if (photoUrl && photoUrl.includes('http://localhost') && photoUrl.includes('https://')) {
-      // Garder seulement la partie localhost pour dev ou corriger si c'était une erreur
-      // Ici on suppose que l'image est cassée si elle pointe vers localhost depuis la prod
-      // On tente de la récupérer si elle est accessible, sinon placeholder
-      if (window.location.hostname !== 'localhost') {
-        // Essayer de corriger l'URL si elle vient de notre backend actuel
-        const filename = photoUrl.split('/').pop();
-        if (filename && !filename.includes('http')) {
-          photoUrl = `${API_URL.replace('/api/contributions', '')}/uploads/${filename}`;
-        } else {
-          photoUrl = null; // Image irrécupérable
-        }
+    if (photoUrl && photoUrl.includes('http://localhost') && window.location.hostname !== 'localhost') {
+      const filename = photoUrl.split('/').pop();
+      if (filename && !filename.includes('http')) {
+        photoUrl = `${API_URL.replace('/api/contributions', '')}/uploads/${filename}`;
+      } else {
+        photoUrl = null;
       }
     }
 
     const img = document.createElement('img');
-    img.src = photoUrl ? photoUrl + '?w=300' : 'https://via.placeholder.com/400x240?text=No+Image';
-    img.onerror = () => { img.src = 'https://via.placeholder.com/400x240?text=Image+Error'; };
+    img.src = photoUrl ? photoUrl + '?w=200' : 'https://via.placeholder.com/200x200?text=No+Image';
+    img.alt = e.type || 'شجرة';
+    img.onerror = () => { img.src = 'https://via.placeholder.com/200x200?text=Error'; };
 
     const typeIcon = getTreeIconClass(e.type);
+    const locationInfo = [e.city, e.district].filter(Boolean).join('، ') || 'منطقة غير محددة';
 
-    const meta = document.createElement('div'); meta.className = 'meta';
-    const locationInfo = [e.city, e.district].filter(Boolean).join(' — ') || 'غير متوفر';
+    const meta = document.createElement('div');
+    meta.className = 'meta';
     meta.innerHTML = `
-      <h4>
-        <i class="${typeIcon} type-icon"></i> ${escapeHtml(e.type)} (${e.quantite} شجرة)
-      </h4>
-      <p>${escapeHtml(e.nom)} — ${escapeHtml(e.adresse || 'غير محدد')}</p>
-      <small class="muted">الموقع: ${escapeHtml(locationInfo)}</small>
-      <small class="muted">أُضيف في: ${formatDate(e.createdAt || e.timestamp)}</small>
-    `;
+      <h4><i class="${typeIcon} type-icon"></i> ${escapeHtml(e.type)}</h4>
+      <p title="${escapeHtml(e.nom)}">${escapeHtml(e.nom)}</p>
+      
+      <div class="info-row">
+        <div class="info-tag"><i class="fas fa-layer-group"></i> ${e.quantite} شجرة</div>
+        <div class="info-tag"><i class="fas fa-map-marker-alt"></i> ${escapeHtml(locationInfo)}</div>
+      </div>
+      
+      <div class="info-row">
+        <div class="info-tag"><i class="fas fa-calendar-alt"></i> ${formatDate(e.createdAt || e.timestamp)}</div>
+      </div>
 
-    const actions = document.createElement('div'); actions.className = 'location-actions';
-    actions.innerHTML = `
-      <button class="btn icon-only primary" title="عرض البطاقة" onclick="centerAndOpenPopup('${e.id}')" aria-label="عرض بطاقة ${escapeHtml(e.type)}">
-          <i class="fas fa-map-marker-alt"></i>
-      </button>
-      <button class="btn icon-only primary" title="عرض التفاصيل" onclick="centerAndOpenPanel('${e.id}')" aria-label="عرض تفاصيل ${escapeHtml(e.type)}">
+      <div class="actions-mini">
+        <button class="btn-mini-action" title="تحديد على الخريطة" onclick="centerAndOpenPopup('${e.id}')">
+          <i class="fas fa-crosshairs"></i>
+        </button>
+        <button class="btn-mini-action view-btn" title="عرض التفاصيل" onclick="centerAndOpenPanel('${e.id}')">
           <i class="fas fa-eye"></i>
-      </button>
-      <!-- Suppression désactivée sur la vue publique -->
+        </button>
+      </div>
     `;
 
     div.appendChild(img);
     div.appendChild(meta);
-    div.appendChild(actions);
     container.appendChild(div);
   });
 }
