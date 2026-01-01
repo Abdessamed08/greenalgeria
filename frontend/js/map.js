@@ -1943,25 +1943,37 @@ document.addEventListener('DOMContentLoaded', function () {
   // Pré-remplir la liste des options de filtre de type
   const typeFilterSelect = document.getElementById('typeFilter');
   if (typeFilterSelect) {
-    const existingTypes = new Set(Array.from(typeFilterSelect.options).map(o => o.value).filter(v => v));
-
-    document.getElementById('type_arbre').querySelectorAll('option').forEach(option => {
-      const val = option.value || option.textContent;
-      if (val && val !== "اختر نوع الشجرة" && !existingTypes.has(val)) {
+    // Vider le filtre avant de le remplir pour éviter les doublons ou erreurs
+    typeFilterSelect.innerHTML = '<option value="">كل أنواع الأشجار</option>';
+    
+    const treeOptions = document.getElementById('type_arbre').querySelectorAll('option');
+    treeOptions.forEach(option => {
+      const text = option.textContent.trim();
+      if (text && text !== "اختر نوع الشجرة") {
         const newOption = document.createElement('option');
-        newOption.value = val;
-        newOption.textContent = option.textContent;
+        newOption.value = text;
+        newOption.textContent = text;
         typeFilterSelect.appendChild(newOption);
-        existingTypes.add(val);
       }
     });
 
-    // Initialiser Tom Select pour le filtre de Type pour une recherche fluide
+    // Initialiser Tom Select avec un rendu qui préserve le HTML/Emojis
     if (typeof TomSelect !== 'undefined') {
+      if (typeFilterSelect.tomselect) {
+        typeFilterSelect.tomselect.destroy();
+      }
       new TomSelect('#typeFilter', {
         create: false,
         placeholder: 'كل أنواع الأشجار',
-        onChange: () => applyFiltersAndSort()
+        onChange: () => applyFiltersAndSort(),
+        render: {
+          option: function(data, escape) {
+            return `<div>${data.text}</div>`;
+          },
+          item: function(data, escape) {
+            return `<div>${data.text}</div>`;
+          }
+        }
       });
     }
   }
