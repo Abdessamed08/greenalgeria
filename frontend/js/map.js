@@ -1266,9 +1266,6 @@ function updateStats(filteredCount = entries.length) {
   const typesEl = document.getElementById('stat-types');
   if (typesEl) typesEl.textContent = types.size;
 
-  const updateEl = document.getElementById('lastUpdate');
-  if (updateEl) updateEl.textContent = new Date().toLocaleString('ar-EG', { timeZone: 'Africa/Algiers' });
-
   const filterEl = document.getElementById('filterInfo');
   if (filterEl) filterEl.textContent = (filteredCount < safeEntries.length) ? `(${filteredCount} نتيجة من ${safeEntries.length})` : `الكل (${safeEntries.length})`;
 

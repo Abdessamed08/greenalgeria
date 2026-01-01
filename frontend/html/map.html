@@ -56,18 +56,26 @@
       transform: translate(-50%, -50%);
       text-align: center;
       pointer-events: none;
-    }
-    .doughnut-center-text .number {
-      font-size: 1.5rem;
-      font-weight: 800;
-      color: #059669;
-      display: block;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
       line-height: 1;
     }
+    .doughnut-center-text .number {
+      font-size: 1.4rem; /* Taille plus "intelligente" pour éviter le débordement */
+      font-weight: 900;
+      color: #059669;
+      letter-spacing: -0.5px;
+      margin: 0;
+    }
     .doughnut-center-text .label {
-      font-size: 0.8rem;
-      color: #6b7280;
-      font-weight: 600;
+      font-size: 0.75rem;
+      color: #9ca3af;
+      font-weight: 700;
+      margin-top: 1px;
+      text-transform: uppercase;
     }
   </style>
   <!-- Tom Select pour les menus déroulants -->
@@ -220,7 +228,7 @@
         </div>
 
         <div class="panel mobile-panel" id="stats-panel" style="display:none;">
-          <h3 id="stats-title" style="margin-bottom: 25px;">📊 إحصاءات البيئة</h3>
+          <h3 id="stats-title" style="margin-bottom: 25px;">الاحصائيات</h3>
           
           <div class="stats-overview">
             <!-- Card principale : Total Arbres -->
@@ -258,10 +266,6 @@
                 </div>
               </div>
             </div>
-          </div>
-
-          <div class="last-update-tag">
-            <i class="fas fa-clock"></i> آخر تحديث: <span id="lastUpdate">—</span>
           </div>
 
           <!-- Section Graphiques -->
