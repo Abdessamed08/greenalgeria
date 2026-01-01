@@ -1369,9 +1369,12 @@ function applyFiltersAndSort() {
   let filtered = [...entries];
   const quickSearchEl = document.getElementById('quickSearch');
   const typeFilterEl = document.getElementById('typeFilter');
+  const wilayaFilterEl = document.getElementById('wilayaFilter');
   const sortOrderEl = document.getElementById('sortOrder');
+  
   const query = (quickSearchEl ? quickSearchEl.value || '' : '').toLowerCase().trim();
   const typeFilter = typeFilterEl ? typeFilterEl.value : '';
+  const wilayaFilter = wilayaFilterEl ? wilayaFilterEl.value : '';
   const sortOrder = sortOrderEl ? sortOrderEl.value : 'createdAt';
 
   if (query) {
@@ -1379,17 +1382,36 @@ function applyFiltersAndSort() {
       (e.nom || '') + ' ' + (e.adresse || '') + ' ' + (e.type || '')
     ).toLowerCase().includes(query));
   }
+  
   if (typeFilter) {
     filtered = filtered.filter(e => e.type === typeFilter);
+  }
+
+  if (wilayaFilter) {
+    // Récupération propre du nom de la wilaya depuis DZ_DATA
+    let target = '';
+    if (typeof DZ_DATA !== 'undefined' && DZ_DATA[wilayaFilter]) {
+      target = DZ_DATA[wilayaFilter].ar.toLowerCase();
+    } else {
+      // Fallback si Tom Select ou DZ_DATA n'est pas dispo comme attendu
+      const selectedOption = wilayaFilterEl.options[wilayaFilterEl.selectedIndex];
+      const selectedText = selectedOption ? selectedOption.text : '';
+      target = (selectedText.includes('-') ? selectedText.split('-')[1].trim() : selectedText).toLowerCase();
+    }
+    
+    filtered = filtered.filter(e => {
+      const state = (e.state || '').toLowerCase();
+      const addr = (e.adresse || '').toLowerCase();
+      return state.includes(target) || addr.includes(target);
+    });
   }
 
   filtered.sort((a, b) => {
     if (sortOrder === 'nom') return (a.nom || '').localeCompare(b.nom || '');
     if (sortOrder === 'type') return (a.type || '').localeCompare(b.type || '');
-    // Handle potential missing createdAt with timestamp fallback or 0
     const timeA = a.createdAt || a.timestamp || 0;
     const timeB = b.createdAt || b.timestamp || 0;
-    return timeB - timeA;
+    return new Date(timeB) - new Date(timeA);
   });
 
   updateList(filtered);
@@ -1919,6 +1941,28 @@ document.addEventListener('DOMContentLoaded', function () {
       existingTypes.add(option.value);
     }
   });
+
+  // Pré-remplir la liste des options de filtre de Wilaya
+  const wilayaFilterSelect = document.getElementById('wilayaFilter');
+  if (wilayaFilterSelect && typeof DZ_DATA !== 'undefined') {
+    const sortedIds = Object.keys(DZ_DATA).sort((a,b) => parseInt(a)-parseInt(b));
+    sortedIds.forEach(id => {
+      const option = document.createElement('option');
+      option.value = id;
+      option.textContent = `${id} - ${DZ_DATA[id].ar}`;
+      wilayaFilterSelect.appendChild(option);
+    });
+
+    // Initialiser Tom Select pour le filtre de Wilaya pour avoir la recherche
+    if (typeof TomSelect !== 'undefined') {
+      new TomSelect('#wilayaFilter', {
+        create: false,
+        sortField: { field: "text", direction: "asc" },
+        placeholder: 'كل الولايات (بحث...)',
+        onChange: () => applyFiltersAndSort()
+      });
+    }
+  }
 
   // Gérer l'ouverture initiale du sidebar sur desktop (pour l'affichage du formulaire)
   const isMobile = window.matchMedia('(max-width: 1024px)').matches;

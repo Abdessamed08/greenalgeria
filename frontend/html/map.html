@@ -268,11 +268,17 @@
               <input type="text" id="quickSearch" placeholder="بحث باسم المساهم أو المنطقة..." oninput="debouncedSearch()">
             </div>
             <div class="filter-row">
+              <select id="wilayaFilter" onchange="applyFiltersAndSort()">
+                <option value="">كل الولايات</option>
+                <!-- Options peuplées par JS -->
+              </select>
               <select id="typeFilter" onchange="applyFiltersAndSort()">
                 <option value="">كل أنواع الأشجار</option>
                 <!-- Options peuplées par JS -->
               </select>
-              <select id="sortOrder" onchange="applyFiltersAndSort()">
+            </div>
+            <div class="filter-row" style="margin-top: 8px;">
+              <select id="sortOrder" onchange="applyFiltersAndSort()" style="width: 100%;">
                 <option value="createdAt">الأحدث أولاً</option>
                 <option value="nom">ترتيب حسب الاسم</option>
                 <option value="type">ترتيب حسب النوع</option>
