@@ -1495,12 +1495,9 @@ function updateList(filteredEntries) {
       <p title="${escapeHtml(e.nom)}">${escapeHtml(e.nom)}</p>
       
       <div class="info-row">
-        <div class="info-tag"><i class="fas fa-layer-group"></i> ${e.quantite} شجرة</div>
+        <div class="info-tag"><i class="fas fa-layer-group"></i> ${e.quantite}</div>
         <div class="info-tag"><i class="fas fa-map-marker-alt"></i> ${escapeHtml(locationInfo)}</div>
-      </div>
-      
-      <div class="info-row">
-        <div class="info-tag"><i class="fas fa-calendar-alt"></i> ${formatDate(e.createdAt || e.timestamp)}</div>
+        <div class="info-tag"><i class="fas fa-calendar-alt"></i> ${formatDate(e.createdAt || e.timestamp).split(',')[0]}</div>
       </div>
 
       <div class="actions-mini">
@@ -1508,7 +1505,7 @@ function updateList(filteredEntries) {
           <i class="fas fa-crosshairs"></i>
         </button>
         <button class="btn-mini-action view-btn" title="عرض التفاصيل" onclick="centerAndOpenPanel('${e.id}')">
-          <i class="fas fa-eye"></i>
+          <i class="fas fa-chevron-left"></i>
         </button>
       </div>
     `;
