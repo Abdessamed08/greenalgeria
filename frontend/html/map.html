@@ -55,27 +55,38 @@
       left: 50%;
       transform: translate(-50%, -50%);
       text-align: center;
-      pointer-events: none;
+      pointer-events: auto; /* Permet l'interaction au survol */
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      width: 100%;
-      line-height: 1;
+      width: 50%;
+      height: 50%;
+      cursor: default;
+      z-index: 10;
     }
     .doughnut-center-text .number {
-      font-size: 1.4rem; /* Taille plus "intelligente" pour éviter le débordement */
+      font-size: 1rem; /* Petite taille par défaut */
       font-weight: 900;
       color: #059669;
       letter-spacing: -0.5px;
       margin: 0;
+      transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+    .doughnut-center-text:hover .number {
+      font-size: 2.2rem; /* Taille imposante au survol */
+      color: #000000; /* Devient noir */
     }
     .doughnut-center-text .label {
       font-size: 0.75rem;
       color: #9ca3af;
       font-weight: 700;
       margin-top: 1px;
-      text-transform: uppercase;
+      transition: all 0.3s ease;
+    }
+    .doughnut-center-text:hover .label {
+      transform: translateY(4px);
+      opacity: 0.6;
     }
   </style>
   <!-- Tom Select pour les menus déroulants -->
