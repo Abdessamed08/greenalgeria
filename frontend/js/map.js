@@ -1378,37 +1378,43 @@ function applyFiltersAndSort() {
   const sortOrder = sortOrderEl ? sortOrderEl.value : 'createdAt';
 
   if (query) {
-    filtered = filtered.filter(e => (
-      (e.nom || '') + ' ' + (e.adresse || '') + ' ' + (e.type || '')
-    ).toLowerCase().includes(query));
+    const normalize = (s) => s ? s.replace(/[^\u0600-\u06FFa-zA-Z0-9]/g, '').toLowerCase() : '';
+    const cleanQuery = normalize(query);
+    
+    filtered = filtered.filter(e => {
+      const content = normalize((e.nom || '') + (e.adresse || '') + (e.type || ''));
+      return content.includes(cleanQuery);
+    });
   }
   
   if (typeFilter) {
-    // Nettoyage pour comparaison (on enlève les émojis et les espaces pour être sûr)
-    const cleanTypeFilter = typeFilter.replace(/[\u{1F300}-\u{1F9FF}]/gu, '').trim();
+    // Nettoyage ultra-robuste (on ne garde que les caractères alphanumériques arabes et latins pour la comparaison)
+    const normalize = (s) => s ? s.replace(/[^\u0600-\u06FFa-zA-Z0-9]/g, '').trim() : '';
+    const cleanTarget = normalize(typeFilter);
     
     filtered = filtered.filter(e => {
       if (!e.type) return false;
-      const cleanEntryType = e.type.replace(/[\u{1F300}-\u{1F9FF}]/gu, '').trim();
-      return cleanEntryType === cleanTypeFilter || e.type.trim() === typeFilter.trim();
+      const cleanEntry = normalize(e.type);
+      // On accepte si l'un contient l'autre (ex: "زيتون" dans "🫒 زيتون")
+      return cleanEntry.includes(cleanTarget) || cleanTarget.includes(cleanEntry) || e.type.trim() === typeFilter.trim();
     });
   }
 
   if (wilayaFilter) {
-    // Récupération propre du nom de la wilaya depuis DZ_DATA
+    const normalize = (s) => s ? s.replace(/[^\u0600-\u06FFa-zA-Z0-9]/g, '').toLowerCase() : '';
+    
     let target = '';
     if (typeof DZ_DATA !== 'undefined' && DZ_DATA[wilayaFilter]) {
-      target = DZ_DATA[wilayaFilter].ar.toLowerCase();
+      target = normalize(DZ_DATA[wilayaFilter].ar);
     } else {
-      // Fallback si Tom Select ou DZ_DATA n'est pas dispo comme attendu
       const selectedOption = wilayaFilterEl.options[wilayaFilterEl.selectedIndex];
       const selectedText = selectedOption ? selectedOption.text : '';
-      target = (selectedText.includes('-') ? selectedText.split('-')[1].trim() : selectedText).toLowerCase();
+      target = normalize(selectedText.includes('-') ? selectedText.split('-')[1] : selectedText);
     }
     
     filtered = filtered.filter(e => {
-      const state = (e.state || '').toLowerCase();
-      const addr = (e.adresse || '').toLowerCase();
+      const state = normalize(e.state || '');
+      const addr = normalize(e.adresse || '');
       return state.includes(target) || addr.includes(target);
     });
   }
