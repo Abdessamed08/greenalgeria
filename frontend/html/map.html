@@ -262,6 +262,23 @@
         <div class="panel panel-list mobile-panel" id="list-panel" style="display:none;">
           <h3 id="list-title">قائمة المساهمات</h3>
           
+          <div class="list-header-tools">
+            <div class="search-box">
+              <i class="fas fa-search"></i>
+              <input type="text" id="quickSearch" placeholder="بحث باسم المساهم أو المنطقة..." oninput="debouncedSearch()">
+            </div>
+            <div class="filter-row">
+              <select id="wilayaFilter" onchange="applyFiltersAndSort()">
+                <option value="">كل الولايات</option>
+                <!-- Options peuplées par JS -->
+              </select>
+              <select id="typeFilter" onchange="applyFiltersAndSort()">
+                <option value="">كل أنواع الأشجار</option>
+                <!-- Options peuplées par JS -->
+              </select>
+            </div>
+          </div>
+
           <div class="list-title">
             <strong>المساهمات النشطة</strong>
             <small id="resultsCount">0</small>
