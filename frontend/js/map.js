@@ -1316,11 +1316,19 @@ function updateCharts(data) {
 
   // --- 3. Rendu / Mise à jour du Graphique TYPES (Donut) ---
   const ctxTypes = document.getElementById('typesChart');
+  const centerTextEl = document.getElementById('typesCenterText');
+  const totalTreesEl = document.getElementById('typesTotal');
+
   if (ctxTypes) {
     if (typesChartInstance) {
-      typesChartInstance.destroy(); // Détruire l'ancien pour éviter les bugs
+      typesChartInstance.destroy();
     }
     
+    // Calculer le total pour le texte central
+    const totalTrees = typeData.reduce((a, b) => a + b, 0);
+    if (totalTreesEl) totalTreesEl.textContent = totalTrees.toLocaleString();
+    if (centerTextEl) centerTextEl.style.display = 'flex';
+
     // Configuration police
     Chart.defaults.font.family = "'Cairo', sans-serif";
     

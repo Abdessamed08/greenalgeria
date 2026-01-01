@@ -220,43 +220,66 @@
         </div>
 
         <div class="panel mobile-panel" id="stats-panel" style="display:none;">
-          <h3 id="stats-title">إحصاءات وأدوات</h3>
-          <div class="list-title">
-            <strong>إحصاء سريع</strong>
-            <small class="muted" id="lastUpdate">—</small>
-          </div>
-          <div class="stat-grid">
-            <div class="stat-item" role="status" aria-live="polite">
-              <strong id="stat-total-trees">0</strong>
-              <div class="muted">مجموع الأشجار المزروعة</div>
+          <h3 id="stats-title" style="margin-bottom: 25px;">📊 إحصاءات البيئة</h3>
+          
+          <div class="stats-overview">
+            <!-- Card principale : Total Arbres -->
+            <div class="stat-card primary-stat">
+              <div class="stat-icon-wrapper">
+                <i class="fas fa-tree"></i>
+              </div>
+              <div class="stat-content">
+                <span class="stat-label">إجمالي الأشجار المزروعة</span>
+                <strong class="stat-value" id="stat-total-trees">0</strong>
+              </div>
+              <div class="stat-decoration"></div>
             </div>
-            <div class="stat-item">
-              <strong id="stat-count">0</strong>
-              <div class="muted">مجموع المساهمات (نقاط)</div>
-            </div>
-            <div class="stat-item">
-              <strong id="stat-types">0</strong>
-              <div class="muted">أنواع الأشجار</div>
+
+            <div class="stat-row-grid">
+              <!-- Card : Nombre de contributions -->
+              <div class="stat-card secondary-stat">
+                <div class="stat-icon-wrapper mini">
+                  <i class="fas fa-hand-holding-heart"></i>
+                </div>
+                <div class="stat-content">
+                  <span class="stat-label">المساهمات</span>
+                  <strong class="stat-value" id="stat-count">0</strong>
+                </div>
+              </div>
+
+              <!-- Card : Types d'arbres -->
+              <div class="stat-card secondary-stat">
+                <div class="stat-icon-wrapper mini">
+                  <i class="fas fa-seedling"></i>
+                </div>
+                <div class="stat-content">
+                  <span class="stat-label">الأنواع</span>
+                  <strong class="stat-value" id="stat-types">0</strong>
+                </div>
+              </div>
             </div>
           </div>
 
+          <div class="last-update-tag">
+            <i class="fas fa-clock"></i> آخر تحديث: <span id="lastUpdate">—</span>
+          </div>
+
           <!-- Section Graphiques -->
-          <div class="charts-container" style="margin-top: 30px; display: flex; flex-direction: column; gap: 20px;">
-            
-            <div class="chart-box">
-              <h4><i class="fas fa-chart-pie" style="color:#059669; margin-left:8px;"></i> تنوع الغطاء النباتي</h4>
+          <div class="charts-container" style="margin-top: 25px;">
+            <div class="chart-box premium-box">
+              <div class="chart-header">
+                <i class="fas fa-chart-pie"></i>
+                <span>توزيع الغطاء النباتي</span>
+              </div>
               <div class="chart-container-relative">
                 <canvas id="typesChart"></canvas>
-                <div id="typesCenterText" class="doughnut-center-text" style="display:none;">
+                <div id="typesCenterText" class="doughnut-center-text">
                   <span class="number" id="typesTotal">0</span>
                   <span class="label">شجرة</span>
                 </div>
               </div>
             </div>
-
-
           </div>
-
         </div>
 
         <div class="panel panel-list mobile-panel" id="list-panel" style="display:none;">
