@@ -1384,7 +1384,14 @@ function applyFiltersAndSort() {
   }
   
   if (typeFilter) {
-    filtered = filtered.filter(e => e.type === typeFilter);
+    // Nettoyage pour comparaison (on enlève les émojis et les espaces pour être sûr)
+    const cleanTypeFilter = typeFilter.replace(/[\u{1F300}-\u{1F9FF}]/gu, '').trim();
+    
+    filtered = filtered.filter(e => {
+      if (!e.type) return false;
+      const cleanEntryType = e.type.replace(/[\u{1F300}-\u{1F9FF}]/gu, '').trim();
+      return cleanEntryType === cleanTypeFilter || e.type.trim() === typeFilter.trim();
+    });
   }
 
   if (wilayaFilter) {
@@ -1932,15 +1939,29 @@ document.addEventListener('DOMContentLoaded', function () {
 
   // Pré-remplir la liste des options de filtre de type
   const typeFilterSelect = document.getElementById('typeFilter');
-  const existingTypes = new Set(Array.from(typeFilterSelect.options).map(o => o.value).filter(v => v));
+  if (typeFilterSelect) {
+    const existingTypes = new Set(Array.from(typeFilterSelect.options).map(o => o.value).filter(v => v));
 
-  document.getElementById('type_arbre').querySelectorAll('option').forEach(option => {
-    if (option.value && !existingTypes.has(option.value)) {
-      const newOption = option.cloneNode(true);
-      typeFilterSelect.appendChild(newOption);
-      existingTypes.add(option.value);
+    document.getElementById('type_arbre').querySelectorAll('option').forEach(option => {
+      const val = option.value || option.textContent;
+      if (val && val !== "اختر نوع الشجرة" && !existingTypes.has(val)) {
+        const newOption = document.createElement('option');
+        newOption.value = val;
+        newOption.textContent = option.textContent;
+        typeFilterSelect.appendChild(newOption);
+        existingTypes.add(val);
+      }
+    });
+
+    // Initialiser Tom Select pour le filtre de Type pour une recherche fluide
+    if (typeof TomSelect !== 'undefined') {
+      new TomSelect('#typeFilter', {
+        create: false,
+        placeholder: 'كل أنواع الأشجار',
+        onChange: () => applyFiltersAndSort()
+      });
     }
-  });
+  }
 
   // Pré-remplir la liste des options de filtre de Wilaya
   const wilayaFilterSelect = document.getElementById('wilayaFilter');
