@@ -1344,6 +1344,7 @@ function updateCharts(data) {
       options: {
         responsive: true,
         maintainAspectRatio: false,
+        cutout: '50%', // Retour au format original du graphique
         plugins: {
           legend: {
             position: 'right',

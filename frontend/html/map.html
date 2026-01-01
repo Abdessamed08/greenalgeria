@@ -48,22 +48,24 @@
     .chart-container-relative {
       position: relative;
       height: 220px;
+      overflow: hidden;
     }
     .doughnut-center-text {
       position: absolute;
       top: 50%;
-      left: 50%;
+      left: 35%; /* Déplacé davantage vers la gauche pour être bien centré dans le donut */
       transform: translate(-50%, -50%);
       text-align: center;
-      pointer-events: auto; /* Permet l'interaction au survol */
+      pointer-events: auto;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      width: 50%;
-      height: 50%;
+      width: 40%; /* Zone restreinte pour rester strictement dans le blanc */
+      height: 40%;
       cursor: default;
       z-index: 10;
+      overflow: hidden;
     }
     .doughnut-center-text .number {
       font-size: 1rem; /* Petite taille par défaut */
