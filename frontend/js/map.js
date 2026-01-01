@@ -1964,7 +1964,7 @@ document.addEventListener('DOMContentLoaded', function () {
       }
     });
 
-    // Initialiser Tom Select avec un rendu qui préserve le HTML/Emojis
+    // Initialiser Tom Select avec un rendu qui remplace les émojis par des icônes Font Awesome
     if (typeof TomSelect !== 'undefined') {
       if (typeFilterSelect.tomselect) {
         typeFilterSelect.tomselect.destroy();
@@ -1975,10 +1975,20 @@ document.addEventListener('DOMContentLoaded', function () {
         onChange: () => applyFiltersAndSort(),
         render: {
           option: function(data, escape) {
-            return `<div>${data.text}</div>`;
+            const iconClass = getTreeIconClass(data.text);
+            const cleanText = data.text.replace(/[\u{1F300}-\u{1F9FF}]/gu, '').trim();
+            return `<div style="display: flex; align-items: center; gap: 10px; padding: 5px 0;">
+                      <i class="${iconClass}" style="color: var(--color-secondary); width: 20px; text-align: center; font-size: 1.1rem;"></i>
+                      <span style="font-weight: 600;">${cleanText}</span>
+                    </div>`;
           },
           item: function(data, escape) {
-            return `<div>${data.text}</div>`;
+            const iconClass = getTreeIconClass(data.text);
+            const cleanText = data.text.replace(/[\u{1F300}-\u{1F9FF}]/gu, '').trim();
+            return `<div style="display: flex; align-items: center; gap: 8px;">
+                      <i class="${iconClass}" style="color: var(--color-secondary); font-size: 1rem;"></i>
+                      <span style="font-weight: 700;">${cleanText}</span>
+                    </div>`;
           }
         }
       });
