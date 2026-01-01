@@ -217,6 +217,11 @@ async function loadRemoteData() {
  * Rafraîchit les données depuis le serveur (après ajout/modification/suppression)
  */
 async function refreshFromServer() {
+  const refreshBtn = document.getElementById('manualRefreshBtn');
+  const icon = refreshBtn ? refreshBtn.querySelector('i') : null;
+  
+  if (icon) icon.classList.add('fa-spin'); // Animation de rotation
+  
   try {
     const response = await fetch(API_URL);
     if (!response.ok) throw new Error(`HTTP ${response.status}`);
@@ -233,12 +238,14 @@ async function refreshFromServer() {
       applyFiltersAndSort();
       saveToLocalCache();
       
-      // 🔹 Forcer la mise à jour des graphiques après rafraîchissement
-      console.log('📊 Mise à jour des graphiques avec', entries.length, 'entrées');
       updateCharts(entries);
+      toast('تم تحديث البيانات من الخادم بنجاح', 'success');
     }
   } catch (error) {
     console.error('❌ Erreur lors du rafraîchissement:', error);
+    toast('خطأ في الاتصال بالخادم', 'error');
+  } finally {
+    if (icon) icon.classList.remove('fa-spin'); // Arrêt de l'animation
   }
 }
 
