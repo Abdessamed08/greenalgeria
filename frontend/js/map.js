@@ -1940,54 +1940,6 @@ document.addEventListener('DOMContentLoaded', function () {
 
   initMap();
 
-  // Pré-remplir la liste des options de filtre de type
-  const typeFilterSelect = document.getElementById('typeFilter');
-  if (typeFilterSelect) {
-    const existingTypes = new Set(Array.from(typeFilterSelect.options).map(o => o.value).filter(v => v));
-
-    document.getElementById('type_arbre').querySelectorAll('option').forEach(option => {
-      const val = option.value || option.textContent;
-      if (val && val !== "اختر نوع الشجرة" && !existingTypes.has(val)) {
-        const newOption = document.createElement('option');
-        newOption.value = val;
-        newOption.textContent = option.textContent;
-        typeFilterSelect.appendChild(newOption);
-        existingTypes.add(val);
-      }
-    });
-
-    // Initialiser Tom Select pour le filtre de Type pour une recherche fluide
-    if (typeof TomSelect !== 'undefined') {
-      new TomSelect('#typeFilter', {
-        create: false,
-        placeholder: 'كل أنواع الأشجار',
-        onChange: () => applyFiltersAndSort()
-      });
-    }
-  }
-
-  // Pré-remplir la liste des options de filtre de Wilaya
-  const wilayaFilterSelect = document.getElementById('wilayaFilter');
-  if (wilayaFilterSelect && typeof DZ_DATA !== 'undefined') {
-    const sortedIds = Object.keys(DZ_DATA).sort((a,b) => parseInt(a)-parseInt(b));
-    sortedIds.forEach(id => {
-      const option = document.createElement('option');
-      option.value = id;
-      option.textContent = `${id} - ${DZ_DATA[id].ar}`;
-      wilayaFilterSelect.appendChild(option);
-    });
-
-    // Initialiser Tom Select pour le filtre de Wilaya pour avoir la recherche
-    if (typeof TomSelect !== 'undefined') {
-      new TomSelect('#wilayaFilter', {
-        create: false,
-        sortField: { field: "text", direction: "asc" },
-        placeholder: 'كل الولايات (بحث...)',
-        onChange: () => applyFiltersAndSort()
-      });
-    }
-  }
-
   // Gérer l'ouverture initiale du sidebar sur desktop (pour l'affichage du formulaire)
   const isMobile = window.matchMedia('(max-width: 1024px)').matches;
   if (!isMobile) {
